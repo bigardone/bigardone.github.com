@@ -28,6 +28,11 @@ article {
       background: $img-border bottom left repeat-x;
     }
   }
+
+  &.page header{
+    padding-top: 0;
+  }
+  
   h2 {
     padding-top: 0.8em;
     background: $img-border top left repeat-x;

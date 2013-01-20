@@ -3,10 +3,10 @@ layout: post
 title: "Aloha mundo"
 date: 2012-11-26
 comments: true
-categories: [code, love, boards]
+categories: [Code, Love, Boards]
 ---
 
-{% img left http://codeloveandboards.files.wordpress.com/2012/11/cropped-la-foto1.jpg?w=180 %}
+{% img left /images/me.jpg %}
 
 Mi nombre es <strong>Ricardo García</strong> y llevo desarrollando aplicaciones web desde los últimos 12 años. Siempre he trabajado por cuenta ajena, y la mayor parte de mi experiencia laboral he vivido en Madrid. Desde hace 5 años lo dejé todo atrás para mudarme a Asturias, movido por dos de mis pasiones: El Amor y el Surf. Ha llovido mucho desde entonces y siguiendo mi corazón, he tomado una serie de decisiones que me han llevado a poner en marcha mi sueño: Conseguir el trabajo que siempre he querido tener.
 
