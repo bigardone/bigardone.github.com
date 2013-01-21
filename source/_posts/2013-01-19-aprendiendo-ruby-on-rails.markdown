@@ -3,7 +3,7 @@ layout: post
 title: "Aprendiendo Ruby on Rails"
 date: 2012-11-29
 comments: true
-categories: Code
+categories: code
 ---
 {% img left /images/ruby_on_rails_logo.jpg 200 %}
 

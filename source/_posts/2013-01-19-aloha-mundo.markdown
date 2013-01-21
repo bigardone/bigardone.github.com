@@ -3,7 +3,7 @@ layout: post
 title: "Aloha mundo"
 date: 2012-11-26
 comments: true
-categories: [Code, Love, Boards]
+categories: [code, love, boards]
 ---
 
 {% img left /images/me.jpg %}

@@ -3,7 +3,7 @@ layout: post
 title: "Rails Composer, el generador de Rails con esteroides"
 date: 2012-12-03
 comments: true
-categories: Code
+categories: code
 ---
 
 {% img left /images/ruby_on_rails_logo.jpg 200 %}
