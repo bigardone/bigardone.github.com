@@ -1,3 +1,14 @@
+html
+	background: #000 image-url("body-bg.jpg") center center no-repeat
+	background-attachment: fixed
+
+	body
+		margin-top: 1em
+		+box-shadow(0 0 40px rgba(#000, .7))
+		+border-radius(10px)
+
+		& > header
+			+border-radius(.4em .4em 0 0)
 
 a
 	text-decoration: none
