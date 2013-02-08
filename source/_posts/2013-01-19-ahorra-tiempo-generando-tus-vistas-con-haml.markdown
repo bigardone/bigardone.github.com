@@ -3,7 +3,7 @@ layout: post
 title: "Ahorra tiempo generando tus vistas con Haml"
 date: 2013-01-15
 comments: true
-categories: code
+categories: [code, haml, html]
 ---
 
 {% img left /images/haml_logo.png 200 %}

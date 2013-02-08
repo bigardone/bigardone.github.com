@@ -3,7 +3,7 @@ layout: post
 title: "Desplegando tu blog Octopress en GitHub Pages"
 date: 2013-01-24
 comments: true
-categories: code
+categories: [code, octopress]
 ---
 
 {% img left /images/octopress_logo.jpg 200 %}

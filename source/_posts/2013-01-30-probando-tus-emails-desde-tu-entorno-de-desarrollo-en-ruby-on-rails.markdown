@@ -3,7 +3,7 @@ layout: post
 title: "Probando tus emails desde tu entorno de desarrollo en Ruby on Rails"
 date: 2013-01-30
 comments: true
-categories: code
+categories: [code, rails, development, mailer]
 ---
 {% img left /images/ruby_on_rails_logo.jpg 200 %}
 
@@ -90,6 +90,7 @@ config.action_mailer.smtp_settings = { :address => "localhost", :port => 1025 }
 	</li>
 </ol>
 Para ver los emails solo tienes que acceder en tu browser al cliente que te genera en la url **http://localhost:1080**.
+
 {% img center /images/mailcatcher.png %}
 
 

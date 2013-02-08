@@ -3,7 +3,7 @@ layout: post
 title: "Mejores hojas de estilo con Sass"
 date: 2012-12-17
 comments: true
-categories: code 
+categories: [code, sass, css] 
 ---
 {% img left /images/sass.gif 200 %}
 

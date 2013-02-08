@@ -3,7 +3,7 @@ layout: post
 title: "Cambiando de Wordpress a Octopress"
 date: 2013-01-23
 comments: true
-categories: [code, love, boards]
+categories: [code, octopress]
 ---
 
 {% img left /images/octopress_logo.jpg 200 %}

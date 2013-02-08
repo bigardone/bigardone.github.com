@@ -3,7 +3,7 @@ layout: post
 title: "Mejor JavaScript con CoffeeScript"
 date: 2013-01-04
 comments: true
-categories: code
+categories: [code, coffeescript, javascript]
 ---
 
 {% img left /images/coffeescript_logo.png 200 %}
