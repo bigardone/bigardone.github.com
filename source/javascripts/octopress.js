@@ -144,6 +144,21 @@ $.domReady(function() {
     scales = [0.25, 1.6];
     doc[addEvent](type, fix, true);
   }
+  
+  var feed = new Instafeed({
+        get: 'user',
+        userId: 4623546,
+        clientId: '99c71fa03349419b9a150df04b9ab13e',
+        accessToken: '4623546.99c71fa.f776a640355b49dc8ef5703f9f123389',
+        resolution: 'low_resolution',
+        sortBy: 'random',
+        limit: 60,
+        links: false
+
+    });
+
+    feed.run();
+    
 }(document));
 
 /*!	SWFObject v2.2 modified by Brandon Mathis to contain only what is necessary to dynamically embed flash objects
