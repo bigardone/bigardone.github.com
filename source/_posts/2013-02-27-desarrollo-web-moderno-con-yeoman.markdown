@@ -3,7 +3,7 @@ layout: post
 title: "Desarrollo web moderno con Yeoman"
 date: 2013-02-27
 comments: true
-categories: code
+categories: [code, yeoman]
 ---
 {% img left /images/yeoman-logo.png 200 %}
 
