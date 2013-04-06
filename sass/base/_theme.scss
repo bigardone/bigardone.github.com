@@ -22,16 +22,16 @@ $text-color-light: #aaa !default;
 $type-border: #ddd !default;
 
 /* Navigation */
-$nav-bg: #ccc !default;
-$nav-bg-front: image-url('noise.png') !default;
-$nav-bg-back: linear-gradient(lighten($nav-bg, 8), $nav-bg, darken($nav-bg, 11)) !default;
-$nav-color: darken($nav-bg, 38) !default;
-$nav-color-hover: darken($nav-color, 25) !default;
+$nav-bg: #000 !default;
+$nav-bg-front: rgba($nav-bg, .5) !default;
+$nav-bg-back: rgba($nav-bg, .5) !default;
+$nav-color: lighten($nav-bg, 60) !default;
+$nav-color-hover: lighten($nav-bg, 85) !default;
 $nav-placeholder: desaturate(darken($nav-bg, 10), 15) !default;
-$nav-border: darken($nav-bg, 10) !default;
+$nav-border: $nav-bg !default;
 $nav-border-top: lighten($nav-bg, 15) !default;
-$nav-border-bottom: darken($nav-bg, 25) !default;
-$nav-border-left: darken($nav-bg, 11) !default;
+$nav-border-bottom: $nav-bg  !default;
+$nav-border-left: rgba(#fff, .2) !default;
 $nav-border-right: lighten($nav-bg, 7) !default;
 
 /* Sidebar colors */
@@ -46,7 +46,7 @@ $sidebar-link-color-subdued: lighten($sidebar-color, 20) !default;
 $sidebar-link-color-subdued-hover: $sidebar-link-color-hover !default;
 $twitter-status-link: lighten($sidebar-link-color-subdued, 15) !default;
 
-$footer-color: #888 !default;
+$footer-color: darken(#fff,30) !default;
 $footer-bg: #ccc !default;
 $footer-bg-front: image-url('noise.png') !default;
 $footer-bg-back: linear-gradient(lighten($footer-bg, 8), $footer-bg, darken($footer-bg, 11)) !default;
