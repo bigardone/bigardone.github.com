@@ -5,14 +5,13 @@ date: 2013-03-19
 comments: true
 categories: [code, javascript, sublime text]
 ---
-{% img left /images/sublime_logo.png 200 %}
 
 Dos de las herramientas que más uso para trabajar en mi día a día son el editor <a href="http://www.sublimetext.com/">Sublime Text 2</a> y las <a href="https://developers.google.com/chrome-developer-tools/">Chrome Developer Tools</a>. **Sublime Text** poco a poco ha ido ganando puntos para ser mi editor favorito, hasta el punto de ser el único que uso debido a su velocidad, facilidad de uso y la cantidad de extensiones que ya existen y van saliendo para ayudarnos en nuestro trabajo. Así mismo las **Developer Tools** son una herramienta fundamental con la que tenemos que contar ya que nos facilita información acerca de nuestro navegador y cómo interacciona con nuestras aplicaciones, mostrando los elementos que renderizamos en las vistas, estilos, recursos que usamos, peticiones http y un laaaaargo etc además de, como no, debuguear **JavaScript**. Pero... ¿y si pudiéramos usar todo el poder del debuguer de JavaScript de las **Chrome Developer Tools** desde nuestro **Sublime Text**? Pues ahora es posible.
 
 <!--more-->
 
 ###Aloha, Sublime Web Inspector (SWI)###
-Recientemente he descubierto esta <a href="http://sokolovstas.github.com/SublimeWebInspector/">extensión para Sublime</a>, que funciona por encima del protocolo WebInspectorProtocol, permitiéndonos acceder a las funcionalidades del debuguer de Chrome. 
+Recientemente he descubierto esta <a href="http://sokolovstas.github.com/SublimeWebInspector/">extensión para Sublime</a>, que funciona por encima del protocolo WebInspectorProtocol, permitiéndonos acceder a las funcionalidades del debuguer de Chrome.
 
 <iframe width="420" height="315" src="http://www.youtube.com/embed/LaH_43N34Jg" frameborder="0" allowfullscreen></iframe>
 
@@ -23,11 +22,11 @@ En este fichero podemos cambiar la ruta donde está nuestro Chrome, en mi caso c
 ###Iniciando SWI###
 Para lanzarlo, podemos hacerlo de dos maneras:
 
-- Desde el **Command Palette** buscamos **Web Inspector**. 
+- Desde el **Command Palette** buscamos **Web Inspector**.
 - Ó bien con el atajo de teclado **shift + command + R**.
 
 Con cualquiera de ellas saldrá un opción que dice:
-	
+
     Start Google Chrome with remote debug port 9222
 
 Esto nos abrirá nuestro Chrome listo para debuguear por el puerto especificado.

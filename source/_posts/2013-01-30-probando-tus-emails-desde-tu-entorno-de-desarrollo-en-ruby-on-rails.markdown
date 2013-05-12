@@ -5,10 +5,9 @@ date: 2013-01-30
 comments: true
 categories: [code, rails, development, mailer]
 ---
-{% img left /images/ruby_on_rails_logo.jpg 200 %}
 
 Desde que me embarqué en el nuevo proyecto personal que estoy desarrollado en Ruby on Rails siempre he tenido en mente automatizar muchas acciones que los usuarios de la antigua versión de la aplicación tienen que hacer manualmente. Una de estas acciones es la de enviar por **email** a sus proveedores los detalles de los nuevos pedidos que reciben de sus compradores. Esto aunque parezca una cosa simple, les roba mucho tiempo de su día a día, así que en esta nueva versión de la aplicación le he dado máxima prioridad a esta funcionalidad.
-Para ello y gracias al uso de los <a href="http://guides.rubyonrails.org/action_mailer_basics.html" target="_blank" title="Action Mailers">Action Mailers</a> de Rails, he diseñado una serie de emails que se envían automáticamente después de ciertas acciones. Pero... ¿cómo podemos probar que estos emails se generan de manera correcta y se envian a sus destinatarios? 
+Para ello y gracias al uso de los <a href="http://guides.rubyonrails.org/action_mailer_basics.html" target="_blank" title="Action Mailers">Action Mailers</a> de Rails, he diseñado una serie de emails que se envían automáticamente después de ciertas acciones. Pero... ¿cómo podemos probar que estos emails se generan de manera correcta y se envian a sus destinatarios?
 
 <!--more-->
 

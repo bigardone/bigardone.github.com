@@ -6,8 +6,6 @@ comments: true
 categories: [code, octopress]
 ---
 
-{% img left /images/octopress_logo.jpg 200 %}
-
 En mi [último post](/blog/2013-01-23-cambiando-de-wordpress-a-octopress) vimos cómo crear un blog de páginas estáticas con <a title="A blogging framework for hackers" href="http://octopress.org" target="_blank">Octopress</a>, configurarlo, crear posts y páginas y ver los cambios en local. Ya tienes montado tu blog, y ahora tienes que desplegarlo en algún sitio para que el mundo lo vea. Para esto, vamos a usar <a title="GitHub Pages" href="http://pages.github.com" target="_blank">GitHub Pages</a>, con el que se integra al 100% y encima es completamente gratuito, sin mencionar la fiabilidad del servicio ;)
 
 <!--more-->

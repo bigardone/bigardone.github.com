@@ -5,7 +5,6 @@ date: 2013-02-14
 comments: true
 categories: [code, rails, logs]
 ---
-{% img left /images/ruby_on_rails_logo.jpg 200 %}
 
 Mientras desarrollamos una aplicación es importante tener toda la información sobre lo que ocurre en ella durante cada petición que hagamos, ya sea para ver el tiempo que tarda en procesar los datos, los parámetros que le pasamos, el número de operaciones que se realizan en la base de datos y el tiempo que tarda en hacerlas, etc. Para ayudarnos a ver estos datos, Rails nos proporciona un fichero de log para nuestro entorno de desarrollo que podemos encontrar en <code>/log/development.log</code>, pero la verdad es que tener que estar mirando siempre el log puede llegar a ser un auténtico coñazo, así que aquí van dos maneras distintas y mucho más amenas de tener siempre a mano esta información.
 
@@ -50,7 +49,7 @@ La información que nos proporciona no es tan extensa y detallada como **Footnot
 Para que funcione, además de instalar la extensión, debéis añadir la siguiente gema a vuestro <code>Gemfile</code>:
 
     group :development do
-	  gem 'meta_request', '0.2.1' 
+	  gem 'meta_request', '0.2.1'
 	end
 
 Y no os olvidéis seleccionar vuestro editor en la configuración de la extensión en el propio **Chrome**.

@@ -6,8 +6,6 @@ comments: true
 categories: [code, coffeescript, javascript]
 ---
 
-{% img left /images/coffeescript_logo.png 200 %}
-
 Siguiendo con mi último post acerca de como ser más productivo y escribir mejores hojas de estilo con <a title="Mejores hojas de estilo con Sass" href="http://codeloveandboards.wordpress.com/2012/12/17/mejores-hojas-de-estilo-con-sass/">SASS</a>, este nuevo post no podría ir de otra cosa que no fuera acerca de <a title="CoffeeScript" href="http://coffeescript.org" target="_blank">CoffeeScript</a>, que viene a ser a JavaScript lo que es SASS a las hojas de estilo, es decir, un lenguaje sencillo que se compila en JavaScript usando una sintaxis muy sencilla y aportando nueva funcionalidad muy útil.
 
 <!--more-->
@@ -45,8 +43,8 @@ Otra aportación de CoffeeScript es el uso de clases, del cual carece JavaScript
 
 {% codeblock lang:js %}
 # script.coffee
-class SurfBoard 
-  constructor: (@type) -&gt; 
+class SurfBoard
+  constructor: (@type) -&gt;
   description: -&gt;
     console.log "This surfboard is a #{@type}"
 {% endcodeblock %}

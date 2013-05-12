@@ -5,9 +5,8 @@ date: 2013-03-14
 comments: true
 categories: [code, yeoman]
 ---
-{% img left /images/yeoman-logo.png 200 %}
 
-En el pasado post [conocimos a Yeoman](/blog/2013/02/27/desarrollo-web-moderno-con-yeoman), un nuevo amigo que nos ayuda a desarrollar proyectos web de manera moderna y dinámica, poniendo a nuestra disposición una serie de de flujos de trabajo y buenas prácticas orientados no solo a optimizar el resultado final de nuestro desarrollo, sino también generando por nosotros el esqueleto del mismo, manejo de dependencias y un largo etcétera. También vimos como instalar la versión 1.0 (junto con sus dos dependencias  **Bower** y 
+En el pasado post [conocimos a Yeoman](/blog/2013/02/27/desarrollo-web-moderno-con-yeoman), un nuevo amigo que nos ayuda a desarrollar proyectos web de manera moderna y dinámica, poniendo a nuestra disposición una serie de de flujos de trabajo y buenas prácticas orientados no solo a optimizar el resultado final de nuestro desarrollo, sino también generando por nosotros el esqueleto del mismo, manejo de dependencias y un largo etcétera. También vimos como instalar la versión 1.0 (junto con sus dos dependencias  **Bower** y
 **Grunt**), con una sola linea desde nuestra consola:
 
 <!--more-->
@@ -89,7 +88,7 @@ Esto nos creará una carpeta llamada <code>dist</code>, en la que a partir de lo
 
 La verdad es que Yeoman me flipa. Toda la generación personalizable del esqueleto del proyecto, la manera que tiene que instalar dependencias y actualizarlas, el servidor, el compilar los ficheros según los vas modificando y demás hace que tenga en "una" sola herramienta lo que antes tenía que hacer usando varias. Lo he probado para un theme de WordPress que estoy desarrollando, pero solo de manera muy básica. No me atrevo a decir que tal funcionará con otro tipo de proyectos, pero gracias al nivel de personalización que le puedes dar a todas las tareas con el fichero <code>Grunt.js</code>, estoy deseando poder usarlo más a fondo y exprimirlo al máximo.
 
-Love & Boards! 
+Love & Boards!
 
 
 

@@ -5,7 +5,6 @@ date: 2013-04-06
 comments: true
 categories: [code, git]
 ---
-{% img left /images/git_logo.png 200 %}
 
 <a href="http://git-scm.com/" target="_blank" title="Git">Git</a> es probablemente el sistema de control de versiones más popular hoy en día debido a su gran flexibilidad a la hora de trabajar con diferentes ramas de nuestros proyectos, entre otras muchas otras cosas. Esta flexibilidad a la hora de crear diferentes ramas nos permite poder usar el flujo de trabajo que queramos a la hora de funcionar con git diariamente, lo que por otro lado también puede ser un arma de doble filo ya que si no tienes experiencia usándolo o ejecutamos algún comando en el orden que no es o con algún parámetro no deseado, podemos llevarnos algún susto.
 
@@ -89,5 +88,5 @@ Esto fusionará los cambios tanto con **develop** como con **master**, teniendo 
 
 Como veis **git-flow** automatiza muy bien la manera de trabajar con **git**, aplicando un flujo de trabajo más que probado y usado, adaptándose perfectamente a la mayoría de los proyectos. Espero que os ayude y facilite las cosas tal y como lo me lo ha hecho a mi.
 
-Love & Boards! 
+Love & Boards!
 

@@ -6,9 +6,6 @@ comments: true
 categories: [code, octopress]
 ---
 
-{% img left /images/octopress_logo.jpg 200 %}
-
-
 Hace poco he descubierto <a title="A blogging framework for hackers" href="http://octopress.org" target="_blank">Octopress</a>, un framework de Jekyll para generar sitios web estáticos a partir de Ruby, SASS, plantillas HTML y ficheros escritos con markdown. En resumidas cuentas, creas un nuevo artículo en un archivo escrito con tu editor de texto favorito, y con un par de instrucciones en tu consola, te genera el post y te lo despliega en tu servidor. No he podido resistirme a dar el salto por los siguientes motivos:
 
 <!--more-->
@@ -49,11 +46,11 @@ Crear un nuevo post es muy sencillo. Solo tienes que ejecutar la siguiente instr
 Esto crea un fichero dentro de <strong>source/_posts</strong> cuyo nombre será <strong>yyyy-mm-dd-título-del-post.markdown</strong>. Si lo abres, verás que ya tiene algo así codificado, que es la configuración de como Octopress debe procesar este post.
 
 <pre>
---- 
-layout: post 
-title: "Bienvenidos a mi blog" 
+---
+layout: post
+title: "Bienvenidos a mi blog"
 date: 2013-01-22
-comments: true 
+comments: true
 categories: [ code, love, boards ]
 ---
 </pre>
@@ -67,20 +64,20 @@ Aqui puedes configurar tu post indicándole qué diseño quieres que use, el tí
 <h3>Creando una página</h3>
 Crear una nueva página es igual de sencillo, sólo tenemos que tener el cuenta con que URL queremos que se acceda a ella:
 <pre>
-$ rake new_page[mi-pagina] 
+$ rake new_page[mi-pagina]
 # creates /source/mi-pagina/index.markdown
-$ rake new_page[mi-pagina/pagina.html] 
+$ rake new_page[mi-pagina/pagina.html]
 # creates /source/mi-pagina/pagina.html
 </pre>
 Las páginas creadas también tienen su propia sección configuración:
 <pre>
---- 
-layout: page 
-title: "Mi página" 
-date: 2013-01-22 
-comments: true 
-sharing: true 
-footer: true 
+---
+layout: page
+title: "Mi página"
+date: 2013-01-22
+comments: true
+sharing: true
+footer: true
 ---
 </pre>
 Donde podremos decirle a Octopress qué diseño quieres que emplee, el título de la misma, si quieres activar los comentarios y los links para compartirla, y si quieres que aparezca o no el pie de la misma donde están incluidas al mismo tiempo las opciones de compartir y comentarios.
@@ -90,8 +87,8 @@ Para escribir el contenido tanto de los posts como de las páginas solo tienes q
 <h3>Viendo lo que has creado</h3>
 Una vez termines tu post o página tienes las siguientes instrucciones desde tu consola:
 <pre>
-$ rake generate # Genera los posts y páginas en la carpeta pública 
-$ rake watch # Observa las carpetas source/ y sass/ por si hay cambios para generarlos automáticamente 
+$ rake generate # Genera los posts y páginas en la carpeta pública
+$ rake watch # Observa las carpetas source/ y sass/ por si hay cambios para generarlos automáticamente
 $ rake preview # Observa como la opción anterior y monta un servidor en http://localhost:4000
 </pre>
 

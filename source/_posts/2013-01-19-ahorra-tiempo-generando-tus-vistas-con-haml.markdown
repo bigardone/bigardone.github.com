@@ -6,8 +6,6 @@ comments: true
 categories: [code, haml, html]
 ---
 
-{% img left /images/haml_logo.png 200 %}
-
 Después de haber escrito sobre <a title="Mejores hojas de estilo con Sass" href="http://codeloveandboards.wordpress.com/2012/12/17/mejores-hojas-de-estilo-con-sass/">Sass</a> y <a title="Mejor JavaScript con CoffeeScript" href="http://codeloveandboards.wordpress.com/2013/01/04/mejor-javascript-con-coffeescript/">CoffeScript</a>, y teniendo cubierto con ambas tanto la generación de las hojas de estilo como el javascript de una aplicación de manera simple y con una sintaxis más intuitiva, no podía deja atrás al origen de todo esto, <a title="Beautiful, DRY, well-indented, clear markup: templating haiku." href="http://haml.info" target="_blank">Haml</a>, que viene a ser lo mismo pero para la generación de las plantillas HTML para las vistas.
 
 <!--more-->

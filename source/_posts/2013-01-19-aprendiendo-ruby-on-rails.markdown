@@ -5,7 +5,6 @@ date: 2012-11-29
 comments: true
 categories: [code, ruby, rails, tutorials]
 ---
-{% img left /images/ruby_on_rails_logo.jpg 200 %}
 
 
 Casi toda mi vida profesional la he dedicado a desarrollar aplicaciones J2EE y paralelamente en TonkaLabs con el framework Yii de php. Hace tiempo que estaba un poco saturado de ambas tecnologías, así que decidí reciclarme un poco y empezar a desarrollar por mi cuenta algo diferente, usando tecnologías distintas, y así de paso probar cosas nuevas. La elección fue muy fácil ya que siempre he sentido curiosidad por <a title="Ruby" href="http://es.wikipedia.org/wiki/Ruby" target="_blank">Ruby</a> y su archiconocido framework MVC <a title="Ruby on Rails" href="http://es.wikipedia.org/wiki/Ruby_on_Rails" target="_blank">Ruby on Rails</a>.

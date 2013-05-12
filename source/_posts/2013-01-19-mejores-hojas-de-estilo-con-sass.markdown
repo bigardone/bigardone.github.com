@@ -3,9 +3,8 @@ layout: post
 title: "Mejores hojas de estilo con Sass"
 date: 2012-12-17
 comments: true
-categories: [code, sass, css] 
+categories: [code, sass, css]
 ---
-{% img left /images/sass.gif 200 %}
 
 Cuando desarrollo el interfaz de alguna aplicación, siempre hay una cosa que me vuelve loco que son las hojas de estilo. Siempre empiezo organizándolas por apartados, intentando poner cada cosa en su su sitio, para que luego sea sencillo encontrar cada cosa y no volverme loco. Pero esta organización solía durarme pocas semanas, hasta que entraba en vorágine de cambios de diseño, y terminaba destrozando ese orden con el que había empezado... hasta que descubrí <a title="Sass - Syntactically Awesome Stylesheets" href="http://sass-lang.com" target="_blank">Sass</a>!!!
 
@@ -59,7 +58,7 @@ $globalPadding: 10px
 
 /* .css */
 .inner {
-  padding: 10px 20px; 
+  padding: 10px 20px;
 }
 {% endcodeblock %}
 
@@ -83,12 +82,12 @@ Los mixins nos permiten declarar un grupo de reglas css que luego podremos reuti
 .widget {
   -webkit-border-radius: 5px;
   -moz-border-radius: 5px;
-  border-radius: 5px; 
+  border-radius: 5px;
 }
 .button {
   -webkit-border-radius: 10px;
   -moz-border-radius: 10px;
-  border-radius: 10px; 
+  border-radius: 10px;
 }
 {% endcodeblock %}
 
@@ -109,7 +108,7 @@ $orange: #d74c17
 .element {
   background-color: #ea6937;
   border: 1px solid #7b2b0d;
-  color: #17a2d7; 
+  color: #17a2d7;
 }
 {% endcodeblock %}
 
@@ -122,13 +121,13 @@ Otra característica muy útil e importante cuando tienes que repetir la misma r
     background-image: url('/images/logos/#{$logo}.jpg')
 // .css
 .twitter-logo {
-  background-image: url("/images/logos/twitter.jpg"); 
+  background-image: url("/images/logos/twitter.jpg");
 }
 .facebook-logo {
-  background-image: url("/images/logos/facebook.jpg"); 
+  background-image: url("/images/logos/facebook.jpg");
 }
 .linkedin-logo {
-  background-image: url("/images/logos/linkedin.jpg"); 
+  background-image: url("/images/logos/linkedin.jpg");
 }
 {% endcodeblock %}
 <h4>¡Y muchas cosas más!</h4>

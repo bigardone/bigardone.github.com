@@ -1,27 +1,16 @@
 {
   "CodeKitInfo" : "This is a CodeKit project configuration file. It is designed to sync project settings across multiple machines. Modifying the contents of this file can be a poor life decision if you don't know what you're doing. This file is not useful unless accompanied by the project that created it in CodeKit. For more information, see: http:\/\/incident57.com\/codekit",
-  "creatorBuild" : "8248",
+  "creatorBuild" : "8283",
   "files" : {
-    "\/octopress_logo.jpg" : {
+    "\/bird_32_gray.png" : {
       "ignoreWasSetByUser" : 0,
       "ignore" : 0,
       "hidden" : 0,
       "outputPathIsSetByUser" : 0,
-      "inputAbbreviatedPath" : "\/octopress_logo.jpg",
+      "inputAbbreviatedPath" : "\/bird_32_gray.png",
       "processed" : 1,
-      "outputAbbreviatedPath" : "\/octopress_logo.jpg",
-      "initialSize" : 6664,
-      "fileType" : 4096
-    },
-    "\/dotted-border.png" : {
-      "ignoreWasSetByUser" : 0,
-      "ignore" : 0,
-      "hidden" : 0,
-      "outputPathIsSetByUser" : 0,
-      "inputAbbreviatedPath" : "\/dotted-border.png",
-      "processed" : 1,
-      "outputAbbreviatedPath" : "\/dotted-border.png",
-      "initialSize" : 99,
+      "outputAbbreviatedPath" : "\/bird_32_gray.png",
+      "initialSize" : 1376,
       "fileType" : 8192
     },
     "\/body-bg.jpg" : {
@@ -35,15 +24,37 @@
       "initialSize" : 1982579,
       "fileType" : 4096
     },
-    "\/mailcatcher.png" : {
+    "\/railspanel.png" : {
       "ignoreWasSetByUser" : 0,
       "ignore" : 0,
       "hidden" : 0,
       "outputPathIsSetByUser" : 0,
-      "inputAbbreviatedPath" : "\/mailcatcher.png",
+      "inputAbbreviatedPath" : "\/railspanel.png",
+      "processed" : 0,
+      "outputAbbreviatedPath" : "\/railspanel.png",
+      "initialSize" : 30791,
+      "fileType" : 8192
+    },
+    "\/dotted-border.png" : {
+      "ignoreWasSetByUser" : 0,
+      "ignore" : 0,
+      "hidden" : 0,
+      "outputPathIsSetByUser" : 0,
+      "inputAbbreviatedPath" : "\/dotted-border.png",
       "processed" : 1,
-      "outputAbbreviatedPath" : "\/mailcatcher.png",
-      "initialSize" : 205998,
+      "outputAbbreviatedPath" : "\/dotted-border.png",
+      "initialSize" : 99,
+      "fileType" : 8192
+    },
+    "\/sublime_logo.png" : {
+      "ignoreWasSetByUser" : 0,
+      "ignore" : 0,
+      "hidden" : 0,
+      "outputPathIsSetByUser" : 0,
+      "inputAbbreviatedPath" : "\/sublime_logo.png",
+      "processed" : 0,
+      "outputAbbreviatedPath" : "\/sublime_logo.png",
+      "initialSize" : 31566,
       "fileType" : 8192
     },
     "\/ruby_on_rails_logo.jpg" : {
@@ -57,17 +68,6 @@
       "initialSize" : 11587,
       "fileType" : 4096
     },
-    "\/bird_32_gray.png" : {
-      "ignoreWasSetByUser" : 0,
-      "ignore" : 0,
-      "hidden" : 0,
-      "outputPathIsSetByUser" : 0,
-      "inputAbbreviatedPath" : "\/bird_32_gray.png",
-      "processed" : 1,
-      "outputAbbreviatedPath" : "\/bird_32_gray.png",
-      "initialSize" : 1376,
-      "fileType" : 8192
-    },
     "\/bird_32_gray_fail.png" : {
       "ignoreWasSetByUser" : 0,
       "ignore" : 0,
@@ -77,39 +77,6 @@
       "processed" : 1,
       "outputAbbreviatedPath" : "\/bird_32_gray_fail.png",
       "initialSize" : 615,
-      "fileType" : 8192
-    },
-    "\/me.jpg" : {
-      "ignoreWasSetByUser" : 0,
-      "ignore" : 0,
-      "hidden" : 0,
-      "outputPathIsSetByUser" : 0,
-      "inputAbbreviatedPath" : "\/me.jpg",
-      "processed" : 1,
-      "outputAbbreviatedPath" : "\/me.jpg",
-      "initialSize" : 9843,
-      "fileType" : 4096
-    },
-    "\/rss.png" : {
-      "ignoreWasSetByUser" : 0,
-      "ignore" : 0,
-      "hidden" : 0,
-      "outputPathIsSetByUser" : 0,
-      "inputAbbreviatedPath" : "\/rss.png",
-      "processed" : 1,
-      "outputAbbreviatedPath" : "\/rss.png",
-      "initialSize" : 490,
-      "fileType" : 8192
-    },
-    "\/haml_logo.png" : {
-      "ignoreWasSetByUser" : 0,
-      "ignore" : 0,
-      "hidden" : 0,
-      "outputPathIsSetByUser" : 0,
-      "inputAbbreviatedPath" : "\/haml_logo.png",
-      "processed" : 1,
-      "outputAbbreviatedPath" : "\/haml_logo.png",
-      "initialSize" : 46580,
       "fileType" : 8192
     },
     "\/search.png" : {
@@ -145,6 +112,61 @@
       "initialSize" : 17742,
       "fileType" : 8192
     },
+    "\/debut_dark.png" : {
+      "ignoreWasSetByUser" : 0,
+      "ignore" : 0,
+      "hidden" : 0,
+      "outputPathIsSetByUser" : 0,
+      "inputAbbreviatedPath" : "\/debut_dark.png",
+      "processed" : 0,
+      "outputAbbreviatedPath" : "\/debut_dark.png",
+      "initialSize" : 19856,
+      "fileType" : 8192
+    },
+    "\/footnotes.png" : {
+      "ignoreWasSetByUser" : 0,
+      "ignore" : 0,
+      "hidden" : 0,
+      "outputPathIsSetByUser" : 0,
+      "inputAbbreviatedPath" : "\/footnotes.png",
+      "processed" : 0,
+      "outputAbbreviatedPath" : "\/footnotes.png",
+      "initialSize" : 84272,
+      "fileType" : 8192
+    },
+    "\/mailcatcher.png" : {
+      "ignoreWasSetByUser" : 0,
+      "ignore" : 0,
+      "hidden" : 0,
+      "outputPathIsSetByUser" : 0,
+      "inputAbbreviatedPath" : "\/mailcatcher.png",
+      "processed" : 1,
+      "outputAbbreviatedPath" : "\/mailcatcher.png",
+      "initialSize" : 205998,
+      "fileType" : 8192
+    },
+    "\/yeoman-logo.png" : {
+      "ignoreWasSetByUser" : 0,
+      "ignore" : 0,
+      "hidden" : 0,
+      "outputPathIsSetByUser" : 0,
+      "inputAbbreviatedPath" : "\/yeoman-logo.png",
+      "processed" : 0,
+      "outputAbbreviatedPath" : "\/yeoman-logo.png",
+      "initialSize" : 12899,
+      "fileType" : 8192
+    },
+    "\/code_bg.png" : {
+      "ignoreWasSetByUser" : 0,
+      "ignore" : 0,
+      "hidden" : 0,
+      "outputPathIsSetByUser" : 0,
+      "inputAbbreviatedPath" : "\/code_bg.png",
+      "processed" : 1,
+      "outputAbbreviatedPath" : "\/code_bg.png",
+      "initialSize" : 239,
+      "fileType" : 8192
+    },
     "\/email.png" : {
       "ignoreWasSetByUser" : 0,
       "ignore" : 0,
@@ -167,15 +189,70 @@
       "initialSize" : 3453,
       "fileType" : 8192
     },
-    "\/code_bg.png" : {
+    "\/haml_logo.png" : {
       "ignoreWasSetByUser" : 0,
       "ignore" : 0,
       "hidden" : 0,
       "outputPathIsSetByUser" : 0,
-      "inputAbbreviatedPath" : "\/code_bg.png",
+      "inputAbbreviatedPath" : "\/haml_logo.png",
       "processed" : 1,
-      "outputAbbreviatedPath" : "\/code_bg.png",
-      "initialSize" : 239,
+      "outputAbbreviatedPath" : "\/haml_logo.png",
+      "initialSize" : 46580,
+      "fileType" : 8192
+    },
+    "\/git_logo.png" : {
+      "ignoreWasSetByUser" : 0,
+      "ignore" : 0,
+      "hidden" : 0,
+      "outputPathIsSetByUser" : 0,
+      "inputAbbreviatedPath" : "\/git_logo.png",
+      "processed" : 0,
+      "outputAbbreviatedPath" : "\/git_logo.png",
+      "initialSize" : 5565,
+      "fileType" : 8192
+    },
+    "\/me.jpg" : {
+      "ignoreWasSetByUser" : 0,
+      "ignore" : 0,
+      "hidden" : 0,
+      "outputPathIsSetByUser" : 0,
+      "inputAbbreviatedPath" : "\/me.jpg",
+      "processed" : 1,
+      "outputAbbreviatedPath" : "\/me.jpg",
+      "initialSize" : 9843,
+      "fileType" : 4096
+    },
+    "\/octopress_logo.jpg" : {
+      "ignoreWasSetByUser" : 0,
+      "ignore" : 0,
+      "hidden" : 0,
+      "outputPathIsSetByUser" : 0,
+      "inputAbbreviatedPath" : "\/octopress_logo.jpg",
+      "processed" : 1,
+      "outputAbbreviatedPath" : "\/octopress_logo.jpg",
+      "initialSize" : 6664,
+      "fileType" : 4096
+    },
+    "\/rss.png" : {
+      "ignoreWasSetByUser" : 0,
+      "ignore" : 0,
+      "hidden" : 0,
+      "outputPathIsSetByUser" : 0,
+      "inputAbbreviatedPath" : "\/rss.png",
+      "processed" : 1,
+      "outputAbbreviatedPath" : "\/rss.png",
+      "initialSize" : 490,
+      "fileType" : 8192
+    },
+    "\/airbrakescreen.png" : {
+      "ignoreWasSetByUser" : 0,
+      "ignore" : 0,
+      "hidden" : 0,
+      "outputPathIsSetByUser" : 0,
+      "inputAbbreviatedPath" : "\/airbrakescreen.png",
+      "processed" : 0,
+      "outputAbbreviatedPath" : "\/airbrakescreen.png",
+      "initialSize" : 146716,
       "fileType" : 8192
     }
   },

@@ -6,8 +6,6 @@ comments: true
 categories: [code, rails, errors]
 ---
 
-{% img left /images/ruby_on_rails_logo.jpg 200 %}
-
 Por muchas pruebas que hagamos y creamos tener todo controlado, los errores ocurren. Por eso es importante poder conseguir la mayor información sobre ellos en cuanto aparezcan, para poder corregirlos lo antes posible. Así mismo, en producción es importante si algo que no esperamos ocurre, al usuario se le notifique de manera amigable, en vez de mostrar una página de error que provoque en él el reflejo de apagar directamente su ordenador por si "ha roto algo". Por estos motivos quiero compartir con vosotros tres formas muy sencillas de hacer nuestras páginas de errores y la información que recibimos sobre ellos más amigable y entendible.
 
 <!--more-->
@@ -67,7 +65,7 @@ class ApplicationController < ActionController::Base
 
   def render_500(exception)
     @error = exception
-    render template: 'errors/error_500', layout: 'layouts/application', status: 500 
+    render template: 'errors/error_500', layout: 'layouts/application', status: 500
   end
 
 end
@@ -78,6 +76,6 @@ De esta manera capturará esas excepciones o las que queráis capturar, mostrand
     # config/environments/development.rb
     config.consider_all_requests_local = true
 
-Espero que estos tres simples métodos os ayuden como me ayudan a mi a comprender y terminar con todos lo errores que van saliendo en mis aplicaciones. 
+Espero que estos tres simples métodos os ayuden como me ayudan a mi a comprender y terminar con todos lo errores que van saliendo en mis aplicaciones.
 
 Love & Boards!

@@ -6,8 +6,6 @@ comments: true
 categories: [code, rails, development]
 ---
 
-{% img left /images/ruby_on_rails_logo.jpg 200 %}
-
 A la hora de crear una nueva aplicación, sea en el lenguaje que sea, antes de nada me pregunto que tecnologías voy a usar cómo que tipo de base de datos, qué framework css para los estilos, si usaré algún motor de plantillas para ayudarme en las vistas, y demás cosas que luego tendré que ir añadiendo a la aplicación y configurando para que todo funcione correctamente.
 
 Pués bien, a la hora de generar una nueva aplicación en Rails, se le puede pasar un parámetro para especificarle una plantilla a partir de la cual generar la nueva aplicación. Una plantilla no es más que un fichero que contiene una serie de gemas, inicializadores y demás que quieres que se incluyan de manera predeterminada en tu aplicación.
