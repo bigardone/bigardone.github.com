@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "Cuatro gemas de Ruby que te ayudarán con tus modelos y base de dato."
+title: "Cuatro gemas de Ruby que te ayudarán con tus modelos y base de datos."
 date: 2013-05-12 08:14
 comments: true
 categories: [ruby,rails,gems,data base]
