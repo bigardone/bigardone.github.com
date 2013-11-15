@@ -15,9 +15,7 @@ Hoy en día el desarrollo web ya no consiste simplemente en crear unas vistas co
 Hace unos meses descubrí <a href="http://yeoman.io/" title="Modern Workflows For Modern Webapps" target="_blank">Yeoman</a>, una herramienta que, entre otras muchas cosas, nos ayuda con esta tarea de empezar con un nuevo proyecto y añadir todo lo necesario.
 Tal y como explican en su web oficial es un flujo de trabajo, un conjunto de herramientas y buenas prácticas funcionando en armonía para hacer el desarrollo web incluso mejor.
 
-{% blockquote %}
-Yeoman 1.0 is more than just a tool. It's a workflow; a collection of tools and best practices working in harmony to make developing for the web even better.
-{% endblockquote %}
+  
 
 ### ¿Qué nos aporta? ###
 

@@ -1,6 +1,6 @@
 {
   "CodeKitInfo" : "This is a CodeKit project configuration file. It is designed to sync project settings across multiple machines. Modifying the contents of this file can be a poor life decision if you don't know what you're doing. This file is not useful unless accompanied by the project that created it in CodeKit. For more information, see: http:\/\/incident57.com\/codekit",
-  "creatorBuild" : "8283",
+  "creatorBuild" : "8326",
   "files" : {
     "\/bird_32_gray.png" : {
       "ignoreWasSetByUser" : 0,
@@ -90,6 +90,17 @@
       "initialSize" : 333,
       "fileType" : 8192
     },
+    "\/noise.png" : {
+      "ignoreWasSetByUser" : 0,
+      "ignore" : 0,
+      "hidden" : 0,
+      "outputPathIsSetByUser" : 0,
+      "inputAbbreviatedPath" : "\/noise.png",
+      "processed" : 1,
+      "outputAbbreviatedPath" : "\/noise.png",
+      "initialSize" : 17742,
+      "fileType" : 8192
+    },
     "\/line-tile.png" : {
       "ignoreWasSetByUser" : 0,
       "ignore" : 0,
@@ -101,15 +112,15 @@
       "initialSize" : 636,
       "fileType" : 8192
     },
-    "\/noise.png" : {
+    "\/digital-ocean-logo.png" : {
       "ignoreWasSetByUser" : 0,
       "ignore" : 0,
       "hidden" : 0,
       "outputPathIsSetByUser" : 0,
-      "inputAbbreviatedPath" : "\/noise.png",
-      "processed" : 1,
-      "outputAbbreviatedPath" : "\/noise.png",
-      "initialSize" : 17742,
+      "inputAbbreviatedPath" : "\/digital-ocean-logo.png",
+      "processed" : 0,
+      "outputAbbreviatedPath" : "\/digital-ocean-logo.png",
+      "initialSize" : 14953,
       "fileType" : 8192
     },
     "\/debut_dark.png" : {
@@ -167,6 +178,17 @@
       "initialSize" : 239,
       "fileType" : 8192
     },
+    "\/heroku-logo.png" : {
+      "ignoreWasSetByUser" : 0,
+      "ignore" : 0,
+      "hidden" : 0,
+      "outputPathIsSetByUser" : 0,
+      "inputAbbreviatedPath" : "\/heroku-logo.png",
+      "processed" : 0,
+      "outputAbbreviatedPath" : "\/heroku-logo.png",
+      "initialSize" : 2877,
+      "fileType" : 8192
+    },
     "\/email.png" : {
       "ignoreWasSetByUser" : 0,
       "ignore" : 0,
@@ -222,17 +244,6 @@
       "initialSize" : 9843,
       "fileType" : 4096
     },
-    "\/octopress_logo.jpg" : {
-      "ignoreWasSetByUser" : 0,
-      "ignore" : 0,
-      "hidden" : 0,
-      "outputPathIsSetByUser" : 0,
-      "inputAbbreviatedPath" : "\/octopress_logo.jpg",
-      "processed" : 1,
-      "outputAbbreviatedPath" : "\/octopress_logo.jpg",
-      "initialSize" : 6664,
-      "fileType" : 4096
-    },
     "\/rss.png" : {
       "ignoreWasSetByUser" : 0,
       "ignore" : 0,
@@ -243,6 +254,17 @@
       "outputAbbreviatedPath" : "\/rss.png",
       "initialSize" : 490,
       "fileType" : 8192
+    },
+    "\/octopress_logo.jpg" : {
+      "ignoreWasSetByUser" : 0,
+      "ignore" : 0,
+      "hidden" : 0,
+      "outputPathIsSetByUser" : 0,
+      "inputAbbreviatedPath" : "\/octopress_logo.jpg",
+      "processed" : 1,
+      "outputAbbreviatedPath" : "\/octopress_logo.jpg",
+      "initialSize" : 6664,
+      "fileType" : 4096
     },
     "\/airbrakescreen.png" : {
       "ignoreWasSetByUser" : 0,
@@ -274,7 +296,10 @@
     "sassAutoOutputPathStyle" : 2,
     "stylusAutoOutputPathReplace2" : "css",
     "lessAutoOutputPathStyle" : 0,
+    "lessIECompatibility" : 1,
     "genericWebpageFileExtensionsString" : "html, htm, shtml, shtm, xhtml, php, jsp, asp, aspx, erb, ctp",
+    "lessStrictUnits" : 0,
+    "lessStrictMath" : 0,
     "coffeeMinifyOutput" : 1,
     "javascriptOutputSuffix" : "-ck",
     "jadeOutputStyle" : 0,
@@ -328,28 +353,26 @@
       "curly" : 1,
       "trailing" : 1,
       "nonew" : 1,
-      "withstmt" : 0,
+      "es3" : false,
       "yui" : 0,
       "mootools" : 0,
       "proto" : 0,
       "boss" : 0,
       "funcscope" : 0,
-      "regexdash" : 0,
       "jquery" : 1,
       "esnext" : 0,
       "camelcase" : 0,
-      "es5" : 0,
       "dojo" : 0,
       "strict" : 0,
       "devel" : 0,
-      "onecase" : 0,
       "wsh" : 0,
       "nonstandard" : 0,
       "asi" : 0,
-      "smarttabs" : 0,
+      "moz" : false,
       "rhino" : 0,
-      "noempty" : 0,
+      "smarttabs" : 0,
       "lastsemic" : 0,
+      "noempty" : 0,
       "eqnull" : 0,
       "eqeqeq" : 1,
       "couch" : 0,
@@ -373,43 +396,37 @@
       "multistr" : 0,
       "shadow" : 0,
       "sub" : 0,
-      "regexp" : 1,
+      "plusplus" : 0,
       "scripturl" : 0,
       "forin" : 0,
       "loopfunc" : 0,
-      "laxbreak" : 0,
-      "plusplus" : 0
+      "laxbreak" : 0
     },
     "jsLintFlags" : {
       "white" : 0,
-      "bitwise" : 0,
+      "unparam" : 0,
       "regexp" : 0,
+      "nomen" : 0,
       "vars" : 0,
-      "anon" : 0,
       "sub" : 0,
       "stupid" : 0,
-      "nomen" : 0,
-      "unparam" : 0,
+      "continue" : false,
+      "bitwise" : 0,
       "newcap" : 0,
-      "'continue'" : 0,
       "sloppy" : 0,
-      "fragment" : 0,
-      "undef" : 0,
+      "closure" : false,
       "es5" : 0,
       "browser" : 1,
       "properties" : 0,
-      "forin" : 0,
       "plusplus" : 0,
       "debug" : 0,
+      "forin" : 0,
       "eqeq" : 0,
-      "confusion" : 0,
       "evil" : 0,
-      "on" : 0,
-      "windows" : 0,
-      "devel" : 0,
-      "rhino" : 0,
       "node" : 0,
-      "css" : 0
+      "rhino" : 0,
+      "devel" : 0,
+      "ass" : false
     },
     "uglifyFlags" : {
       "no-mangle-functions" : 0,
@@ -431,6 +448,7 @@
     "jadeCompileDebug" : 1,
     "slimRailsCompatible" : 0,
     "kitAutoOutputPathReplace2" : "",
+    "lessRelativeURLS" : 0,
     "lessDebugStyle" : 0,
     "javascriptAutoOutputPathRelativePath" : "",
     "slimAutoOutputPathStyle" : 0
