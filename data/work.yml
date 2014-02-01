@@ -1,0 +1,87 @@
+projects:
+  codeloveandboards:
+    name: Code, Love & Boards
+    description: My new personal home page and blog.
+    tags:
+      - Middleman
+      - Rubby
+      - Haml
+      - Sass
+      - CoffeeScript
+  cutback:
+    name: Cutback
+    description: Scrumrf's enhanced version.
+    tags:
+      - Ruby
+      - Ruby on Rails
+      - Postgres
+      - Haml
+      - Sass
+      - CoffeeScript
+  multinput:
+    name: MultInput.js
+    description: Simple jQuery plugin.
+    url: http://codeloveandboards.com/multinput/
+    tags:
+      - JavaScript
+      - jQuery
+      - CoffeeScript
+      - Yeoman
+      - Grunt
+      - Bower
+  talentoit:
+    name: Talento IT
+    description: TalentoIT company's home site and blog.
+    url: http://talentoit.org
+    tags:
+      - Ruby
+      - Middleman
+      - Ruby on Rails
+      - Haml
+      - Sass
+      - CoffeeScript
+      - Wordpress
+      - Yeoman
+      - Grunt
+      - Bower
+  gvbtool:
+    name: GVBTool
+    description: Custom invoicing solution.
+    tags:
+      - Ruby
+      - Ruby on Rails
+      - Postgres
+      - Haml
+      - Sass
+      - CoffeeScript
+  quiver:
+    name: Quiver
+    description: Knowledge management and project assignation solution.
+    url: https://quiverhq.com/
+    tags:
+      - Yii
+      - JavaScript
+      - jQuery
+      - Less
+      - MySql
+  tonkalabs:
+    name: TonkaLabs
+    description: My first entrepreneurship attempt.
+    url: http://tonkalabs.com
+    tags:
+      - Yii
+      - JavaScript
+      - jQuery
+      - Less
+      - MySql
+      - Wordpress
+  scrumrf:
+    name: Scrumrf
+    description: Agile project management tool.
+    url: http://scrumrf.com
+    tags:
+      - Yii
+      - JavaScript
+      - jQuery
+      - Less
+      - MySql

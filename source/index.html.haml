@@ -1,0 +1,84 @@
+---
+title: Welcome
+---
+
+%section#about
+  .container
+    %header
+      %h2 Hello
+
+    %p.center
+      My name's Ricardo, I'm a passionate full-stack developer linving in the northen coast of Spain.
+      <br/> I love building web applications using Ruby, JavaScript, HTML5 and CSS3. <br/> When I’m not creating new stuff for the web, you can find me riding any of my boards, for either asphalt, watter or snow.
+      %br/
+      Love & boards!
+
+%section#work
+  .container
+    %header
+      %h2 Recent work
+    %p Check out some of my side projects
+    .projects
+      - data.work.projects.each_with_index do |project, i|
+        .project{class: "#{project[0]} invisible animate", data:{ animation: ( i%2 == 0 ? 'fadeInLeft' : 'fadeInRight')}}
+          .info
+            %header
+              %h3= project[1]["name"]
+            %p= project[1]["description"]
+            %small= project[1]["tags"].join(', ') unless project[1]["tags"].blank?
+            - unless project[1]["url"].blank?
+              .call-to-action
+                %a{href: "#{project[1]["url"]}", target: '_blank'} Visit site
+
+
+%section#blog
+  .container
+    %header
+      %h2 Latest articles
+    %p What I write about the things I do and like.
+    .articles
+      - blog.articles[0..3].each_with_index do |article, i|
+        %article.animate.invisible{data:{ animation: 'fadeInUp'}}
+          %header
+            %h4= link_to article.title, article
+
+            .meta-data
+              posted #{article.date.strftime('%b %e, %Y')}
+              on #{article.tags.join(', ')}
+          = article.summary
+
+          =link_to 'continue reading →', article, class: 'small'
+
+    .call-to-action
+      =link_to 'Read more articles...', '/blog'
+
+.map-wrapper
+  #map-canvas
+  #map-overlay
+  %section#contact
+    .container
+      %header
+        %h2 Get in touch
+      %p Wanna talk? Great! Send me an email to:
+      .call-to-action
+        %a{href: "mailto:ricardo@codeloveandboards.com"} ricardo@codeloveandboards.com
+      %p You can also find me on:
+
+      %ul.social
+        %li
+          %a{href: 'http://www.linkedin.com/in/ricardogarciavega', target: '_blank'}
+            %span.icon.fa.fa-linkedin
+        %li
+          %a{href: 'https://twitter.com/bigardone', target: '_blank'}
+            %span.icon.fa.fa-twitter
+        %li
+          %a{href: 'https://github.com/bigardone', target: '_blank'}
+            %span.icon.fa.fa-github
+        %li
+          %a{href: 'http://instagram.com/bigardone', target: '_blank'}
+            %span.icon.fa.fa-instagram
+        %li
+          %a{href: 'https://www.youtube.com/bigardone', target: '_blank'}
+            %span.icon.fa.fa-youtube
+
+

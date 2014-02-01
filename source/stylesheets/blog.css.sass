@@ -1,0 +1,230 @@
+@import vendor/normalize
+@import bourbon
+@import base/grid_settings
+@import neat
+@import vendor/animate
+
+
+@import base/main
+
+html, body
+  height: 100%
+  margin: 0
+  padding: 0
+
+body
+  background: #fff url(/images/backgrounds/surf-blur.jpg) 0 0 no-repeat fixed
+  -webkit-background-size: cover
+  -moz-background-size: cover
+  -o-background-size: cover
+  background-size: cover
+  color: $main-font-color
+  font-family: $body-font-family
+  font-size: $main-font-size
+
+// Main navigation
+#main_nav
+  position: absolute
+  z-index: 100
+  color: #fff
+  top: 0
+  left: 0
+  right: 0
+
+  ul
+    list-style: none
+    padding: 0
+    margin: 0
+    width: 100%
+    li
+      +span-columns( 3 of 12)
+      a
+        font-family: $header-font-family
+        color: #000
+        line-height: $nav-height
+        font-weight: normal
+        font-size: .8em
+        text-align: center
+        display: block
+        text-transform: uppercase
+#main_nav.sticky
+  position: fixed
+  width: 100%
+  background: rgba(#fff,.8)
+
+  a
+    color: #333
+
+
+
+#main_header
+  color: #fff
+  padding: 3em 0 4em 0
+  text-align: center
+  .main-logo
+    margin-bottom: 3em
+    img
+      height: 75px
+  h1
+    line-height: 1.1em
+
+
+
+#main_content
+  background: #fff
+  min-height: 1000px
+  padding: 4em 0
+
+  .articles
+    list-style: none
+    margin: 0
+    padding: 0
+
+    > li
+      +clearfix
+      border-bottom: 1px dotted $gray-light
+      margin-bottom: 1.5em
+      padding-bottom: 1.5em
+      .year
+        +span-columns(1 of 12)
+      .date
+        +span-columns(2 of 12)
+      .post
+        +span-columns(9 of 12)
+        h2
+          font-size: 1.5em
+          line-height: 1.1em
+          margin-bottom: .3em
+          a
+            display: block
+
+        .tags
+          list-style: none
+          margin: 0
+          padding: 0
+          display: inline-block
+          li
+            display: inline-block
+            font-size: .7em
+            a
+              line-height: 1.2em
+              background: rgba($gray,.5)
+              color: #fff
+              padding: 0 .5em
+              &:hover
+                background: $blue
+
+  article
+    > h2, h3
+      color: #333
+      font-weight: 700
+      line-height: 1.2em
+      margin: 2em 0 0 0
+    a
+      border-bottom: 1px dotted transparent
+
+      &:hover
+        color: $blue
+        border-bottom: 1px dotted $blue
+    p
+      line-height: 1.8em
+      margin: 0 0 1em 0
+    ul
+      li
+        line-height: 1.8em
+
+    .highlight
+      margin: 2em 0
+      overflow-x: scroll
+      table
+        td
+          vertical-align: top
+      pre
+        white-space: pre
+
+
+footer
+  font-size: .8em
+  color: #fff
+  .article-nav
+    +list
+    +clearfix
+    padding: 3em 2em
+
+    .previous
+      +span-columns(6 of 12)
+    .next
+      +span-columns(6 of 12)
+      text-align: right
+    a
+      display: block
+      color: $gray
+      &:hover
+        color: #fff
+    h3
+      font-family: $header-font-family
+    h4
+      text-transform: uppercase
+      font-weight: normal
+      line-height: 1em
+      margin: 0 0 1em 0
+
+    .meta-data
+      margin: 0
+
+  section
+    color: $gray-dark
+    font-size: .8rem
+    background: #000
+    .center
+      line-height: 8em
+
+
+
+
+
+
+
+
+h1, h2
+  font-family: $header-font-family
+  margin: 0
+
+h1
+  font-size: 2.5em
+  font-weight: 400
+  line-height: 1.5em
+h2
+  font-size: 2em
+  font-weight: 400
+  line-height: 1em
+
+h3
+  font-size: 1.5em
+  font-weight: 400
+a
+  +transition( all .2s linear )
+  text-decoration: none
+  color: darken($blue, 10)
+  line-height: 1.4em
+  display: inline-block
+  &:hover
+    color: $blue
+
+// Common classes
+.container
+  +outer-container
+  position: relative
+  max-width: 800px
+
+.center
+  text-align: center
+
+
+.meta-data
+  display: inline-block
+  font-size: .8em
+  hr
+    margin: 0 0 1em 0
+    border: 0 none
+    border-top: 1px dotted rgba(#fff, .5)

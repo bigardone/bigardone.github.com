@@ -1,0 +1,68 @@
+!!! 5
+/[if lt IE 7]   <html class="no-js lt-ie10 lt-ie9 lt-ie8 lt-ie7" lang="en-us">
+/[if IE 7]      <html class="no-js lt-ie10 lt-ie9 lt-ie8" lang="en-us">
+/[if IE 8]      <html class="no-js lt-ie10 lt-ie9" lang="en-us">
+/[if IE 9]      <html class="no-js lt-ie10 lt-ie9" lang="en-us">
+/[if lt IE 10]  <html class="no-js lt-ie10" lang="en-us">
+/[if !IE]>
+%html{lang: 'en', class: 'no-js'}
+  /<![endif]
+  %head
+    %title #{current_page.data.title} - Code, Love & Boards
+    %meta(http-equiv="content-type" content="text/html" charset="utf-8")
+    %meta(http-equiv="x-ua-compatible" content="ie=edge,chrome=1")
+    %meta(name="description" content="")
+    %meta(name="author" content="Ricardo García Vega - http://twitter.com/bigardone")
+    %meta{content: "initial-scale=1.0,user-scalable=no,maximum-scale=1,width=device-width", name: "viewport"}
+    = stylesheet_link_tag "http://fonts.googleapis.com/css?family=Headland+One"
+    %link{href: "http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css", rel: "stylesheet"}/
+    = stylesheet_link_tag "application", media: "all"
+
+    -# App Icons
+    %link{href: "/images/apple-touch-icon-57x57.png", rel: "apple-touch-icon", sizes: "57x57"}/
+    %link{href: "/images/apple-touch-icon-114x114.png", rel: "apple-touch-icon", sizes: "114x114"}/
+    %link{href: "/images/apple-touch-icon-72x72.png", rel: "apple-touch-icon", sizes: "72x72"}/
+    %link{href: "/images/apple-touch-icon-144x144.png", rel: "apple-touch-icon", sizes: "144x144"}/
+    %link{href: "/images/apple-touch-icon-60x60.png", rel: "apple-touch-icon", sizes: "60x60"}/
+    %link{href: "/images/apple-touch-icon-120x120.png", rel: "apple-touch-icon", sizes: "120x120"}/
+    %link{href: "/images/apple-touch-icon-76x76.png", rel: "apple-touch-icon", sizes: "76x76"}/
+    %link{href: "/images/apple-touch-icon-152x152.png", rel: "apple-touch-icon", sizes: "152x152"}/
+    %link{href: "/images/favicon-160x160.png", rel: "icon", sizes: "160x160", type: "image/png"}/
+    %link{href: "/images/favicon-96x96.png", rel: "icon", sizes: "96x96", type: "image/png"}/
+    %link{href: "/images/favicon-32x32.png", rel: "icon", sizes: "32x32", type: "image/png"}/
+    %link{href: "/images/favicon-16x16.png", rel: "icon", sizes: "16x16", type: "image/png"}/
+    %meta{content: "#9f00a7", name: "msapplication-TileColor"}/
+    %meta{content: "/images/mstile-144x144.png", name: "msapplication-TileImage"}/
+
+  %body{class: current_page.data.body_class || 'page'}
+    = partial 'partials/nav'
+    %header#main_header{data: {stellar: {'background-ratio' => '0.5'}}}
+      %section.center
+        .container
+          #welcome.invisible
+            .main-logo
+              = link_to '/' do
+                %img{src: "/images/logo.png", alt: ""}/
+
+            %h1 Ricardo García Vega
+            %h2 Full-stack developer
+
+    #main_content
+      = yield
+    = partial 'partials/footer'
+
+    -# Javascripts
+    = javascript_include_tag 'http://html5shiv.googlecode.com/svn/trunk/html5.js'
+    = javascript_include_tag '//cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js'
+    = javascript_include_tag '//cdnjs.cloudflare.com/ajax/libs/jquery/1.9.1/jquery.min.js'
+    = javascript_include_tag 'https://maps.googleapis.com/maps/api/js?key=AIzaSyBnD-8o7h1yG5nqEH79kesRc8PpGJxHZhM&sensor=false'
+    = javascript_include_tag 'application'
+
+    - if build?
+      -# Google Analytics
+      :javascript
+        var _gaq=[['_setAccount','UA-33087017-1'],['_trackPageview']];
+        (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+        g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+        s.parentNode.insertBefore(g,s)}(document,'script'));
+

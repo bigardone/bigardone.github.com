@@ -1,0 +1,43 @@
+#main_header
+  background: url(/images/backgrounds/surf.jpg) 50% 0 no-repeat
+  -webkit-background-size: cover
+  -moz-background-size: cover
+  -o-background-size: cover
+  background-size: cover
+  padding: $main-header-padding/2 0 $main-header-padding*2
+  color: #fff
+  height: 100%
+
+  #welcome
+    margin-top: 5em
+    .main-logo
+      margin-bottom: 3em
+      img
+        height: 180px
+
+  h1, h2
+    font-family: $header-font-family
+    margin: 0
+
+
+  // Media queries
+
+  +media($mobile)
+    background: url(/images/backgrounds/surf-mobile.jpg) 50% 0 no-repeat
+    -webkit-background-size: cover
+    -moz-background-size: cover
+    -o-background-size: cover
+    background-size: cover
+    padding: 2em 0
+
+    #welcome
+      margin-top: 2em
+
+      .main-logo
+        margin-bottom: 2em
+        img
+          height: 80px
+
+      h1
+        margin-bottom: .5em
+

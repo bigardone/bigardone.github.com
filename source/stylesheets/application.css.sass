@@ -1,0 +1,98 @@
+@import vendor/normalize
+@import bourbon
+@import base/grid_settings
+@import neat
+@import vendor/animate
+
+$mobile: new-breakpoint(max-width 480px)
+$tablet: new-breakpoint(min-width 481px max-width 768px)
+$landscape-tablet: new-breakpoint(min-width 769px max-width 1024px)
+
+@import base/main
+@import body
+@import nav
+@import header
+@import content
+@import footer
+
+
+
+h1, h2, h3, h3
+  text-rendering: optimizelegibility
+  text-shadow: 0 0 1px rgba(51,51,51,0.2)
+
+h1
+  font-size: 3em
+  font-weight: 400
+  line-height: 1.5em
+h2
+  font-size: 2em
+  font-weight: normal
+  line-height: 1em
+  margin: 0
+h3
+  font-size: 1.5em
+  font-weight: normal
+a
+  +transition( all .2s linear )
+  text-decoration: none
+
+p
+  line-height: 1.8em
+  margin: 0 0 1em 0
+
+// Common classes
+.container
+  +outer-container
+  position: relative
+  max-width: 960px
+
+.center
+  text-align: center
+
+.call-to-action
+  @extend .center
+  margin: 2em 0
+  a
+    +inline-block
+    border-radius: 4px
+    font-size: 1.3em
+    padding: .7em 3em
+    color: $gray-dark
+    border: 2px solid $asphalt
+
+.meta-data
+  display: inline-block
+  font-size: .7em
+  color: $gray
+hr
+  margin: 0 0 1em 0
+  border: 0 none
+  border-top: 1px dotted rgba($gray, .5)
+
+.invisible
+  visibility: hidden
+
+
++media($mobile)
+  h1
+    font-size: 1.7em
+    font-weight: 400
+    line-height: 1.2em
+  h2
+    font-size: 1.4em
+    font-weight: normal
+    line-height: 1em
+    margin: 0
+
+  h3
+    font-size: 1.2em
+    font-weight: normal
+
+
+  .call-to-action
+    @extend .center
+    margin: 2em 0
+    a
+      font-size: 1em
+      padding: .7em 1em

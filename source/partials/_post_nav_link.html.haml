@@ -1,0 +1,9 @@
+- if article
+  = link_to article do
+    %h4 #{post_type} post
+    %h3
+      = article.title
+    .meta-data
+      %hr/
+      posted #{article.date.strftime('%b %e, %Y')}
+      on #{article.tags.join(', ')}

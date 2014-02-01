@@ -1,0 +1,71 @@
+// Main navigation
+#main_nav
+  position: fixed
+  z-index: 100
+  color: #fff
+  top: 2rem
+  right: 2rem
+
+  .scroll-to
+    color: rgba(#fff, 0.5)
+    display: block
+    text-align: center
+
+  ul
+    +list
+    li
+      text-align: center
+      width: 7rem
+
+      .toggle-nav
+        color: $asphalt
+        line-height: $nav-height
+        font-weight: normal
+        font-size: 1.2em
+        text-align: center
+        padding: 0
+        display: block
+        background: transparent
+
+        &:hover
+          color: $blue
+      ul
+        overflow: hidden
+        li
+          overflow: hidden
+          +transition( color .2s linear )
+          +transition( background .2s linear )
+          +transition( height .2s linear )
+          height: 0
+
+          a
+            color: $gray-light
+            line-height: $nav-height
+            font-weight: normal
+            font-size: .8em
+            text-align: center
+            text-transform: lowercase
+            padding: 0 1em
+            display: block
+            background: rgba($asphalt, 0.5)
+
+            &:hover
+              color: #fff
+              background: rgba($asphalt, 0.65)
+
+          &.active
+            a
+              background: rgba(darken($asphalt,20), .85)
+              color: #fff
+
+
+        &.show
+          li
+            height: $nav-height
+
+
+  // Media queries
+  +media($mobile)
+    top: 1rem
+    left: 50%
+    margin-left: -3.5rem
