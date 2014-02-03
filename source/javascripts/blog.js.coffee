@@ -1,2 +1,4 @@
+#= require_tree ./vendor
+
 $ ->
 
