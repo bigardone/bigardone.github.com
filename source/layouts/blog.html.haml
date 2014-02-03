@@ -38,7 +38,7 @@
     %header#main_header
       .main-logo
         = link_to '/' do
-          %img{src: "/images/logo.png", alt: ""}/
+          =image_tag "/images/logo.png"
       .container
         %section.center
           -if current_article
@@ -95,16 +95,17 @@
 
 
     -# Javascripts
-    = javascript_include_tag 'http://html5shiv.googlecode.com/svn/trunk/html5.js'
-    = javascript_include_tag '//cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js'
-    = javascript_include_tag '//cdnjs.cloudflare.com/ajax/libs/jquery/1.9.1/jquery.min.js'
     = javascript_include_tag 'blog'
 
     - if build?
       -# Google Analytics
       :javascript
-        var _gaq=[['_setAccount','UA-33087017-1'],['_trackPageview']];
-        (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
-        g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
-        s.parentNode.insertBefore(g,s)}(document,'script'));
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+        ga('create', 'UA-37802122-1', 'codeloveandboards.com');
+        ga('send', 'pageview');
+
 

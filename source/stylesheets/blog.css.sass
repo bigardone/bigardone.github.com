@@ -17,7 +17,7 @@ html, body
   padding: 0
 
 body
-  background: #fff url(/images/backgrounds/surf-blur.jpg) 0 0 no-repeat fixed
+  background: #fff image-url('/images/backgrounds/surf-blur.jpg') 0 0 no-repeat fixed
   -webkit-background-size: cover
   -moz-background-size: cover
   -o-background-size: cover
@@ -27,7 +27,7 @@ body
   font-size: $main-font-size
 
   +media($mobile)
-    background: #fff url(/images/backgrounds/surf-blur-mobile.jpg) center center no-repeat fixed
+    background: #fff image-url('/images/backgrounds/surf-blur-mobile.jpg') center center no-repeat fixed
     -webkit-background-size: cover
     -moz-background-size: cover
     -o-background-size: cover
@@ -56,6 +56,7 @@ body
 #main_content
   background: #fff
   padding: 4em 0
+  min-height: 700px
 
   .articles
     list-style: none
