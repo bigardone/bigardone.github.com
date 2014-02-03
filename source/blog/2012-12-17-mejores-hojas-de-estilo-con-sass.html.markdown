@@ -15,7 +15,7 @@ Sass son las siglas de Syntactically Awesome Stylesheets, o lo que viene a ser 
 <h3>Sintaxis</h3>
 Bueno, en realidad hay dos sintaxis, que puedes elegir según la extensión del fichero que uses, una es .SCSS y la otra .SASS, la cual es la que yo prefiero, ya que es más simplificada, y te permite olvidarte de usar puntos y coma, llaves y demás elementos que en css son necesarios teniendo solo en cuenta que tienes que ser estricto con la indentación que uses (en mi caso 2 espacios), ya que luego te generará el css usando anidando los elementos usando esa indentación:
 
-{% codeblock lang:sass %}
+```sass
 // Esto en .sass
 $primaryColor: #000
 $secondaryColor: lighten($primaryColor, 20%)
@@ -29,8 +29,8 @@ ul
       &amp;:hover
         color: $secondaryColor
         +underlined
-{% endcodeblock %}
-{% codeblock lang:css %}
+```
+```css
 
 /* Es esto en .css */
 ul li a {
@@ -41,14 +41,14 @@ ul li a:hover {
   color: #333333;
   border-bottom: 1px solid #333333;
 }
-{% endcodeblock %}
+```
 
 Como podéis ver, adios a las llaves, puntos y comas, podemos declarar variables, mixins, anidar selectores y muchas más cosas. A continuación os detallo las cosas que más me gustan y uso:
 
 <h4>Variables</h4>
 Imagino que ya podréis imaginar el potencial que esto nos da en nuestras hojas de estilo, para poder modificar colores, tamaños, márgenes y demás cambiándolo en un solo sitio, ya que además se pueden usar operaciones aritméticas con ellas.
 
-{% codeblock lang:sass %}
+```sass
 // .sass
 $globalPadding: 10px
 .inner
@@ -58,12 +58,12 @@ $globalPadding: 10px
 .inner {
   padding: 10px 20px;
 }
-{% endcodeblock %}
+```
 
 <h4>Mixins</h4>
 Los mixins nos permiten declarar un grupo de reglas css que luego podremos reutilizar donde queramos:
 
-{% codeblock lang:sass %}
+```sass
 // .sass
 =border-radius($radius)
   -webkit-border-radius: $radius
@@ -73,9 +73,9 @@ Los mixins nos permiten declarar un grupo de reglas css que luego podremos reuti
   +border-radius(5px)
 .button
   +border-radius(10px)
-{% endcodeblock %}
+```
 
-{% codeblock lang:css %}
+```css
 /* .css */
 .widget {
   -webkit-border-radius: 5px;
@@ -87,32 +87,33 @@ Los mixins nos permiten declarar un grupo de reglas css que luego podremos reuti
   -moz-border-radius: 10px;
   border-radius: 10px;
 }
-{% endcodeblock %}
+```
 
 <h4>Funciones con colores</h4>
 Esto es lo que más me gusta ya que siempre ando tocando colores, buscando paletas y colores similares para mis aplicaciones. Normalmente siempre he usado servicios como <a title="0to255" href="http://0to255.com" target="_blank">0to255</a>, pero con las funciones de colores, Sass se encarga de calcularte los colores a partir del que tu quieras.
 
-{% codeblock lang:sass %}
+```sass
 // .sass
 $orange: #d74c17
 .element
   background-color: lighten($orange, 10%)
   border: 1px solid darken($orange, 20%)
   color: complement($orange)
-{% endcodeblock %}
+```
 
-{% codeblock lang:sass %}
+```sass
 /* .css */
 .element {
   background-color: #ea6937;
   border: 1px solid #7b2b0d;
   color: #17a2d7;
 }
-{% endcodeblock %}
+```
 
 <h4>Bucles</h4>
 Otra característica muy útil e importante cuando tienes que repetir la misma reglas en varios sitios pero con pequeñas variaciones:
-{% codeblock lang:sass %}
+
+```sass
 // .sass
 @each $logo in twitter, facebook, linkedin
   .#{$logo}-logo
@@ -127,7 +128,7 @@ Otra característica muy útil e importante cuando tienes que repetir la misma r
 .linkedin-logo {
   background-image: url("/images/logos/linkedin.jpg");
 }
-{% endcodeblock %}
+```
 <h4>¡Y muchas cosas más!</h4>
 Esto es solo un pequeño resumen de las muchísimas cosas que se pueden hacer con Sass, y que te ayudan escribir css de manera más sencilla, rápida y mantenible. A continuación os dejo unos enlaces donde podréis aprender mas sobre este lenguaje que hará que os volváis a divertir escribiendo css ;)
 <ul>

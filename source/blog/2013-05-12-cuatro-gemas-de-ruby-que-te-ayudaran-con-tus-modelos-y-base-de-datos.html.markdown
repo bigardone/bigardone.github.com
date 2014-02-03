@@ -11,20 +11,22 @@ tags: ruby, rails, gems, data base
 ###Annotate (aka AnnotateModels)###
 <a href="https://github.com/ctran/annotate_models" target="_blank">Esta gema</a> hace una cosa muy sencilla, pero muy útil. Crea una serie de anotaciones en tus modelos, tests, fixtures y factorias acerca del esquema de la tabla que usan.
 
-    # == Schema Info
-    #
-    # Table name: line_items
-    #
-    #  id                  :integer(11)    not null, primary key
-    #  quantity            :integer(11)    not null
-    #  product_id          :integer(11)    not null
-    #  unit_price          :float
-    #  order_id            :integer(11)
-    #
+```ruby
+# == Schema Info
+#
+# Table name: line_items
+#
+#  id                  :integer(11)    not null, primary key
+#  quantity            :integer(11)    not null
+#  product_id          :integer(11)    not null
+#  unit_price          :float
+#  order_id            :integer(11)
+#
 
-     class LineItem < ActiveRecord::Base
-       belongs_to :product
-      . . .
+ class LineItem < ActiveRecord::Base
+   belongs_to :product
+  . . .
+```
 
 Para instalarla solo tenemos que añadirla a nuestro <code>Gemfile</code>:
 
@@ -58,19 +60,21 @@ En un [post anterior](/blog/2013/02/14/dos-maneras-de-tener-siempre-a-mano-toda-
 
 Luego tendremos que agregar a nuestro fichero de entorno de desarrollo <code>config/environments/development.rb</code> su configuración:
 
-    config.after_initialize do
-      Bullet.enable = true
-      Bullet.alert = true
-      Bullet.bullet_logger = true
-      Bullet.console = true
-      Bullet.growl = true
-      Bullet.xmpp = { :account  => 'bullets_account@jabber.org',
-                      :password => 'bullets_password_for_jabber',
-                      :receiver => 'your_account@jabber.org',
-                      :show_online_status => true }
-      Bullet.rails_logger = true
-      Bullet.airbrake = true
-    end
+```ruby
+config.after_initialize do
+  Bullet.enable = true
+  Bullet.alert = true
+  Bullet.bullet_logger = true
+  Bullet.console = true
+  Bullet.growl = true
+  Bullet.xmpp = { :account  => 'bullets_account@jabber.org',
+                  :password => 'bullets_password_for_jabber',
+                  :receiver => 'your_account@jabber.org',
+                  :show_online_status => true }
+  Bullet.rails_logger = true
+  Bullet.airbrake = true
+end
+```
 
 Con estas opciones podremos configurar la manera en la que nos va a notificar sobre las consultas que deberíamos cambiar. Una vez hecho todo esto, empezaremos a recibir su feedback, que tendrá el siguiente formato:
 

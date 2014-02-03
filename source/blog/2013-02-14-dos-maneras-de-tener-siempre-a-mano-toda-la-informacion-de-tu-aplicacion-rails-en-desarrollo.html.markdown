@@ -11,7 +11,7 @@ Mientras desarrollamos una aplicación es importante tener toda la información 
 ### Rails Footnotes ###
 <a href="https://github.com/josevalim/rails-footnotes" target="_blank" title="Rails Footnotes en GitHub">Esta gema</a>, como su propio nombre indica, crea una serie de notas en el pie de tu aplicación donde podremos visualizar toda la información de la sesión, parámetros de la petición, cookies, la cadena de filtros, rutas, consultas a la base de datos y mucho más.
 
-<img src="/images/bog/footnotes.png"/>
+<img src="/images/blog/footnotes.png"/>
 
 Como podéis ver en la captura, hay dos secciones en el pie, una de edición y otra de visualización, y pinchando en cada uno de los links podremos hacer los siguiente:
 

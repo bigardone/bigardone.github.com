@@ -15,16 +15,16 @@ En el pasado post [conocimos a Yeoman](/blog/2013/02/27/desarrollo-web-moderno-c
 Teniendo ya todo instalado vamos a generar nuestro primer proyecto y para ello vamos a usar uno de los generadores de Yeoman, para que genere para nosotros todo lo que en un principio necesitaremos. Para ver la lista de generadores por defecto, solo tenemos que ejecutar lo siguiente:
 
     $ yo
-
+    
     Usage: yo <generator> [arguments] [--help]
-
+    
     The webapp generator is bundled, while others can be installed with npm install <generator-name>
-
+    
     Officially supported generators:
     webapp angular ember backbone chromeapp chrome-extension bootstrap mocha jasmine testacular
-
+    
     See a list of all available generators with npm search yeoman-generator
-
+    
     Now just run yo webapp and have a great day :)
 
 Como veis, tiene unos cuantos generadores por defecto, dependiendo de que librerías o frameworks queramos usar, pero para este ejemplo vamos a generar un nuevo proyecto con el generador por defecto **webapp** y luego añadiremos alguna dependencia más.

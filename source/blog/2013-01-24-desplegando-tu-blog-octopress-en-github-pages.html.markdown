@@ -10,43 +10,50 @@ En mi [último post](/blog/2013-01-23-cambiando-de-wordpress-a-octopress) vimos 
 
 <h3>Configurando GitHub</h3>
 Lo primero que tienes que hacer es acceder a tu cuenta de GitHub y crear un nuevo repositorio con el siguiente nombre:
-<pre>tu_nombre_de_usuario.github.com</pre>
+
+        tu_nombre_de_usuario.github.com
 
 La manera que tiene GitHub Pages de funcionar es la siguiente. Usa la <strong>master branch</strong> como directorio público de tu servidor web sirviendo los ficheros del repositiorio que creaste antes, y donde se encuentran el contenido estático generado. Tienes que trabajar desde la <strong>source branch</strong> y commitear el contenido generado a la <strong>master branch</strong>, para que los cambios puedan contemplarse. No te preocupes, hay una instrucción desde tu consola, que se encarga de configurar esto. Entra en ella, y desde el directorio raíz de tu blog ejecuta:
-<pre>$ rake setup_github_pages</pre>
+
+        $ rake setup_github_pages
+
 A continuación deberás introducir otra vez el la url de tu repositorio, pero recuerda introducirla usando el siguiente formato:
-<pre>git@github.com:tu_nombre_de_usuario/tu_nombre_de_usuario.github.com.git</pre>
+
+        git@github.com:tu_nombre_de_usuario/tu_nombre_de_usuario.github.com.git
+
 Ya tenemos nuestro "hosting" configurado :)
 Para desplegar los cambios, solo tienes que generar el blog, y desplegarlo:
-<pre>
-$ rake generate
-$ rake deploy
-</pre>
+
+        $ rake generate
+        $ rake deploy
+
 Y en pocos segundos ya puedes ver tu blog accediendo a <strong>http://tu_nombre_de_usuario.github.com</strong>
 
 Como último detalle, no te olvides commitear los cambios a tu <strong>source branch</strong>:
 
-<pre>
-$ git add .
-$ git commit -am 'Commit inicial'
-$ git push origin source
-</pre>
+    $ git add .
+    $ git commit -am 'Commit inicial'
+    $ git push origin source
+
 
 <h3>Usando un dominio personalizado</h3>
 Para terminar de personalizarlo del todo, puedes usar un nombre de dominio personalizado para que apunte a tu nuevo blog.
 Lo primero que tienes que hacer, es crear un fichero con el nombre <strong>CNAME</strong> dentro del directorio <strong>source</strong> con el nombre de tu dominio:
-<pre>$ echo 'nombre_de_tu_dominio.com' >> source/CNAME</pre>
+
+        $ echo 'nombre_de_tu_dominio.com' >> source/CNAME
 No te olvides de volver a generar otra vez todo y desplegarlo:
-<pre>
-$ rake generate
-$ rake deploy
-$ git add .
-$ git commit -am 'CNAME creado para dominio personalizado'
-$ git push origin source
-</pre>
+
+    $ rake generate
+    $ rake deploy
+    $ git add .
+    $ git commit -am 'CNAME creado para dominio personalizado'
+    $ git push origin source
+
 
 A continuación tienes que crear un registro A en el DNS de tu dominio que apunte a la siguiente dirección IP de GitHub Pages:
-<pre>207.97.227.245</pre>
+
+    207.97.227.245
+
 Y trás las horas que tarde en refrescar el DNS, ya podremos acceder a nuestro blog desde <strong>nombre_de_tu_dominio.com</strong>, yeah!
 
 Espero no haberme dejado nada importante en el tintero, de todas formas si algo de esto no te funciona, siempre puedes mirar la documentación del propio <a href="http://octopress.org/docs/" title="Octopress docs" target="_blank">Octopress</a> y la de <a href="https://help.github.com/categories/20/articles" title="GitHub Pages help" target="_blank">GitHub Pages</a>. Happy blogging!

@@ -13,7 +13,7 @@ Estamos ante otro lenguaje de sintaxis simplificada, que nos ayuda a codificar d
 
 Vamos a ver un ejemplo muy sencillo de html estático:
 
-{% codeblock lang:html %}
+```html
 <div class="surf-spot" id="salinas">
   <header>
     <h3>Playa de Salinas</h3>
@@ -37,11 +37,11 @@ Vamos a ver un ejemplo muy sencillo de html estático:
     </dl>
   </div>
 </div>
-{% endcodeblock %}
+```
 
 ¿Y como sería su versión en <strong>Haml</strong>? Muy sencillo:
 
-{% codeblock lang:haml %}
+```haml
 #salinas.surf-spot
   %header
     %h3 Playa de Salinas
@@ -58,7 +58,7 @@ Vamos a ver un ejemplo muy sencillo de html estático:
       %dd NW
       %dt.wind-dir Wind direction
       %dd S, SW, SE
-{% endcodeblock %}
+```
 
 Como puedes ver, es mucho más simple. Como norma general, si el elemento que quieres añadir es un <strong>div</strong>, con una clase o identificador, no hace falta poner el nombre del tag, simplemente basta con usar el nombre de la clase precedido por un "<strong>.</strong>" o una "<strong>#</strong>" si se trata de un identificador. En caso de tener ambos, puedes usarlos también. En el caso de que no se trate de un simple div, sino de cualquier otro elemento html, deberás poner su nombre precedido de un "<strong>%</strong>", pudiendo añadirle clases e identificador igual que antes. Para el resto de atributos del elemento, solo tienes que incluirlos dentro de un hash "<strong>{}</strong>", justo después del nombre del mismo. Es <strong>muy importante</strong> la indentación de los elementos, ya que es lo que va a usar para anidar los elementos unos dentro de otros.
 
