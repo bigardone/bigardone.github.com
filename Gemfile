@@ -14,6 +14,8 @@ gem "middleman-neat"
 gem "middleman-smusher"
 gem "middleman-syntax"
 
+gem "middleman-deploy"
+
 gem "redcarpet"
 
 gem 'nokogiri'
