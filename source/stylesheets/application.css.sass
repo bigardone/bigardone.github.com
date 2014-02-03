@@ -61,6 +61,11 @@ p
     color: $gray-dark
     border: 2px solid $asphalt
 
+  +media($mobile)
+    a
+      font-size: 1em
+      padding: .7em 1em
+
 .meta-data
   display: inline-block
   font-size: .7em
@@ -89,10 +94,3 @@ hr
     font-size: 1.2em
     font-weight: normal
 
-
-  .call-to-action
-    @extend .center
-    margin: 2em 0
-    a
-      font-size: 1em
-      padding: .7em 1em
