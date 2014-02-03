@@ -41,13 +41,19 @@
           %img{src: "/images/logo.png", alt: ""}/
       .container
         %section.center
-          %h1= current_page.data.title
-          %h3= current_page.data.subtitle
           -if current_article
+            %h1= current_page.data.title
+            %h3= current_page.data.subtitle
             .meta-data
               %hr/
               posted #{current_article.date.strftime('%b %e, %Y')}
               on #{current_article.tags.join(', ')}
+          -elsif defined? tagname
+            %h1 #{current_page.data.title} #{tagname}
+          -else
+            %h1= current_page.data.title
+            %h3= current_page.data.subtitle
+
     %section#main_content
       .container
         %section
@@ -70,16 +76,22 @@
               %a.dsq-brlink{href: "http://disqus.com"}
                 comments powered by
                 %span.logo-disqus Disqus
-    - if current_article
-      %footer#main_footer
+    %footer#main_footer
+      - if current_article
         %ul.article-nav
           %li.previous
             = partial 'partials/post_nav_link', locals: {article: current_article.previous_article, post_type: 'previous'}
           %li.next
             = partial 'partials/post_nav_link', locals: {article: current_article.next_article, post_type: 'next'}
-        %section
-          .container
-            .center Copyright © #{Date.today.year} - Ricardo García Vega - Code, Love & Boards!
+      %section
+        .container
+          .center
+            %ul
+              %li
+                %a{href: "/blog"} Archives
+              %li
+                %a{href: "http://feeds.feedburner.com/CodeLoveAndBoards", target: '_blank'} RSS
+            Copyright © #{Date.today.year} - Ricardo García Vega - Code, Love & Boards!
 
 
     -# Javascripts
