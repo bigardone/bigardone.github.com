@@ -4,6 +4,10 @@
 @import neat
 @import vendor/animate
 
+$mobile: new-breakpoint(max-width 480px)
+$tablet: new-breakpoint(min-width 481px max-width 768px)
+$landscape-tablet: new-breakpoint(min-width 769px max-width 1024px)
+
 
 @import base/main
 
@@ -53,7 +57,7 @@ body
   background: rgba(#fff,.8)
 
   a
-    color: #333
+    color: $gray-dark
 
 
 
@@ -87,8 +91,10 @@ body
       padding-bottom: 1.5em
       .year
         +span-columns(1 of 12)
+        font-weight: bold
       .date
         +span-columns(2 of 12)
+        color: $gray-dark
       .post
         +span-columns(9 of 12)
         h2
@@ -114,18 +120,22 @@ body
               &:hover
                 background: $blue
 
+    +media($mobile)
+      > li
+        .year
+          +span-columns(12 of 12)
+        .date
+          +span-columns(12 of 12)
+        .post
+          +span-columns(12 of 12)
+
   article
     > h2, h3
-      color: #333
+      color: darken($gray-dark,10)
       font-weight: 700
-      line-height: 1.2em
+      line-height: 1.6em
       margin: 2em 0 0 0
-    a
-      border-bottom: 1px dotted transparent
 
-      &:hover
-        color: $blue
-        border-bottom: 1px dotted $blue
     p
       line-height: 1.8em
       margin: 0 0 1em 0
@@ -216,6 +226,9 @@ a
   +outer-container
   position: relative
   max-width: 800px
+
+  +media($mobile)
+    padding: .5em
 
 .center
   text-align: center
