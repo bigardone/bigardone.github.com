@@ -27,7 +27,7 @@ body
   font-size: $main-font-size
 
   +media($mobile)
-    background: #fff url(/images/backgrounds/surf-blur-mobile.jpg) 0 0 no-repeat fixed
+    background: #fff url(/images/backgrounds/surf-blur-mobile.jpg) center center no-repeat fixed
     -webkit-background-size: cover
     -moz-background-size: cover
     -o-background-size: cover
@@ -45,11 +45,16 @@ body
     img
       height: 75px
 
+  +media($mobile)
+    padding: 2em 0
+
+    .main-logo
+      margin-bottom: 2em
+
 
 
 #main_content
   background: #fff
-  min-height: 1000px
   padding: 4em 0
 
   .articles
@@ -62,6 +67,10 @@ body
       border-bottom: 1px dotted $gray-light
       margin-bottom: 1.5em
       padding-bottom: 1.5em
+
+      &:last-of-type
+        border-bottom: 0px none
+
       .year
         +span-columns(1 of 12)
         font-weight: bold
@@ -161,6 +170,14 @@ footer
     background: #000
     .center
       padding: 3em 0
+
+    ul
+      +list
+      margin-bottom: 1em
+      li
+        display: inline-block
+        a
+          padding: 0 1em
 
   +media($mobile)
     .article-nav
