@@ -26,38 +26,13 @@ body
   font-family: $body-font-family
   font-size: $main-font-size
 
-// Main navigation
-#main_nav
-  position: absolute
-  z-index: 100
-  color: #fff
-  top: 0
-  left: 0
-  right: 0
-
-  ul
-    list-style: none
-    padding: 0
-    margin: 0
-    width: 100%
-    li
-      +span-columns( 3 of 12)
-      a
-        font-family: $header-font-family
-        color: #000
-        line-height: $nav-height
-        font-weight: normal
-        font-size: .8em
-        text-align: center
-        display: block
-        text-transform: uppercase
-#main_nav.sticky
-  position: fixed
-  width: 100%
-  background: rgba(#fff,.8)
-
-  a
-    color: $gray-dark
+  +media($mobile)
+    background: #fff url(/images/backgrounds/surf-blur-mobile.jpg) 0 0 no-repeat fixed
+    -webkit-background-size: cover
+    -moz-background-size: cover
+    -o-background-size: cover
+    background-size: cover
+    font-size: $main-font-size - .3em
 
 
 
@@ -69,8 +44,6 @@ body
     margin-bottom: 3em
     img
       height: 75px
-  h1
-    line-height: 1.1em
 
 
 
@@ -187,7 +160,21 @@ footer
     font-size: .8rem
     background: #000
     .center
-      line-height: 8em
+      padding: 3em 0
+
+  +media($mobile)
+    .article-nav
+      .previous
+        +span-columns(12 of 12)
+        margin-bottom: 2em
+      .next
+        +span-columns(12 of 12)
+        text-align: left
+
+    section
+      .center
+        padding: 3em .5em
+
 
 
 
@@ -241,3 +228,19 @@ a
     margin: 0 0 1em 0
     border: 0 none
     border-top: 1px dotted rgba(#fff, .5)
+
+
++media($mobile)
+  h1
+    font-size: 1.7em
+    font-weight: 400
+    line-height: 1.2em
+  h2
+    font-size: 1.4em
+    font-weight: normal
+    line-height: 1em
+    margin: 0
+
+  h3
+    font-size: 1.2em
+    font-weight: normal
