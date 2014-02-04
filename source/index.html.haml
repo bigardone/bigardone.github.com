@@ -8,8 +8,8 @@ title: Welcome
       %h2 Hello
 
     %p.center
-      My name's Ricardo, I'm a passionate full-stack developer linving in the northen coast of Spain.
-      <br/> I love building web applications using Ruby, JavaScript, HTML5 and CSS3. <br/> When I’m not creating new stuff for the web, you can find me riding any of my boards, for either asphalt, watter or snow.
+      My name is Ricardo and I'm a passionate full-stack developer linving in the northen coast of Spain.
+      <br/> I love building web applications using <strong>Ruby</strong>, <strong>JavaScript</strong>, <strong>HTML5</strong> and <strong>CSS3</strong>. <br/> When I’m not creating new stuff for the web, you can find me riding any of my boards, for either asphalt, watter or snow.
       %br/
       Love & boards!
 
@@ -17,7 +17,7 @@ title: Welcome
   .container
     %header
       %h2 Recent work
-    %p Check out some of my side projects
+    %p Check out some of my personal side projects.
     .projects
       - data.work.projects.each_with_index do |project, i|
         .project{class: "#{project[0]} invisible animate", data:{ animation: ( i%2 == 0 ? 'fadeInLeft' : 'fadeInRight')}}
@@ -59,9 +59,10 @@ title: Welcome
     .container
       %header
         %h2 Get in touch
-      %p Wanna talk? Great! Send me an email to:
+      %p Wanna talk? Great! You can send me an email to:
       .call-to-action
         %a{href: "mailto:ricardo@codeloveandboards.com"} ricardo@codeloveandboards.com
+
       %p You can also find me on:
 
       %ul.social
