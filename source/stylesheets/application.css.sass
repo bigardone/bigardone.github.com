@@ -79,6 +79,30 @@ hr
   visibility: hidden
 
 
+#preloader
+  position: fixed
+  top: 0
+  left: 0
+  right: 0
+  bottom: 0
+  background-color: $asphalt
+  z-index: 99
+
+#status
+  width: 3em
+  height: 3em
+  position: absolute
+  left: 50%
+  top: 50%
+  background-repeat: no-repeat
+  background-position: center
+  margin: -1.5em 0 0 -1.5em
+
+  .fa
+    font-size: 3em
+    color: rgba(#fff,.5)
+
+
 +media($mobile)
   h1
     font-size: 1.7em
@@ -93,4 +117,5 @@ hr
   h3
     font-size: 1.2em
     font-weight: normal
+
 

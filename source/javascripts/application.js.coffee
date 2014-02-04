@@ -1,8 +1,7 @@
 #= require_tree ./vendor
 #= require_tree ./lib
 
-$ ->
-
+$(window).load ->
   $('#main_nav').stickyMenu()
 
   mapCanvas = document.getElementById 'map-canvas'
@@ -19,12 +18,9 @@ $ ->
     horizontalScrolling: false
     responsive: false
 
-
-  setTimeout ->
+  $("#status").fadeOut() # will first fade out the loading animation
+  $("#preloader").delay(350).fadeOut "slow", ->
     $('#welcome').removeClass('invisible').addClass "animated fadeInUp"
-  , 500
-
-
 
 
   $(".animate").each ->

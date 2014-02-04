@@ -35,6 +35,9 @@
     %meta{content: "/images/mstile-144x144.png", name: "msapplication-TileImage"}/
 
   %body{class: current_page.data.body_class || 'page'}
+    #preloader
+      #status
+        .fa.fa-cog.fa-spin
     = partial 'partials/nav'
     %header#main_header{data: {stellar: {'background-ratio' => '0.5'}}}
       %section.center
