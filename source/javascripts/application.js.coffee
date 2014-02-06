@@ -31,7 +31,7 @@ $(window).load ->
       $(window).scroll ->
         top = element.offset().top
         windowTop = $(window).scrollTop()
-        element.removeClass('invisible').addClass "animated #{animation}"  if top < windowTop + 800
+        element.removeClass('invisible').addClass "animated #{animation}"  if top < windowTop + 820
 
 
 
