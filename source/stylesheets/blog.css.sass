@@ -22,7 +22,7 @@ body
   -moz-background-size: cover
   -o-background-size: cover
   background-size: cover
-  color: $main-font-color
+  color: darken($main-font-color, 6)
   font-family: $body-font-family
   font-size: $main-font-size
 
@@ -122,6 +122,9 @@ body
     p
       line-height: 1.8em
       margin: 0 0 1em 0
+
+      code
+        background: #f8f8f8
     ul
       li
         line-height: 1.8em
@@ -198,6 +201,10 @@ footer
         padding: 3em .5em
 
 
+#disqus_thread
+  border-top: 1px solid $gray-light
+  margin-top: 5em
+  padding-top: 5em
 
 
 
