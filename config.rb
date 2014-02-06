@@ -80,11 +80,16 @@ activate :syntax, line_numbers: true
 # activate :livereload
 
 # Methods defined in the helpers block are available in templates
-# helpers do
-#   def some_helper
-#     "Helping"
-#   end
-# end
+helpers do
+  # Meta keywords for blog layout
+  def key_words
+    if current_article
+      current_article.tags.join(', ')
+    else
+      blog.tags.keys.join(', ')
+    end
+  end
+end
 
 set :css_dir, 'stylesheets'
 
