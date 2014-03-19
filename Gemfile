@@ -3,6 +3,7 @@
 source 'http://rubygems.org'
 
 gem "middleman", "~> 3.2.1"
+gem "middleman-livereload"
 gem "middleman-blog", "~> 3.5.1"
 
 # For feed.xml.builder

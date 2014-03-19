@@ -39,6 +39,7 @@ page "/feed.xml", layout: false
 activate :bourbon
 activate :neat
 activate :syntax, line_numbers: true
+# activate :livereload
 ###
 # Compass
 ###
@@ -98,9 +99,7 @@ set :js_dir, 'javascripts'
 set :images_dir, 'images'
 
 set :markdown_engine, :redcarpet
-set :markdown,  fenced_code_blocks: true,
-                autolink: true,
-                smartypants: false
+set :markdown,  fenced_code_blocks: true, smartypants: true
 
 
 # Build-specific configuration
