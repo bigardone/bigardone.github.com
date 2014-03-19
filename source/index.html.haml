@@ -8,8 +8,8 @@ title: Ricardo García Vega, full stack developer
       %h2 Hello
 
     %p.center
-      My name is Ricardo and I'm a passionate <strong>full stack</strong> developer linving in the northen coast of Spain.
-      <br/> I love building web applications using <strong>Ruby</strong>, <strong>JavaScript</strong>, <strong>HTML5</strong> and <strong>CSS3</strong>. <br/> When I’m not creating new stuff for the web, you can find me riding any of my boards, for either watter, concrete or snow.
+      My name is Ricardo and I'm a passionate <strong>full stack</strong> developer living in the northen coast of Spain.
+      <br/> I love building web applications using <strong>Ruby on Rails</strong>, <strong>Haml</strong>, <strong>CoffeeScript</strong> and <strong>Sass</strong>. <br/> When I’m not creating new stuff for the web, you can find me riding any of my boards for either water, concrete or snow.
       %br/
       Love & boards!
 
@@ -34,8 +34,7 @@ title: Ricardo García Vega, full stack developer
 %section#blog
   .container
     %header
-      %h2 Latest articles
-    %p What I write about the things I do and like.
+      %h2 Recent articles
     .articles
       - blog.articles[0..3].each_with_index do |article, i|
         %article.animate.invisible{data:{ animation: 'fadeInUp'}}
