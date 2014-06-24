@@ -5,6 +5,8 @@
 Time.zone = "America/Los_Angeles"
 I18n.enforce_available_locales = false
 
+activate :livereload
+
 activate :directory_indexes
 
 activate :blog do |blog|
@@ -99,7 +101,7 @@ set :js_dir, 'javascripts'
 set :images_dir, 'images'
 
 set :markdown_engine, :redcarpet
-set :markdown,  fenced_code_blocks: true, smartypants: true
+set :markdown,  tables: true, autolink: true, gh_blockcode: true, fenced_code_blocks: true, with_toc_data: true, disable_indented_code_blocks: true
 
 
 # Build-specific configuration
@@ -109,6 +111,8 @@ configure :build do
   ignore 'stylesheets/vendor/*'
   ignore 'javascripts/lib/*'
   ignore 'javascripts/vendor/*'
+
+  activate :minify_html
 
   # For example, change the Compass output style for deployment
   activate :minify_css
@@ -126,6 +130,8 @@ configure :build do
   # set :http_prefix, "/Content/images/"
 
   activate :cache_buster
+
+  activate :gzip
 end
 
 activate :deploy do |deploy|
