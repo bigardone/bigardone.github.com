@@ -11,7 +11,7 @@
     %title #{current_page.data.title} - Code, Love & Boards
     %meta(http-equiv="content-type" content="text/html" charset="utf-8")
     %meta(http-equiv="x-ua-compatible" content="ie=edge,chrome=1")
-    %meta(name="description" content="My name is Ricardo and I'm a passionate full stack developer linving in the northen coast of Spain. I love building web applications using Ruby, JavaScript, HTML5 and CSS3.")
+    %meta(name="description" content="My name is Ricardo and I'm a passionate full stack developer linving in the northen coast of Spain. I love building web applications using Ruby on Rails, CoffeeScript, Haml and Sass.")
     %meta(name="author" content="Ricardo García Vega - http://twitter.com/bigardone")
     %meta(name="keywords" content="Ricardo García Vega, full stack, web applications, web developer, ruby, ruby on rails, javascript, jquery, haml, sass, coffeescript, html5")
     %meta{content: "initial-scale=1.0,user-scalable=no,maximum-scale=1,width=device-width", name: "viewport"}
@@ -34,6 +34,16 @@
     %link{href: "/images/favicon-16x16.png", rel: "icon", sizes: "16x16", type: "image/png"}/
     %meta{content: "#9f00a7", name: "msapplication-TileColor"}/
     %meta{content: "/images/mstile-144x144.png", name: "msapplication-TileImage"}/
+    :javascript
+      var _StatHat = _StatHat || [];
+      _StatHat.push(['_setUser', 'NzIzMCDaNaL5bvEP1HQkMYwfYsQe']);
+      (function() {
+              var sh = document.createElement('script'); sh.type = 'text/javascript';
+              sh.async = true;
+              sh.src = '//www.stathat.com/javascripts/api.js';
+              var s = document.getElementsByTagName('script')[0];
+              s.parentNode.insertBefore(sh, s);
+      })();
 
   %body{class: current_page.data.body_class || 'page'}
     #preloader
@@ -69,4 +79,5 @@
 
         ga('create', 'UA-37802122-1', 'codeloveandboards.com');
         ga('send', 'pageview');
+
 

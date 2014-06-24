@@ -34,6 +34,16 @@
     %link{href: "/images/favicon-16x16.png", rel: "icon", sizes: "16x16", type: "image/png"}/
     %meta{content: "#9f00a7", name: "msapplication-TileColor"}/
     %meta{content: "/images/mstile-144x144.png", name: "msapplication-TileImage"}/
+    :javascript
+      var _StatHat = _StatHat || [];
+      _StatHat.push(['_setUser', 'NzIzMCDaNaL5bvEP1HQkMYwfYsQe']);
+      (function() {
+              var sh = document.createElement('script'); sh.type = 'text/javascript';
+              sh.async = true;
+              sh.src = '//www.stathat.com/javascripts/api.js';
+              var s = document.getElementsByTagName('script')[0];
+              s.parentNode.insertBefore(sh, s);
+      })();
 
   %body{class: 'blog'}
     %header#main_header
@@ -109,5 +119,9 @@
 
         ga('create', 'UA-37802122-1', 'codeloveandboards.com');
         ga('send', 'pageview');
+
+      -# StatHat Analytics
+      :javascript
+        _StatHat.push(["_trackCount", "g2pcD9xou7DlR0DtndiwvSBBYU5k", 1.0]);
 
 
