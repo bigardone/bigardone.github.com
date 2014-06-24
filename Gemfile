@@ -13,7 +13,8 @@ gem "builder", "~> 3.0"
 gem "middleman-bourbon"
 gem "middleman-neat"
 gem "middleman-smusher"
-gem "middleman-syntax"
+gem "middleman-syntax", github: 'middleman/middleman-syntax'
+gem "middleman-minify-html"
 
 gem "middleman-deploy"
 
