@@ -43,6 +43,8 @@ do ($ = jQuery, window, document) ->
       link = $(e.target)
       target = $(link.attr 'href')
 
+      _StatHat.push(["_trackValue", "_SFMWj1L4-q-vtm8JpHEHiBCejdJZQ~~", target])
+
       if target.length
         @scrolling = true
 
