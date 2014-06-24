@@ -4,7 +4,7 @@ projects:
     description: My new personal home page and blog.
     tags:
       - Middleman
-      - Rubby
+      - Ruby
       - Haml
       - Sass
       - CoffeeScript
