@@ -96,12 +96,7 @@ body
             display: inline-block
             font-size: .7em
             a
-              line-height: 1.2em
-              background: rgba($gray,.5)
-              color: #fff
-              padding: 0 .5em
-              &:hover
-                background: $blue
+              +tag-link
 
     +media($mobile)
       > li
@@ -117,7 +112,7 @@ body
       color: darken($gray-dark,10)
       font-weight: 700
       line-height: 1.6em
-      margin: 2em 0 0 0
+      margin: 1em 0 .5em 0
 
     p
       line-height: 1.8em
@@ -125,22 +120,30 @@ body
 
       code
         background: #f8f8f8
-    ul
+        overflow-x: scroll
+    ul, ol
       li
         line-height: 1.8em
 
-    .highlight
-      margin: 2em 0
-      overflow-x: scroll
+    .hljs
       font-size: .8em
-      table
-        td
-          vertical-align: top
-      pre
+      span
         white-space: pre
 
     img
       max-width: 100%
+
+    blockquote
+      margin: 1.2em 0
+      font-size: 1.2em
+      font-style: italic
+      padding: .2em 2em
+      border-left: 5px solid lighten($gray-light, 5)
+      border-right: 5px solid lighten($gray-light, 5)
+      color: lighten($main-font-color, 20)
+
+      p
+        margin-bottom: 0
 
 
 footer
@@ -209,10 +212,6 @@ footer
 
 
 
-
-
-
-
 h1, h2
   font-family: $header-font-family
   margin: 0
@@ -258,6 +257,20 @@ a
     margin: 0 0 1em 0
     border: 0 none
     border-top: 1px dotted rgba(#fff, .5)
+  .tag
+    +tag-link
+
+.btn-wrapper
+  text-align: center
+  margin-bottom: 2rem
+  .btn
+    +transition
+    background: darken($blue, 10)
+    color: #fff
+    padding: .5em 2em
+
+    &:hover
+      background: $blue
 
 
 +media($mobile)
