@@ -1,4 +1,16 @@
 projects:
+  eventostalentoit:
+    name: Eventos TalentoIT
+    description: Ticket raffle platform for IT events.
+    url: https://eventos.talentoit.org/
+    tags:
+      - Ruby
+      - Ruby on Rails
+      - Postgres
+      - Haml
+      - Sass
+      - CoffeeScript
+      - React
   codeloveandboards:
     name: Code, Love & Boards
     description: My new personal home page and blog.
