@@ -43,7 +43,11 @@ title: Ricardo García Vega, full stack developer
 
             .meta-data
               posted #{article.date.strftime('%b %e, %Y')}
-              on #{article.tags.join(', ')}
+              on
+              %ul.tags
+                - article.tags.each do |tag|
+                  %li
+                    = link_to tag, tag_path(tag)
           = article.summary
 
           =link_to 'continue reading →', article, class: 'small'
