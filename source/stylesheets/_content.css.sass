@@ -46,7 +46,7 @@
           &:nth-of-type(2n)
             +omega
 
-          $projects: eventostalentoit codeloveandboards cutback multinput talentoit gvbtool quiver tonkalabs scrumrf
+          $projects: trello_tribute eventostalentoit codeloveandboards cutback multinput talentoit gvbtool quiver tonkalabs scrumrf
 
           @each $project in $projects
             &.#{$project}
@@ -126,6 +126,8 @@
                 a
                   +tag-link
 
+          h2
+            display: none
 
           p
             font-size: .85em
@@ -222,4 +224,3 @@
               height: auto
               padding-top: 0
               font-size: 1.8em
-
