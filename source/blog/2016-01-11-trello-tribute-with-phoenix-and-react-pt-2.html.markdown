@@ -4,6 +4,21 @@ date: 2016-01-11
 tags: elixir, phoenix, react, webpack, redux
 canonical: https://blog.diacode.com/trello-clone-with-phoenix-and-react-pt-2
 ---
+<div class="index">
+  <p>This post belongs to the <strong>Trello tribute with Phoenix Framework and React</strong> series.</p>
+  <ol>
+    <li><a href="/blog/2016/01/04/trello-tribute-with-phoenix-and-react-pt-1">Intro and selected stack</a></li>
+    <li><a href="/blog/2016/01/11/trello-tribute-with-phoenix-and-react-pt-2">Phoenix Framework project setup</a></li>
+    <li><a href="/blog/2016/01/12/trello-tribute-with-phoenix-and-react-pt-3">The User model and JWT auth</a></li>
+    <li><a href="/blog/2016/01/14/trello-tribute-with-phoenix-and-react-pt-4/">Front-end for sign up with React and Redux</a></li>
+    <li><a href="/blog/2016/01/18/trello-tribute-with-phoenix-and-react-pt-5/">Database seeding and sign in controller</a></li>
+    <li>Coming soon</li>
+  </ol>
+
+  <a href="https://phoenix-trello.herokuapp.com/"><i class="fa fa-cloud"></i> Live demo</a> |
+  <a href="https://github.com/bigardone/phoenix-trello"><i class="fa fa-github"></i> Source code</a>
+</div>
+
 ## Project setup
 So now that we have selected our [current stack](/blog/2016/01/04/trello-tribute-with-phoenix-and-react-pt-1)
 let's start by creating the new **Phoenix** project. Before doing so we need to
