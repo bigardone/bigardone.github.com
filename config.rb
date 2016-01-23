@@ -141,4 +141,5 @@ activate :deploy do |deploy|
   deploy.remote   = "origin" # remote name or git url, default: origin
   deploy.branch   = "master" # default: gh-pages
   # deploy.strategy = :submodule      # commit strategy: can be :force_push or :submodule, default: :force_push
+  deploy.build_before = true
 end
