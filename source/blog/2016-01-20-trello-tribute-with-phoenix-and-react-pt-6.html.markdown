@@ -3,7 +3,7 @@ title: Trello tribute with Phoenix and React (pt.6)
 date: 2016-01-20 23:53 PST
 tags: elixir, phoenix, react, redux
 canonical: https://blog.diacode.com/trello-clone-with-phoenix-and-react-pt-6
-published: false
+published: true
 ---
 <div class="index">
   <p>This post belongs to the <strong>Trello tribute with Phoenix Framework and React</strong> series.</p>
@@ -13,6 +13,7 @@ published: false
     <li><a href="/blog/2016/01/12/trello-tribute-with-phoenix-and-react-pt-3">The User model and JWT auth</a></li>
     <li><a href="/blog/2016/01/14/trello-tribute-with-phoenix-and-react-pt-4/">Front-end for sign up with React and Redux</a></li>
     <li><a href="/blog/2016/01/18/trello-tribute-with-phoenix-and-react-pt-5/">Database seeding and sign in controller</a></li>
+    <li><a href="/blog/2016/01/20/trello-tribute-with-phoenix-and-react-pt-6/">Front-end authentication with React and Redux</a></li>
     <li>Coming soon</li>
   </ol>
 
@@ -23,12 +24,12 @@ published: false
 ## User sign in front-end
 
 Now that the [back-end functionality][c0a8e4d0] is ready to handle sign in requests
-let's move on to the front-end and see how to build and send this requests and how to
-use the returned data to permit the user accessing the private routes.
+let's move on to the front-end and see how to build and send these requests and how to
+use the returned data to allow the user access to private routes.
 
 ### The routes files
 
-Before continuing let's take a look again to our
+Before continuing let's take a look again at our
 React routes file:
 
 ```javascript
@@ -62,7 +63,7 @@ export default (
 ```
 
 As we saw in [part 4][d3ecc194], the ```AuthenticatedContainer``` is going to prevent
-unauthenticated users to access to the boards views unless the **jwt** token
+unauthenticated users from accessing the boards views unless the **jwt** token
 returned from the sign in process is present and valid.
 
 ### The view component
@@ -136,7 +137,7 @@ export default connect(mapStateToProps)(SessionsNew);
 ```
 
 It basically renders the form and calls the ```signIn```action creator when submitting
-it. I will also be connected to the store to get its props which will be updated
+it. It will also be connected to the store to get its props which will be updated
 through the session reducer, so we can display validation errors to the user.
 
 ### The action creator
@@ -284,9 +285,9 @@ export default connect(mapStateToProps)(AuthenticatedContainer);
 
 ```
 
-When it mounts and there is an authentication token but we still don't have the ```currentUser```
+When this component gets mounted, if there is an authentication token but not a ```currentUser```
 in the store, it will call the ```currentUser``` action creator to retrieve the
-users data from the back-end. Let's add it:
+user's data from the back-end. Let's add it:
 
 ```javascript
 // web/static/js/actions/sessions.js
@@ -434,7 +435,7 @@ const Actions = {
 // ...
 ```
 
-It will send a ```DELETE``` request agains the back-end and, when successful, it
+It will send a ```DELETE``` request against the back-end and, when successful, it
 will remove the ```phoenixAuthToken``` from the ```localStorage``` and dispatch the ```USER_SIGNED_OUT```
 action reseting the ```currentUser``` from the state using the previously defined
 session reducer:
@@ -464,8 +465,8 @@ export default function reducer(state = initialState, action = {}) {
 
 ### One more thing
 Although we are done with the user sign in process, there is a crucial functionality
-we haven't implemented yet which is going to be the core of all the following features
-we will code... the user socket and it's channels. It's so important that I rather
+we haven't implemented yet, which is going to be the core of all the future features
+we will code: **the user socket and its channels**. It's so important that I'd rather
 prefer leaving it for the next post where we will see how the ```UserSocket``` looks like and
 how to connect to it so we can have bidirectional channels between our front-end and
 the back-end, displaying changes to the user in realtime. Meanwhile, don't forget to check out the live
