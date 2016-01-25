@@ -4,6 +4,8 @@ date: 2016-01-14
 tags: elixir, phoenix, react, redux
 canonical: https://blog.diacode.com/trello-clone-with-phoenix-and-react-pt-4
 published: true
+excerpt:
+  Adding the front-end for the sign up with React and Redux.
 ---
 <div class="index">
   <p>This post belongs to the <strong>Trello tribute with Phoenix Framework and React</strong> series.</p>

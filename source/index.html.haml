@@ -48,7 +48,7 @@ title: Ricardo García Vega, full stack developer
                 - article.tags.each do |tag|
                   %li
                     = link_to tag, tag_path(tag)
-          = article.summary
+          = article.data.excerpt || article.summary
 
           =link_to 'continue reading →', article, class: 'small'
 

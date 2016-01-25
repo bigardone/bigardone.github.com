@@ -4,6 +4,8 @@ date: 2016-01-20 23:53 PST
 tags: elixir, phoenix, react, redux
 canonical: https://blog.diacode.com/trello-clone-with-phoenix-and-react-pt-6
 published: true
+excerpt:
+  Handling user authentication from the front-end with React and Redux.
 ---
 <div class="index">
   <p>This post belongs to the <strong>Trello tribute with Phoenix Framework and React</strong> series.</p>

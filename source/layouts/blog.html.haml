@@ -11,7 +11,7 @@
     %title #{data.page.title} - Code, Love & Boards
     %meta(http-equiv="content-type" content="text/html" charset="utf-8")
     %meta(http-equiv="x-ua-compatible" content="ie=edge,chrome=1")
-    %meta(name="description" content="A blog about coding web apps, loving life and board sports by Ricardo García Vega")
+    %meta{name:"description", content:(current_page.data.excerpt || "A blog about coding web apps, loving life and board sports by Ricardo García Vega")}
     %meta(name="author" content="Ricardo García Vega - http://twitter.com/bigardone")
     %meta(name="keywords" content="#{key_words}")
     %meta{content: "initial-scale=1.0,user-scalable=no,maximum-scale=1,width=device-width", name: "viewport"}
