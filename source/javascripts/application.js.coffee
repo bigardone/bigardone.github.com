@@ -18,11 +18,6 @@ $(window).load ->
     horizontalScrolling: false
     responsive: false
 
-  $("#status").fadeOut() # will first fade out the loading animation
-  $("#preloader").delay(350).fadeOut "slow", ->
-    $('#welcome').removeClass('invisible').addClass "animated fadeInUp"
-
-
   $(".animate").each ->
     element = $(@)
     animation = element.data 'animation'
@@ -32,8 +27,3 @@ $(window).load ->
         top = element.offset().top
         windowTop = $(window).scrollTop()
         element.removeClass('invisible').addClass "animated #{animation}"  if top < windowTop + 820
-
-
-
-
-

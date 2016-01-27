@@ -5,14 +5,39 @@ title: Ricardo García Vega, full stack developer
 %section#about
   .container
     %header
-      %h2 Hello
+      %h2 Hello!
 
     %p.center
-      My name is Ricardo and I'm a passionate <strong>full stack</strong> developer living in the northern coast of Spain.
-      <br/> I love building web applications using <strong>Ruby</strong>, <strong>Elixir</strong>, <strong>JavaScript</strong> and <strong>Sass</strong>. <br/> When I’m not creating new stuff for the web, you can find me riding any of my boards for either water, concrete or snow.
-      %br/
-      Love & boards!
+      My name is <strong>Ricardo García Vega</strong> and I'm a passionate <strong>full stack</strong> developer living in the northern coast of Spain and working remotely.
+      I love building web applications using <strong>Ruby</strong>, <strong>Elixir</strong>, <strong>JavaScript</strong> and <strong>Sass</strong> and writing
+      about it.
 
+%hr
+
+%section#blog
+  .container
+    %header
+      %h2 Recent articles
+    .articles
+      - blog.articles[0..7].each_with_index do |article, i|
+        %article.animate.invisible{data:{ animation: 'fadeInUp'}}
+          %header
+            %h4= link_to article.title, article
+
+            .meta-data
+              posted #{article.date.strftime('%b %e, %Y')}
+              on
+              %ul.tags
+                - article.tags.each do |tag|
+                  %li
+                    = link_to tag, tag_path(tag)
+          %p= article.data.excerpt || article.summary
+
+          =link_to 'continue reading →', article, class: 'small'
+
+    .call-to-action
+      =link_to 'Show all articles', '/blog', class: 'animate', data:{ animation: 'swing'}
+%hr
 %section#work
   .container
     %header
@@ -30,30 +55,6 @@ title: Ricardo García Vega, full stack developer
               .call-to-action
                 %a{href: "#{project[1]["url"]}", target: '_blank'} Visit site
 
-
-%section#blog
-  .container
-    %header
-      %h2 Recent articles
-    .articles
-      - blog.articles[0..3].each_with_index do |article, i|
-        %article.animate.invisible{data:{ animation: 'fadeInUp'}}
-          %header
-            %h4= link_to article.title, article
-
-            .meta-data
-              posted #{article.date.strftime('%b %e, %Y')}
-              on
-              %ul.tags
-                - article.tags.each do |tag|
-                  %li
-                    = link_to tag, tag_path(tag)
-          = article.data.excerpt || article.summary
-
-          =link_to 'continue reading →', article, class: 'small'
-
-    .call-to-action
-      =link_to 'Show all articles', '/blog', class: 'animate', data:{ animation: 'swing'}
 
 .map-wrapper
   #map-canvas
