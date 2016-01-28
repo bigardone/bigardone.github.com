@@ -15,7 +15,7 @@
     %meta(name="author" content="Ricardo García Vega - http://twitter.com/bigardone")
     %meta(name="keywords" content="Ricardo García Vega, full stack, web applications, web developer, ruby, ruby on rails, javascript, jquery, haml, sass, coffeescript, html5")
     %meta{content: "initial-scale=1.0,user-scalable=no,maximum-scale=1,width=device-width", name: "viewport"}
-    = stylesheet_link_tag "http://fonts.googleapis.com/css?family=Montserrat:400,700|Open+Sans:400italic,400,600,700,800"
+    = stylesheet_link_tag "http://fonts.googleapis.com/css?family=Montserrat:400,700|Lora:400,700"
     %link{href: "http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css", rel: "stylesheet"}/
     = stylesheet_link_tag "application", media: "all"
 
@@ -46,20 +46,16 @@
       })();
 
   %body{class: current_page.data.body_class || 'page'}
-    #preloader
-      #status
-        .fa.fa-cog.fa-spin
     = partial 'partials/nav'
     %header#main_header{data: {stellar: {'background-ratio' => '0.5'}}}
       %section.center
         .container
-          #welcome.invisible
+          #welcome
             .main-logo
               = link_to '/' do
                 =image_tag "/images/logo.png"
 
-            %h1 Ricardo García Vega
-            %h2 Full stack developer
+      =image_tag "/images/avatar.jpg", class: "avatar"
 
     #main_content
       = yield
@@ -79,5 +75,3 @@
 
         ga('create', 'UA-37802122-1', 'codeloveandboards.com');
         ga('send', 'pageview');
-
-

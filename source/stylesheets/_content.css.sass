@@ -2,9 +2,16 @@
   position: relative
   min-height: 1000px
 
+  hr
+    border: 0px none
+    border-bottom: 1px dotted $gray-light
+    width: 50%
+    margin: 0 auto
+
   section
     +clearfix
-    padding: 5em 0
+    padding: 3em 0
+
     header
       text-align: center
       color: #333
@@ -15,23 +22,19 @@
 
     &#about
       background: #fff
+      padding: 5em 0 3em 0
       strong
         color: $asphalt
         font-weight: normal
 
     &#work
-      background: $asphalt-dark
       -webkit-background-size: cover
       -moz-background-size: cover
       -o-background-size: cover
       background-size: cover
       height: 100%
       width: 100%
-      color: $gray
       text-align: center
-
-      h2
-        color: $gray
 
       .projects
         +clearfix
@@ -83,7 +86,7 @@
             .info
               opacity: 1
     &#blog
-      background: #fff
+      background: tint($gray-light, 80)
       text-align: center
 
       .call-to-action
@@ -102,10 +105,10 @@
             +omega
 
           header
-            font-family: $header-font-family
             margin-bottom: 1em
 
             h4
+              font-family: $header-font-family
               line-height: 1.4em
               margin-bottom: .6em
 
@@ -131,7 +134,6 @@
 
           p
             font-size: .85em
-            color: $gray-dark
 
           a
             +transition( all .2s linear )

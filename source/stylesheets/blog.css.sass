@@ -25,6 +25,9 @@ body
   color: darken($main-font-color, 6)
   font-family: $body-font-family
   font-size: $main-font-size
+  -webkit-font-smoothing: antialiased
+  -moz-osx-font-smoothing: grayscale
+  letter-spacing: .01em
 
   +media($mobile)
     background: #fff image-url('/images/backgrounds/surf-blur-mobile.jpg') center center no-repeat fixed
@@ -113,6 +116,7 @@ body
       font-weight: 700
       line-height: 1.6em
       margin: 1em 0 .5em 0
+      font-family: $header-font-family
 
     h4
       margin-bottom: .5em
