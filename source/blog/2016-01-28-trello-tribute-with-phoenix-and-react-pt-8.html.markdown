@@ -18,6 +18,7 @@ excerpt:
     <li><a href="/blog/2016/01/20/trello-tribute-with-phoenix-and-react-pt-6/">Front-end authentication with React and Redux</a></li>
     <li><a href="/blog/2016/01/25/trello-tribute-with-phoenix-and-react-pt-7/">Sockets and channels</a></li>
     <li><a href="/blog/2016/01/28/trello-tribute-with-phoenix-and-react-pt-8/">Listing and creating boards</a></li>
+    <li><a href="/blog/2016/02/04/trello-tribute-with-phoenix-and-react-pt-9/">Adding new board members</a></li>
     <li>Coming soon</li>
   </ol>
 
@@ -34,7 +35,7 @@ to move on to the next level and let the user list and create his own boards.
 First we need to create the migration and model. To do that, just run:
 
 ```
-$ mix phoenix.gen.model Board boards board_id:references:board name:string
+$ mix phoenix.gen.model Board boards user_id:references:users name:string
 
 ```
 
