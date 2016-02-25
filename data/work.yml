@@ -1,4 +1,17 @@
 projects:
+  phoenix_toggl:
+    name: Phoenix Toggl
+    description: Toggl tribute with Phoenix and React
+    url: https://toggl-trello.herokuapp.com/
+    tags:
+      - Elixir
+      - Phoenix Framework
+      - Postgres
+      - ES6/7
+      - Sass
+      - React
+      - Redux
+      - Websockets
   trello_tribute:
     name: Phoenix Trello
     description: Trello tribute with Phoenix and React
