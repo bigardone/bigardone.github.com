@@ -20,7 +20,7 @@ canonical: https://blog.diacode.com/trello-clone-with-phoenix-and-react-pt-2
     <li><a href="/blog/2016/02/04/trello-tribute-with-phoenix-and-react-pt-9/">Adding new board members</a></li>
     <li><a href="/blog/2016/02/15/trello-tribute-with-phoenix-and-react-pt-10/">Tracking connected board members</a></li>
     <li><a href="/blog/2016/02/24/trello-tribute-with-phoenix-and-react-pt-11/">Adding lists and cards</a></li>
-    <li>Coming soon</li>
+    <li><a href="/blog/2016/03/04/trello-tribute-with-phoenix-and-react-pt-12/">Deploying our application on Heroku</a></li>
   </ol>
 
   <a href="https://phoenix-trello.herokuapp.com/"><i class="fa fa-cloud"></i> Live demo</a> |
@@ -82,7 +82,12 @@ Now our ```package.json``` should look something similar to this:
 We are going to need a bunch of dependencies in the project so instead of listing
 them all please take a look to the
 <a href="https://github.com/bigardone/phoenix-trello/blob/master/package.json">source file</a>
-in the project's repository to check them.
+in the project's repository to copy and paste them into the `package.json` file.
+Now we have to run the following command to install all the packages:
+
+```bash
+$ npm install
+```
 
 We also need to add a ```webpack.config.js``` configuration file to tell **Webpack**
 how to build the assets:
