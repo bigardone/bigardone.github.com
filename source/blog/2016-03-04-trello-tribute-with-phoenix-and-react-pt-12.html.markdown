@@ -185,7 +185,7 @@ It might not be the best solution around, but for a demo application like this
 it works really well. I hope you have enjoyed building and deploying this application
 as much as I have. While writing the whole series I've made a lot of changes to
 the final codebase, correcting some stuff and adding a lot more features. If you want
-to check them don't forget to visit de demo or fork the repository:
+to check them don't forget to visit the demo or fork the repository:
 
 <div class="btn-wrapper">
   <a href="https://phoenix-trello.herokuapp.com/" target="_blank" class="btn"><i class="fa fa-cloud"></i> Live demo</a>
