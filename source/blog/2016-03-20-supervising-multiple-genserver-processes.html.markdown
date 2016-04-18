@@ -154,7 +154,7 @@ defmodule PhoenixTrello.BoardChannel.Monitor do
   # GenServer implementation
 
   def handle_call({:user_joined, user}, _from, users) do
-    users = [user] ++ users
+    users = [user | users]
       |> Enum.uniq
 
     {:reply, users, users}
