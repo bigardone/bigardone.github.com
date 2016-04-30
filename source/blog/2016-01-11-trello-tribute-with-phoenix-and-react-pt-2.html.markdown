@@ -117,7 +117,7 @@ var config = module.exports = {
   },
 
   resolve: {
-    extesions: ['', '.js', '.sass'],
+    extensions: ['', '.js', '.sass'],
     modulesDirectories: ['node_modules'],
   },
 
@@ -126,7 +126,7 @@ var config = module.exports = {
     loaders: [
       {
         test: /\.js$/,
-        exclude: /node_modules/,
+        exclude: /node_modules/,el
         loader: 'babel',
         query: {
           cacheDirectory: true,
