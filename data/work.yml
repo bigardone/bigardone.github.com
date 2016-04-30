@@ -1,8 +1,20 @@
 projects:
+  battleship:
+    name: Phoenix Battleship
+    description: RT game built with Elixit, Phoenix and React
+    url: https://phoenix-battleship.herokuapp.com/
+    tags:
+      - Elixir
+      - Phoenix Framework
+      - ES6/7
+      - Stylus
+      - React
+      - Redux
+      - Websockets
   phoenix_toggl:
     name: Phoenix Toggl
-    description: Toggl tribute with Phoenix and React
-    url: https://toggl-trello.herokuapp.com/
+    description: Toggl tribute with Elixir, Phoenix and React
+    url: https://phoenix-toggl.herokuapp.com/
     tags:
       - Elixir
       - Phoenix Framework
@@ -14,7 +26,7 @@ projects:
       - Websockets
   trello_tribute:
     name: Phoenix Trello
-    description: Trello tribute with Phoenix and React
+    description: Trello tribute with Elixir, Phoenix and React
     url: https://phoenix-trello.herokuapp.com/
     tags:
       - Elixir
