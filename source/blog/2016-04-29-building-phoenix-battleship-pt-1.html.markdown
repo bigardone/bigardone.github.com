@@ -6,6 +6,15 @@ excerpt:
   Designing the game mechanics
 ---
 
+<div class="index">
+  <p>This post belongs to the <strong>Building Phoenix Battleship</strong> series.</p>
+  <ol>
+    <li><a href="/blog/2016/04/29/building-phoenix-battleship-pt-1">Designing the game mechanics</a></li>
+    <li><a href="/blog/2016/05/03/building-phoenix-battleship-pt-2/">The lobby channel and game supervision</a></li>
+    <li>Coming soon...</li>
+  </ol>
+</div>
+
 ## Designing the game mechanics
 After cloning [Trello][83ef4d19] and [Toggl][28808ea3] I wanted to try something
 completely different for my next side-project on **Elixir** and **Phoenix**.
@@ -45,10 +54,10 @@ and it will also create new games with the help of the **Game.Supervisor**.
 
 #### The Game.Supervisor
 This module will use the [Supervisor][4d783b08] behaviour. It will be responsible for
-creating new **Game.Server** processes and supervising them, as well as for
+creating new **Game** processes and supervising them, as well as for
 returning the list of the current games that are actually taking place.
 
-#### The Game.Server
+#### The Game
 Will use the [GenServer][18a2f400]. This processes, supervised by the **Game.Supervisor**,
 will store the state for a given game. The state will consist of a map containing
 the ids for both the attacker player and the defender, their **GameChannel pids**, the
@@ -57,8 +66,8 @@ when a player leaves the game.
 
 #### The GameChannel
 Another [Phoenix Channel][6c51ddb1]. The main interface between the player's browser and
-the **Game.Server** process. It will handle things like joining an existing game, placing
-ships in the grid, chat messages, shooting, etc. Monitored by a **Game.Server** process so
+the **Game** process. It will handle things like joining an existing game, placing
+ships in the grid, chat messages, shooting, etc. Monitored by a **Game** process so
 in case the channel's process ends, the game process ends as well.
 
 #### The Game.Board
@@ -81,9 +90,9 @@ to build a simple game like this. But implementing them will give us the chance 
 learn some useful concepts related to **OTP**, the differences between **GenServer** and
 **Agent**, monitoring processes and creating event handlers. I have really enjoyed
 building it and putting all the pieces together, so I hope you enjoy it too. Therefore, on the next
-part of this series we'll start digging deeper into them. Meanwhile, feel free to take a look
+part of this series we'll start digging deepereer into them. Meanwhile, feel free to take a look
 to the final (but still in progress, though) source code or challenge a
-friend to [battleship game][16b56e99]... Yo ho ho, let the battle begin!
+friend to a [battleship game][16b56e99]... Yo ho ho, let the battle begin!
 
 
 Happy coding!
