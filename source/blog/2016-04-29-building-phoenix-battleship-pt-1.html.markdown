@@ -11,6 +11,7 @@ excerpt:
   <ol>
     <li><a href="/blog/2016/04/29/building-phoenix-battleship-pt-1">Designing the game mechanics</a></li>
     <li><a href="/blog/2016/05/03/building-phoenix-battleship-pt-2/">The lobby channel and game supervision</a></li>
+    <li><a href="/blog/2016/05/21/building-phoenix-battleship-pt-2/">The game setup</a></li>
     <li>Coming soon...</li>
   </ol>
 </div>
@@ -61,8 +62,8 @@ returning the list of the current games that are actually taking place.
 Will use the [GenServer][18a2f400]. This processes, supervised by the **Game.Supervisor**,
 will store the state for a given game. The state will consist of a map containing
 the ids for both the attacker player and the defender, their **GameChannel pids**, the
-list of shot results, chat messages, etc. It will also monitor both **GameChannel pids**, to detect
-when a player leaves the game.
+list of shot results, chat messages, etc. It will also monitor **GameChannel** and **Game.Board** processes,
+to detect any error and stop the game.
 
 #### The GameChannel
 Another [Phoenix Channel][6c51ddb1]. The main interface between the player's browser and
