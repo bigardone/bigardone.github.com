@@ -126,7 +126,7 @@ var config = module.exports = {
     loaders: [
       {
         test: /\.js$/,
-        exclude: /node_modules/,el
+        exclude: /node_modules/,
         loader: 'babel',
         query: {
           cacheDirectory: true,
@@ -228,9 +228,9 @@ We need to configure our **Redux** store so let's create the following file:
 //web/static/js/store/index.js
 
 import { createStore, applyMiddleware } from 'redux';
+import { routerMiddleware }             from 'react-router-redux';
 import createLogger                     from 'redux-logger';
 import thunkMiddleware                  from 'redux-thunk';
-import { syncHistory }                  from 'react-router-redux';
 import reducers                         from '../reducers';
 
 const loggerMiddleware = createLogger({
@@ -239,17 +239,16 @@ const loggerMiddleware = createLogger({
 });
 
 export default function configureStore(browserHistory) {
-  const reduxRouterMiddleware = syncHistory(browserHistory);
+  const reduxRouterMiddleware = routerMiddleware(browserHistory)
   const createStoreWithMiddleware = applyMiddleware(reduxRouterMiddleware, thunkMiddleware, loggerMiddleware)(createStore);
 
   return createStoreWithMiddleware(reducers);
 }
-
 ```
 
 Basically we are configuring the **Store** with three middlewares:
 
-  - **reduxRouterMiddleware** to dispatch router actions to the store.
+  - **routerMiddleware** to dispatch router actions to the store.
   - **redux-thunk** to dispatch async actions.
   - **redux-logger** to log any action and state changes through the browser's console.
 
@@ -301,13 +300,15 @@ render de ```Root``` component:
 import React                    from 'react';
 import ReactDOM                 from 'react-dom';
 import { browserHistory }       from 'react-router';
+import { syncHistoryWithStore } from 'react-router-redux';
 import configureStore           from './store';
 import Root                     from './containers/root';
 
-const store  = configureStore(browserHistory);
+const store = configureStore(browserHistory);
+const history = syncHistoryWithStore(browserHistory, store);
 
 const target = document.getElementById('main_container');
-const node = <Root routerHistory={browserHistory} store={store}/>;
+const node = <Root routerHistory={history} store={store} />;
 
 ReactDOM.render(node, target);
 ```
@@ -318,34 +319,34 @@ in the main application layout which will be a **Redux** ```Provider``` wrapper 
 ```javascript
 //web/static/js/containers/root.js
 
-import React              from 'react';
-import { Provider }       from 'react-redux';
-import { Router }         from 'react-router';
-import invariant          from 'invariant';
-import routes             from '../routes';
+import React, { PropTypes }         from 'react';
+import { Provider }                 from 'react-redux';
+import { Router, RoutingContext }   from 'react-router';
+import invariant                    from 'invariant';
+import configRoutes                 from '../routes';
 
-export default class Root extends React.Component {
-  _renderRouter() {
-    invariant(
-      this.props.routerHistory,
-      '<Root /> needs either a routingContext or routerHistory to render.'
-    );
+const propTypes = {
+  routerHistory: PropTypes.object.isRequired,
+  store: PropTypes.object.isRequired
+};
 
-    return (
-      <Router history={this.props.routerHistory}>
-        {routes}
+const Root = ({ routerHistory, store }) => {
+  invariant(
+    routerHistory,
+    '<Root /> needs either a routingContext or routerHistory to render.'
+  );
+
+  return (
+    <Provider store={store}>
+      <Router history={routerHistory}>
+        {configRoutes(store)}
       </Router>
-    );
-  }
+    </Provider>
+  );
+};
 
-  render() {
-    return (
-      <Provider store={this.props.store}>
-        {this._renderRouter()}
-      </Provider>
-    );
-  }
-}
+Root.propTypes = propTypes;
+export default Root;
 ```
 
 Now let's define our, very basic, routes file:

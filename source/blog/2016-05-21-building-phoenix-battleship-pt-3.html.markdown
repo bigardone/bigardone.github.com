@@ -11,7 +11,8 @@ published: true
   <ol>
     <li><a href="/blog/2016/04/29/building-phoenix-battleship-pt-1">Designing the game mechanics</a></li>
     <li><a href="/blog/2016/05/03/building-phoenix-battleship-pt-2/">The lobby channel and game supervision</a></li>
-    <li><a href="/blog/2016/05/21/building-phoenix-battleship-pt-2/">The game setup</a></li>
+    <li><a href="/blog/2016/05/21/building-phoenix-battleship-pt-3/">The game setup</a></li>
+    <li><a href="/blog/2016/07/28/building-phoenix-battleship-pt-3/">Placing ships on the board's grid</a></li>
     <li>Coming soon...</li>
   </ol>
 </div>
@@ -449,7 +450,6 @@ source code or challenge a friend to a [battleship game][16b56e99].
 Happy coding!
 
 
-
-[0ff361bf]: http://0.0.0.0:4567/blog/2016/05/03/building-phoenix-battleship-pt-2/ "Building Phoenix Battleship (pt. 2)"
+[0ff361bf]: /blog/2016/05/03/building-phoenix-battleship-pt-2/ "Building Phoenix Battleship (pt. 2)"
 [d7a21b37]: http://elixir-lang.org/docs/stable/elixir/Agent.html "Agent"
 [16b56e99]: https://phoenix-battleship.herokuapp.com/ "Phoenix Battleship"

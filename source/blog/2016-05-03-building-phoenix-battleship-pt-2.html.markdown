@@ -11,7 +11,8 @@ published: true
   <ol>
     <li><a href="/blog/2016/04/29/building-phoenix-battleship-pt-1">Designing the game mechanics</a></li>
     <li><a href="/blog/2016/05/03/building-phoenix-battleship-pt-2/">The lobby channel and game supervision</a></li>
-    <li><a href="/blog/2016/05/21/building-phoenix-battleship-pt-2/">The game setup</a></li>
+    <li><a href="/blog/2016/05/21/building-phoenix-battleship-pt-3/">The game setup</a></li>
+    <li><a href="/blog/2016/07/28/building-phoenix-battleship-pt-3/">Placing ships on the board's grid</a></li>
     <li>Coming soon...</li>
   </ol>
 </div>
