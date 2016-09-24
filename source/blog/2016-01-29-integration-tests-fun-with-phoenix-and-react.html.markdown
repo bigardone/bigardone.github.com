@@ -27,7 +27,7 @@ defmodule PhoenixTrello.Mixfile do
   defp deps do
     [
       # ...
-      {:hound, "~> 0.8"},
+      {:hound, "~> 1.0.2"},
       # ...
     ]
   end
@@ -118,8 +118,10 @@ defmodule PhoenixTrello.IntegrationCase do
   end
 
   setup tags do
+    :ok = Ecto.Adapters.SQL.Sandbox.checkout(PhoenixTrello.Repo)
+
     unless tags[:async] do
-      Ecto.Adapters.SQL.restart_test_transaction(PhoenixTrello.Repo, [])
+      Ecto.Adapters.SQL.Sandbox.mode(PhoenixTrello.Repo, {:shared, self()})
     end
 
     :ok

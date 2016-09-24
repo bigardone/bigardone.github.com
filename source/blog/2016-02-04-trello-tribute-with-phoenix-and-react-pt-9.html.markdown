@@ -314,7 +314,7 @@ defmodule PhoenixTrello.UserBoard do
   @required_fields ~w(user_id board_id)
   @optional_fields ~w()
 
-  def changeset(model, params \\ :empty) do
+  def changeset(model, params \\ %{}) do
     model
     |> cast(params, @required_fields, @optional_fields)
     |> unique_constraint(:user_id, name: :user_boards_user_id_board_id_index)

@@ -110,7 +110,7 @@ defmodule PhoenixTrello.User do
   @required_fields ~w(first_name last_name email)
   @optional_fields ~w(encrypted_password)
 
-  def changeset(model, params \\ :empty) do
+  def changeset(model, params \\ %{}) do
     model
     |> cast(params, @required_fields, @optional_fields)
   end
@@ -148,7 +148,7 @@ defmodule PhoenixTrello.User do
   @required_fields ~w(first_name last_name email password)
   @optional_fields ~w(encrypted_password)
 
-  def changeset(model, params \\ :empty) do
+  def changeset(model, params \\ %{}) do
     model
     |> cast(params, @required_fields, @optional_fields)
     |> validate_format(:email, ~r/@/)
@@ -193,7 +193,7 @@ defmodule PhoenixTrello.Mixfile do
   defp deps do
     [
       # ...
-      {:comeonin, "~> 2.0"},
+      {:comeonin, "~> 2.5.3"},
       # ...
     ]
   end
@@ -217,7 +217,7 @@ field:
 defmodule PhoenixTrello.User do
   # ...
 
-  def changeset(model, params \\ :empty) do
+  def changeset(model, params \\ %{}) do
     model
     # ... other validations and contraints
     |> generate_encrypted_password
@@ -297,7 +297,7 @@ defmodule PhoenixTrello.Mixfile do
   defp deps do
     [
       # ...
-      {:guardian, "~> 0.9.0"},
+      {:guardian, "~> 0.13.0"},
       # ...
     ]
   end

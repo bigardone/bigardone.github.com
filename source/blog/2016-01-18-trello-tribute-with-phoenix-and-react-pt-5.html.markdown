@@ -69,7 +69,7 @@ $ mix run priv/repo/seeds.exs
 Before creating the controller we need to make some modifications to the ```router.ex```
 file:
 
-```elixir
+```ruby
 # web/router.ex
 
 defmodule PhoenixTrello.Router do
@@ -112,7 +112,7 @@ We also need to add two more routes to the ```/api/v1``` scope for creating and
 destroying the user's session,  both processed by the ```SessionController```. Let's begin
 with the ```create``` action:
 
-```elixir
+```ruby
 # web/controllers/api/v1/session_controller.ex
 
 defmodule PhoenixTrello.SessionController do
@@ -146,7 +146,7 @@ the user. This will give us the ```jwt``` token so we can return it along with t
 data as **JSON**. Let's take a look to the ```Session``` helper module before
 continuing any further:
 
-```elixir
+```ruby
 # web/helpers/session.ex
 
 defmodule PhoenixTrello.Session do
@@ -212,7 +212,7 @@ will be responsible for returning the authenticated user's data when needed.
 
 Let's add a new route in the ```router.ex``` file:
 
-```elixir
+```ruby
 # web/router.ex
 
 defmodule PhoenixTrello.Router do
@@ -238,7 +238,7 @@ end
 
 Now we need the ```CurrentUserController``` which looks like this:
 
-```elixir
+```ruby
 # web/controllers/api/v1/current_user_controller.ex
 
 defmodule PhoenixTrello.CurrentUserController do

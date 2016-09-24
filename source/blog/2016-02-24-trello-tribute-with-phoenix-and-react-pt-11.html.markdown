@@ -70,7 +70,7 @@ defmodule PhoenixTrello.List do
   @required_fields ~w(name)
   @optional_fields ~w()
 
-  def changeset(model, params \\ :empty) do
+  def changeset(model, params \\ %{}) do
     model
     |> cast(params, @required_fields, @optional_fields)
   end
@@ -108,7 +108,7 @@ defmodule PhoenixTrello.Card do
   @required_fields ~w(name list_id)
   @optional_fields ~w()
 
-  def changeset(model, params \\ :empty) do
+  def changeset(model, params \\ %{}) do
     model
     |> cast(params, @required_fields, @optional_fields)
   end

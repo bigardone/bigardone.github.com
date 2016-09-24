@@ -176,7 +176,7 @@ config :phoenix_trello, PhoenixTrello.Endpoint,
   cache_static_lookup: false,
   check_origin: false,
   watchers: [
-    node: ["node_modules/webpack/bin/webpack.js", "--watch", "--color"]
+    node: ["node_modules/webpack/bin/webpack.js", "--watch", "--color", cd: Path.expand("../", __DIR__)]
   ]
 
 ...
@@ -259,7 +259,7 @@ version of that file:
 //web/static/js/reducers/index.js
 
 import { combineReducers }  from 'redux';
-import { routeReducer }     from 'redux-simple-router';
+import { routerReducer }    from 'react-router-redux';
 import session              from './session';
 
 export default combineReducers({
@@ -421,7 +421,7 @@ defmodule PhoenixTrello.Router do
   scope "/", PhoenixTrello do
     pipe_through :browser # Use the default browser stack
 
-    get "*path", PageController, :index
+    get "/*path", PageController, :index
   end
 end
 ```
