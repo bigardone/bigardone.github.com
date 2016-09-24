@@ -74,7 +74,10 @@ Now our ```package.json``` should look something similar to this:
     "webpack": "^1.12.9"
   },
   "dependencies": {
-
+    ...
+    "phoenix": "file:deps/phoenix",
+    "phoenix_html": "file:deps/phoenix_html",
+    ...
   },
 }
 ```
@@ -199,11 +202,6 @@ css/application.css  49.3 kB       0  [emitted]  application
 Child extract-text-webpack-plugin:
         + 2 hidden modules
 ```
-
-There is just one more thing to do here. If we look into the ```private/static/js```
-folder we will find a ```phoenix.js``` file. This file contains everything we need to
-use **websockets** and their **channels**, so let's move it to our base source
-folder ```web/static/js``` so we can require it wherever we may need it.
 
 ### Front-end basic structure
 Now that we have everything ready to start coding, let's begin by creating our
