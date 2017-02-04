@@ -13,16 +13,16 @@ a very cool startup not only with an awesome product, but with a very passionate
 and talented [team][459e406b] as well, and I have been very busy since then.
 Apart from working for such a team, another of the main reasons for joining was that most of the
 current stack is **Elixir** and **Phoenix**, so it was an excellent opportunity for solving real
-problems with some of my favorite technologies. At that time, I also started to
+problems using some of my favorite technologies. At that time, I also started to
 play around with [Elm][elmlanglink], _the functional programming language for the web_, rewriting some of my pet projects
 like [Phoenix Battleship][pheonixbattelshiplink].
 As a **React**/**Redux** fan and recently converted functional programmer, I felt it was the right
-path to take. Once I was comfortable enough, I proposed building a proof of concept
-of a **SPA** in **Elm** as the new front-end for an internal tool that we use at **TBOE**
-for creating landing pages. A couple of weeks later, the POC was ready, pushed to production,
+path to take. Once I was comfortable enough with the syntax and architecture, I proposed building a proof of concept
+in **Elm** as the new front-end for an internal tool that we use at **TBOE**
+for creating landing pages. A few weeks later, the POC was ready, pushed to production,
 and has been working without a single runtime error since then.
 
-I am having so much fun coding in **Elm** that I wanted to write a small series about creating a small
+I am having so much fun coding in **Elm** that I can't resist writing a small series about creating a small
 **SPA**, covering basic topics such as integrating **Elm** in a **Phoenix** project, routing in an **Elm**
 program, making HTTP requests and sockets support. So let's get started!
 
@@ -30,13 +30,12 @@ program, making HTTP requests and sockets support. So let's get started!
 The people who either know me well or have worked with me know that I am extremely passionate about any
 new technology that I start learning and I like. However, in the case of Elm, it has been different.
 I first heard about Elm almost a year ago, while learning Elixir and doing my first pet projects,
-reading an article about Redux.
-In fact, I discovered that Elm's architecture inspired Redux and it caught my attention immediately.
+and I think it was reading some kind of article about Redux.
+In fact, in thanks to that article, I discovered that Elm's architecture inspired Redux and that caught my attention immediately.
 After an initial try, I decided that learning Elixir was enough task, and left Elm for later, but I
-kept reading articles and tutorials about it. It was not until version 0.17 came out, that I decided
-to give it another try,  and I have been coding Elm almost every day since then,
-just for the joy of it most of the time. Joy is a word that truly represents to me the experience of
-coding in Elm because:
+kept reading articles and tutorials about it. It was not until when version 0.17 came out, that I decided
+to give it another try, and I have been coding Elm almost every day since then, just for the joy of it most of the time.
+Joy is a word that truly represents to me the experience of coding in Elm because:
 
 - It is functional and immutable; therefore I do not need to be switching between paradigms while coding back-end and front-end.
 - Its type system in combination with its gentle compiler forces you to write good and error-free code.
@@ -257,11 +256,16 @@ iex(1)> Elm compile: Main.elm, in web/elm, to ../static/js/main.js
 10:27:50 - info: compiled 89 files into 2 files, copied 2 in 15.2 sec
 ```
 
-Visiting [http://localhost:4000][localhosturl] shoud render the **Hello, World!** message in the browser.
+Visiting [http://localhost:4000][localhosturl] should render the **Hello, World!** message in the browser.
 
 Enough for now. In the next part, we will dig a bit more in the Elm architecture, define our application's
 state and start coding our first Elm modules. In the meantime, you can take a look to the repository with
-the final result or see it in action in the working demo.
+the final result or see it in action in the live demo.
+
+<div class="btn-wrapper">
+  <a href="https://phoenix-and-elm.herokuapp.com/" target="_blank" class="btn"><i class="fa fa-cloud"></i> Live demo</a>
+  <a href="https://github.com/bigardone/phoenix-and-elm" target="_blank" class="btn"><i class="fa fa-github"></i> Source code</a>
+</div>
 
 Happy coding!
 
