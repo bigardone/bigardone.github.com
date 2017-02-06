@@ -210,6 +210,8 @@ which is very similar to npm's package.json file, and the core configuration on 
 Now we can add a very basic `Main.elm` file with the `Main` module that simply returns a **Hello, World!** message:
 
 ```elm
+--- web/elm/Main.elm
+
 module Main exposing (..)
 
 import Html exposing (Html, text)
