@@ -6,6 +6,19 @@ excerpt:
   Introduction to creating a SPA with Phoenix and Elm.
 ---
 
+
+<div class="index">
+  <p>This post belongs to the <strong>Phoenix and Elm, a real use case</strong> series.</p>
+  <ol>
+    <li><a href="/blog/2017/02/02/phoenix-and-elm-a-real-use-case-pt-1/">Introduction to creating a SPA with Phoenix and Elm</a></li>
+    <li><a href="/blog/2017/02/08/phoenix-and-elm-a-real-use-case-pt-2/">Rendering the initial contact list</a></li>
+    <li>Coming soon...</li>
+  </ol>
+
+  <a href="https://phoenix-and-elm.herokuapp.com/" target="_blank"><i class="fa fa-cloud"></i> Live demo</a> |
+  <a href="https://github.com/bigardone/phoenix-and-elm" target="_blank"><i class="fa fa-github"></i> Source code</a>
+</div>
+
 ## Introduction
 
 It has been a long time since my last post. Last September I joined [The Book of Everyone][24f7093e],
