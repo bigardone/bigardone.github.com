@@ -19,7 +19,7 @@ excerpt: Rendering the initial contact list
 
 ## Initial contact list
 In the [previous part](/blog/2017/02/02/phoenix-and-elm-a-real-use-case-pt-1/) we setup the project and created the very basic **Elm** main module.
-se we want to paginate the list of contacts instead of displaying all of them to the user.
+Today we are going to render the first page of contacts, so let's get started with the backend part. I say page because we want to paginate the list of contacts instead of displaying all of them to the user.
 For this, we first need to install an **Elixir** dependency to help us with the pagination functionality.
 The library I usually use for this purpose is [scrivener_ecto](https://github.com/drewolson/scrivener_ecto), so let's add it to the `mix.exs` file:
 
@@ -47,7 +47,19 @@ defmodule PhoenixAndElm.Mixfile do
     ]
 end
 ```
-After running the necessary `mix deps.get`, let's continue by adding, to the `router.ex` file, the new route we are going to use for fetching contacts:
+After running the necessary `mix deps.get`, we have to add some basic configuration to the `repo.ex` file:
+
+```ruby
+# lib/phoenix_and_elm/repo.ex
+
+defmodule PhoenixAndElm.Repo do
+  use Ecto.Repo, otp_app: :phoenix_and_elm
+
+  use Scrivener, page_size: 9
+end
+```
+
+Let's continue by adding, to the `router.ex` file, the new route we are going to use for fetching contacts:
 
 ```ruby
 # web/router.ex
@@ -506,7 +518,7 @@ thing we have to do is to request the first page to the backend. Let's create a 
 module Commands exposing (..)
 
 import Decoders exposing (contactListDecoder)
-import Http
+import Httpjjjjjjjjjjjjjj
 import Messages exposing (Msg(..))
 
 
@@ -574,15 +586,43 @@ contactDecoder =
 As you can see, decoders map fields in the `Model`, one by one. The `|:` is not in the **Elm** core packages, and we need to install
 an additional package to use it, runing `elm package install elm-community/json-extra -y`.
 
-Wow! This part is getting longer than I expected, so let's leave it here for now. With all these changes
+### The final result
+
+Last but not least, let's add some styling. For this particular project I have chosen to write the stylesheets using [stylus](http://stylus-lang.com/),
+so we have to install the [stylus-brunch](https://github.com/brunch/stylus-brunch) and [nib](https://github.com/tj/nib) packages and add them to the `brunch-config.js` file:
+
+```bash
+$ npm install --save-dev stylus-brunch nib
+```
+
+```javascript
+// brunch-config.js
+
+exports.config = {
+  // ...
+
+  plugins: {
+    // ...
+
+    stylus: {
+      plugins: ['nib']
+    }
+  }
+
+  // ...
+}
+```
+
+I do not want to spend any more time talking about the styles and make you lose the focus, so just copy them from [here](https://github.com/bigardone/phoenix-and-elm/tree/master/web/static/css/modules).
+
+With all these changes
 and after populating the database using a [simple seeds file](https://github.com/bigardone/phoenix-and-elm/blob/tutorial/part-2/priv/repo/seeds.exs),
-we can start the **Phoenix** server and see something similar to this:
+we can start the **Phoenix** server, visit [http://localhost:4000](http://localhost:4000) and see something similar to this:
 
 
 <img src="/images/blog/phoenix_and_elm/part-2.jpg" alt="Final result" style="background: #fff;" />
 
-In the next part, we are going to implement the pagination and search functionalities, which involve adding
-full-text search support for the contacts table. In the meantime, take a look the [branch](https://github.com/bigardone/phoenix-and-elm/blob/tutorial/part-2/priv/repo/seeds.exs)
+Wow! This part is getting longer than I expected, so let's leave it here for now. In the next part, we are going to implement the pagination and search functionalities, which involve adding full-text search support for the contacts table. In the meantime, take a look the [branch](https://github.com/bigardone/phoenix-and-elm/blob/tutorial/part-2/priv/repo/seeds.exs)
 I have prepared with everything we have done so far.
 
 Happy coding!
