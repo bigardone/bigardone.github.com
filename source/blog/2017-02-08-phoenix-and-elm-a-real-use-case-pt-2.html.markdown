@@ -319,7 +319,7 @@ view model =
 headerView : Html Msg
 headerView =
     header
-        []
+        [ class "main-header" ]
         [ h1
             []
             [ text "Phoenix and Elm: A real use case" ]
@@ -518,7 +518,7 @@ thing we have to do is to request the first page to the backend. Let's create a 
 module Commands exposing (..)
 
 import Decoders exposing (contactListDecoder)
-import Httpjjjjjjjjjjjjjj
+import Http
 import Messages exposing (Msg(..))
 
 
