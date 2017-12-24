@@ -1,4 +1,11 @@
 projects:
+  phxsockets:
+    name: phxsockets.io
+    description: Phoenix sockets and channels GUI client
+    url: http://phxsockets.io/
+    tags:
+      - Elm
+      - Websockets
   battleship:
     name: Phoenix Battleship
     description: RT game built with Elixit, Phoenix and React

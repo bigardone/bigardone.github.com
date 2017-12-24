@@ -49,11 +49,12 @@
           &:nth-of-type(2n)
             +omega
 
-          $projects: battleship phoenix_toggl trello_tribute eventostalentoit codeloveandboards cutback multinput talentoit gvbtool quiver tonkalabs scrumrf
+          $projects: phxsockets battleship phoenix_toggl trello_tribute eventostalentoit codeloveandboards cutback multinput talentoit gvbtool quiver tonkalabs scrumrf
 
           @each $project in $projects
             &.#{$project}
               background: #fff image-url('/images/projects/#{$project}.jpg') 50% 0
+              background-size: cover
 
 
           .info

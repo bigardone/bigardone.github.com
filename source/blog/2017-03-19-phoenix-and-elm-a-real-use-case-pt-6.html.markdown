@@ -39,7 +39,7 @@ That being said, today we are going to replace the current **API** controller we
 First of all, let's get rid of what we are not going to need anymore. This includes deleting the `ContactContoller` file, located in `web/controllers/contact_controller.ex`
 and the `ContactView` in `web/views/contact_view.ex`. We also need to update the `router` file to remove the **API** pipeline:
 
-```ruby
+```elixir
 # web/router.ex
 
 defmodule PhoenixAndElm.Router do
@@ -64,7 +64,7 @@ end
 Once we have removed the unnecessary stuff, let's create the channel which is going to replace the old `ContactController`.
 First, we need to declare it in the `UserSocket` module:
 
-```ruby
+```elixir
 # web/channels/user_socket.ex
 
 defmodule PhoenixAndElm.UserSocket do
@@ -79,7 +79,7 @@ end
 
 Next step is to create the `ContactsChannel` module in the same folder:
 
-```ruby
+```elixir
 # web/channels/contacts_channel.ex
 
 defmodule PhoenixAndElm.ContactsChannel do
@@ -130,7 +130,7 @@ The front-end application needs to know the **URL** to create the connection, so
 The easiest way of doing so is by creating a helper method in a **Phoenix** view and call it to assign it to javascript
 globally. Let's add the helper method in the `LayoutView` module:
 
-```ruby
+```elixir
 # web/views/layout_view.ex
 
 defmodule PhoenixAndElm.LayoutView do
@@ -183,11 +183,11 @@ Conveniently, **Elm** has the concept of flags which are values that can be rece
 creating the application. To use flags, we need to do some refactoring in the application, so let's start by editing the `Main` module:
 
 ```elm
-# web/elm/Main.elm
+-- web/elm/Main.elm
 
 module Main exposing (..)
 
-# ...
+-- ...
 
 init : Flags -> Navigation.Location -> ( Model, Cmd Msg )
 init flags location =
@@ -214,25 +214,25 @@ The `main` function now has a Flags type in its definition, that is passed to th
 there to the `initialModel`. Let's move on to the `Model` module to implement this type:
 
  ```elm
- # web/elm/Model.elm
+ -- web/elm/Model.elm
 
  module Model exposing (..)
 
- # ...
+ -- ...
 
 type alias Flags =
     { socketUrl : String }
 
 
 type alias Model =
-    { # ---
+    { -- ---
     , flags : Flags
     }
 
 
 initialModel : Flags -> Route -> Model
 initialModel flags route =
-    { # ...
+    { -- ...
     , flags = flags
     }
  ```
@@ -385,13 +385,13 @@ to join multiple channels, there is an excellent [demo example](https://github.c
 are good to continue, so let's update the `Main` module, so the main program uses the new `subscriptions` function:
 
 ```elm
-# web/elm/src/Main.elm
+-- web/elm/src/Main.elm
 
 module Main exposing (..)
 
 import Subscriptions exposing (subscriptions)
 
-# ...
+-- ...
 
 main : Program Flags Model Msg
 main =
