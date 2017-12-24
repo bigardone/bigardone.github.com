@@ -1,0 +1,93 @@
+<!DOCTYPE html> <!--[if lt IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8 lt-ie7" lang=en-us><![endif]--> <!--[if IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8" lang=en-us><![endif]--> <!--[if IE 8]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if IE 9]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if lt IE 10]><html class="no-js lt-ie10" lang=en-us><![endif]--> <!--[if !IE]>><![endif]--> <html class=no-js lang=en> <head> <title>Trello tribute with Phoenix and React (pt.12) - Code, Love & Boards</title> <meta charset=utf-8 content='text/html' http-equiv=content-type> <meta content='ie=edge,chrome=1' http-equiv=x-ua-compatible> <meta content='Deploying our new Phoenix application on Heroku' name=description> <meta content='Ricardo García Vega - http://twitter.com/bigardone' name=author> <meta content='elixir, phoenix, heroku' name=keywords> <meta content='initial-scale=1.0,user-scalable=no,maximum-scale=1,width=device-width' name=viewport> <link href='//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css' rel=stylesheet> <link href="//fonts.googleapis.com/css?family=Montserrat:400,700|Lora:400,700" media=screen rel=stylesheet /> <link href="../../../../../stylesheets/blog-ed6b1e0f.css" media=all rel=stylesheet /> <link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/styles/tomorrow.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/highlight.min.js'></script> <link href='/images/apple-touch-icon-57x57-6e598dc4.png' rel=apple-touch-icon sizes=57x57> <link href='/images/apple-touch-icon-114x114-5be964ba.png' rel=apple-touch-icon sizes=114x114> <link href='/images/apple-touch-icon-72x72-70084a85.png' rel=apple-touch-icon sizes=72x72> <link href='/images/apple-touch-icon-144x144-1dbb56c1.png' rel=apple-touch-icon sizes=144x144> <link href='/images/apple-touch-icon-60x60-d05a5ea9.png' rel=apple-touch-icon sizes=60x60> <link href='/images/apple-touch-icon-120x120-5dafce59.png' rel=apple-touch-icon sizes=120x120> <link href='/images/apple-touch-icon-76x76-b2c0d784.png' rel=apple-touch-icon sizes=76x76> <link href='/images/apple-touch-icon-152x152-45595360.png' rel=apple-touch-icon sizes=152x152> <link href='/images/favicon-160x160-944ce76e.png' rel=icon sizes=160x160 type='image/png'> <link href='/images/favicon-96x96-b7e4e089.png' rel=icon sizes=96x96 type='image/png'> <link href='/images/favicon-32x32-b7f34a79.png' rel=icon sizes=32x32 type='image/png'> <link href='/images/favicon-16x16-2712c528.png' rel=icon sizes=16x16 type='image/png'> <meta content='#9f00a7' name=msapplication-TileColor> <meta content='/images/mstile-144x144-028d4c4c.png' name=msapplication-TileImage> <script>
+  var _StatHat = _StatHat || [];
+  _StatHat.push(['_setUser', 'NzIzMCDaNaL5bvEP1HQkMYwfYsQe']);
+  (function() {
+          var sh = document.createElement('script'); sh.type = 'text/javascript';
+          sh.async = true;
+          sh.src = '//www.stathat.com/javascripts/api.js';
+          var s = document.getElementsByTagName('script')[0];
+          s.parentNode.insertBefore(sh, s);
+  })();
+</script> <link href='https://blog.diacode.com/trello-clone-with-phoenix-and-react-pt-12' rel=canonical> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Trello tribute with Phoenix and React (pt.12)</h1> <h3></h3> <div class=meta-data> <hr> posted Mar 4, 2016 on <a class=tag href="/blog/tags/elixir.html">elixir</a> <a class=tag href="/blog/tags/phoenix.html">phoenix</a> <a class=tag href="/blog/tags/heroku.html">heroku</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <div class=index> <p>This post belongs to the <strong>Trello tribute with Phoenix Framework and React</strong> series.</p> <ol> <li><a href="/blog/2016/01/04/trello-tribute-with-phoenix-and-react-pt-1">Intro and selected stack</a></li> <li><a href="/blog/2016/01/11/trello-tribute-with-phoenix-and-react-pt-2">Phoenix Framework project setup</a></li> <li><a href="/blog/2016/01/12/trello-tribute-with-phoenix-and-react-pt-3">The User model and JWT auth</a></li> <li><a href="/blog/2016/01/14/trello-tribute-with-phoenix-and-react-pt-4/">Front-end for sign up with React and Redux</a></li> <li><a href="/blog/2016/01/18/trello-tribute-with-phoenix-and-react-pt-5/">Database seeding and sign in controller</a></li> <li><a href="/blog/2016/01/20/trello-tribute-with-phoenix-and-react-pt-6/">Front-end authentication with React and Redux</a></li> <li><a href="/blog/2016/01/25/trello-tribute-with-phoenix-and-react-pt-7/">Sockets and channels</a></li> <li><a href="/blog/2016/01/28/trello-tribute-with-phoenix-and-react-pt-8/">Listing and creating boards</a></li> <li><a href="/blog/2016/02/04/trello-tribute-with-phoenix-and-react-pt-9/">Adding new board members</a></li> <li><a href="/blog/2016/02/15/trello-tribute-with-phoenix-and-react-pt-10/">Tracking connected board members</a></li> <li><a href="/blog/2016/02/24/trello-tribute-with-phoenix-and-react-pt-11/">Adding lists and cards</a></li> <li><a href="/blog/2016/03/04/trello-tribute-with-phoenix-and-react-pt-12/">Deploying our application on Heroku</a></li> </ol> <a href="https://phoenix-trello.herokuapp.com/"><i class="fa fa-cloud"></i> Live demo</a> | <a href="https://github.com/bigardone/phoenix-trello"><i class="fa fa-github"></i> Source code</a> </div> <h2>Deploying on Heroku</h2> <p>We finally made it. After 11 parts we&#39;ve learned how to setup a new <strong>Phoenix</strong> project with <strong>Webpack</strong>, <strong>React</strong> and <strong>Redux</strong>. We have created a secure authentication system based on <strong>JWT</strong> tokens, created <strong>migrations</strong> for the necessary schemas for our database, coded socket and channels for realtime features and built a <strong>GenServer</strong> process to keep track of connected board members. Now is time to share it with the world by deploying it on <a title=Heroku href="https://www.heroku.com/">Heroku</a>. Let&#39;s do this!</p> <h3>Setting up Heroku</h3> <p>Before going any further we&#39;ll assume we already have a <strong>Heroku</strong> account and the <a title="Heroku toolbelt" href="https://toolbelt.heroku.com/">Heroku Toolbet</a> installed. For deploying <strong>Phoenix</strong> applications on <strong>Heroku</strong> we need to use two different <em>buildpacks</em>, so lets create the new application using the <a title="Heroku buildpack multi" href="https://github.com/ddollar/heroku-buildpack-multi">multi-buildpack</a>:</p> <pre><code class="bash">$ heroku create phoenix-trello --buildpack https://github.com/ddollar/heroku-buildpack-multi
+</code></pre> <p>This will create our new application on <strong>Heroku</strong> and add the git remote <code>heroku</code> repository that we&#39;ll use for deploying. As just said before, we need two different <em>buildpacks</em> for a <strong>Phoenix</strong> application:</p> <ol> <li><a title="Heroku Buildpack for Elixir" href="https://github.com/HashNuke/heroku-buildpack-elixir">heroku-buildpack-elixir</a>: Main buildpack for Elixir applications.</li> <li><a title="Phoenix Static Buildpack" href="https://github.com/gjaldon/heroku-buildpack-phoenix-static">heroku-buildpack-phoenix-static</a>: For static assets compilation.</li> </ol> <p>To add both of them lets create a <code>.buildpacks</code> file and add both of them:</p> <pre><code class="bash"># .buildpacks
+
+https://github.com/HashNuke/heroku-buildpack-elixir
+https://github.com/gjaldon/phoenix-static-buildpack
+</code></pre> <p>If we need to change any aspect regarding the new Elixir production environment, we can do it by adding a <code>elixir_buildpack.config</code> file:</p> <pre><code class="bash"># elixir_buildpack.config
+
+# Elixir version
+elixir_version=1.2.3
+
+# Always rebuild from scratch on every deploy?
+always_rebuild=true
+</code></pre> <p>In our case we are specifying the Elixir version and also forcing the environment to rebuild everything, included dependencies, on every deployment. The same can be done for static assets by adding a <code>phoenix_static_buildpack.config</code> file:</p> <pre><code class="bash"># phoenix_static_buildpack.config
+
+# We can set the version of Node to use for the app here
+node_version=5.3.0
+
+# We can set the version of NPM to use for the app here
+npm_version=3.5.2
+</code></pre> <p>In this case we are specifying the <code>node</code> and <code>npm</code> versions we need for <strong>Webpack</strong> to build our static assets. Finally we have to create a <code>compile</code> file where we&#39;ll set how to compile our assets after every new deployment:</p> <pre><code class="bash"># compile
+
+info &quot;Building Phoenix static assets&quot;
+webpack
+mix phoenix.digest
+</code></pre> <p>Note that we run the <code>phoenix.digest</code> <a title="Mix.Tasks.Phoenix.Digest" href="https://hexdocs.pm/phoenix/Mix.Tasks.Phoenix.Digest.html">mix task</a> after the <code>webpack</code> build to generate the digested and compressed versions of the assets.</p> <h3>Setting up our production environment</h3> <p>Before deploying for the first time, we need to update the <code>prod.exs</code> file with some necessary configuration changes:</p> <pre><code class="elixir"># config/prod.exs
+
+use Mix.Config
+# ...
+
+config :phoenix_trello, PhoenixTrello.Endpoint,
+  # ..
+  url: [scheme: &quot;https&quot;, host: &quot;phoenix-trello.herokuapp.com&quot;, port: 443],
+  # ..
+  secret_key_base: System.get_env(&quot;SECRET_KEY_BASE&quot;)
+
+# ..
+
+# Configure your database
+config :phoenix_trello, PhoenixTrello.Repo,
+  # ..
+  url: System.get_env(&quot;DATABASE_URL&quot;),
+  pool_size: 20
+
+# Configure guardian
+config :guardian, Guardian,
+  secret_key: System.get_env(&quot;GUARDIAN_SECRET_KEY&quot;)
+</code></pre> <p>Basically what we are doing is enforcing it to use our <strong>Heroku</strong> application&#39;s url and enforce the SSL connection provided. We are also using some environment variables to configure the <code>secret_key_base</code>, database <code>url</code> and guardian&#39;s <code>secret_key</code>. The database <code>url</code> will be automatically created by <strong>Heroku</strong> once we deploy it for the first time, but for the other two we need to generate them and add them using the command line:</p> <pre><code class="bash">$ mix phoenix.gen.secret
+xxxxxxxxxx
+$ heroku config:set SECRET_KEY_BASE=&quot;xxxxxxxxxx&quot;
+...
+...
+
+$ mix phoenix.gen.secret
+yyyyyyyyyyy
+$ heroku config:set GUARDIAN_SECRET_KEY=&quot;yyyyyyyyyyy&quot;
+...
+...
+</code></pre> <p>And we are ready to deploy!</p> <h3>Deploying</h3> <p>After committing all this changes to our repository, we can deploy the application by simply running:</p> <pre><code class="bash">$ git push heroku master
+...
+...
+...
+</code></pre> <p>If we take a look to the console output we can see how both <em>buildpacks</em> do their job by installing <strong>Erlang</strong> and <strong>Elixir</strong> with their necessary dependencies as well as <strong>node</strong> and <strong>npm</strong> among other tasks. Finally we need to run the migration in order to create the database tables:</p> <pre><code class="bash">$ heroku run mix ecto.migrate
+</code></pre> <p>And that&#39;s it, our application is deployed and ready to go!</p> <h3>Conclusion</h3> <p>Deploying a <strong>Phoenix</strong> application on <strong>Heroku</strong> is pretty easy and straightforward. It might not be the best solution around, but for a demo application like this it works really well. I hope you have enjoyed building and deploying this application as much as I have. While writing the whole series I&#39;ve made a lot of changes to the final codebase, correcting some stuff and adding a lot more features. If you want to check them don&#39;t forget to visit the demo or fork the repository:</p> <div class=btn-wrapper> <a href="https://phoenix-trello.herokuapp.com/" target=_blank class=btn><i class="fa fa-cloud"></i> Live demo</a> <a href="https://github.com/bigardone/phoenix-trello" target=_blank class=btn><i class="fa fa-github"></i> Source code</a> </div> <p>Thanks for reading and for the support :)</p> <p>Happy coding!</p> <div id=disqus_thread></div> <script>
+  /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+  var disqus_shortname = 'codeloveandboards'; // required: replace example with your forum shortname
+  
+  /* * * DON'T EDIT BELOW THIS LINE * * */
+  (function() {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script> <noscript> Please enable JavaScript to view the <a href='//disqus.com/?ref_noscript'>comments powered by Disqus.</a> </noscript> <a class=dsq-brlink href='//disqus.com'> comments powered by <span class=logo-disqus>Disqus</span> </a> </article> </section> </div> </section> <footer id=main_footer> <ul class=article-nav> <li class=previous> <a href="/blog/2016/02/24/trello-tribute-with-phoenix-and-react-pt-11/"><h4>previous post</h4> <h3> Trello tribute with Phoenix and React (pt.11) </h3> <div class=meta-data> <hr> posted Feb 24, 2016 on elixir, phoenix, react, redux </div> </a> </li> <li class=next> <a href="/blog/2016/03/20/supervising-multiple-genserver-processes/"><h4>next post</h4> <h3> Supervising multiple GenServer processes </h3> <div class=meta-data> <hr> posted Mar 20, 2016 on elixir, otp, genserver, supervisor </div> </a> </li> </ul> <section> <div class=container> <div class=center> <ul> <li> <a href='/blog'>Archives</a> </li> <li> <a href='//feeds.feedburner.com/CodeLoveAndBoards' target=_blank>RSS</a> </li> </ul> Copyright © 2017 - Ricardo García Vega - Code, Love & Boards! </div> </div> </section> </footer> <script src="../../../../../javascripts/blog-5ddb0520.js"></script> <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  
+  ga('create', 'UA-37802122-1', 'codeloveandboards.com');
+  ga('send', 'pageview');
+</script> <script>
+  _StatHat.push(["_trackCount", "g2pcD9xou7DlR0DtndiwvSBBYU5k", 1.0]);
+</script> </body> </html>

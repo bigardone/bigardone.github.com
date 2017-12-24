@@ -1,0 +1,284 @@
+<!DOCTYPE html> <!--[if lt IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8 lt-ie7" lang=en-us><![endif]--> <!--[if IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8" lang=en-us><![endif]--> <!--[if IE 8]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if IE 9]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if lt IE 10]><html class="no-js lt-ie10" lang=en-us><![endif]--> <!--[if !IE]>><![endif]--> <html class=no-js lang=en> <head> <title>Trello tribute with Phoenix and React (pt.4) - Code, Love & Boards</title> <meta charset=utf-8 content='text/html' http-equiv=content-type> <meta content='ie=edge,chrome=1' http-equiv=x-ua-compatible> <meta content='Adding the front-end for the sign up with React and Redux.' name=description> <meta content='Ricardo García Vega - http://twitter.com/bigardone' name=author> <meta content='elixir, phoenix, react, redux' name=keywords> <meta content='initial-scale=1.0,user-scalable=no,maximum-scale=1,width=device-width' name=viewport> <link href='//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css' rel=stylesheet> <link href="//fonts.googleapis.com/css?family=Montserrat:400,700|Lora:400,700" media=screen rel=stylesheet /> <link href="../../../../../stylesheets/blog-ed6b1e0f.css" media=all rel=stylesheet /> <link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/styles/tomorrow.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/highlight.min.js'></script> <link href='/images/apple-touch-icon-57x57-6e598dc4.png' rel=apple-touch-icon sizes=57x57> <link href='/images/apple-touch-icon-114x114-5be964ba.png' rel=apple-touch-icon sizes=114x114> <link href='/images/apple-touch-icon-72x72-70084a85.png' rel=apple-touch-icon sizes=72x72> <link href='/images/apple-touch-icon-144x144-1dbb56c1.png' rel=apple-touch-icon sizes=144x144> <link href='/images/apple-touch-icon-60x60-d05a5ea9.png' rel=apple-touch-icon sizes=60x60> <link href='/images/apple-touch-icon-120x120-5dafce59.png' rel=apple-touch-icon sizes=120x120> <link href='/images/apple-touch-icon-76x76-b2c0d784.png' rel=apple-touch-icon sizes=76x76> <link href='/images/apple-touch-icon-152x152-45595360.png' rel=apple-touch-icon sizes=152x152> <link href='/images/favicon-160x160-944ce76e.png' rel=icon sizes=160x160 type='image/png'> <link href='/images/favicon-96x96-b7e4e089.png' rel=icon sizes=96x96 type='image/png'> <link href='/images/favicon-32x32-b7f34a79.png' rel=icon sizes=32x32 type='image/png'> <link href='/images/favicon-16x16-2712c528.png' rel=icon sizes=16x16 type='image/png'> <meta content='#9f00a7' name=msapplication-TileColor> <meta content='/images/mstile-144x144-028d4c4c.png' name=msapplication-TileImage> <script>
+  var _StatHat = _StatHat || [];
+  _StatHat.push(['_setUser', 'NzIzMCDaNaL5bvEP1HQkMYwfYsQe']);
+  (function() {
+          var sh = document.createElement('script'); sh.type = 'text/javascript';
+          sh.async = true;
+          sh.src = '//www.stathat.com/javascripts/api.js';
+          var s = document.getElementsByTagName('script')[0];
+          s.parentNode.insertBefore(sh, s);
+  })();
+</script> <link href='https://blog.diacode.com/trello-clone-with-phoenix-and-react-pt-4' rel=canonical> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Trello tribute with Phoenix and React (pt.4)</h1> <h3></h3> <div class=meta-data> <hr> posted Jan 14, 2016 on <a class=tag href="/blog/tags/elixir.html">elixir</a> <a class=tag href="/blog/tags/phoenix.html">phoenix</a> <a class=tag href="/blog/tags/react.html">react</a> <a class=tag href="/blog/tags/redux.html">redux</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <div class=index> <p>This post belongs to the <strong>Trello tribute with Phoenix Framework and React</strong> series.</p> <ol> <li><a href="/blog/2016/01/04/trello-tribute-with-phoenix-and-react-pt-1">Intro and selected stack</a></li> <li><a href="/blog/2016/01/11/trello-tribute-with-phoenix-and-react-pt-2">Phoenix Framework project setup</a></li> <li><a href="/blog/2016/01/12/trello-tribute-with-phoenix-and-react-pt-3">The User model and JWT auth</a></li> <li><a href="/blog/2016/01/14/trello-tribute-with-phoenix-and-react-pt-4/">Front-end for sign up with React and Redux</a></li> <li><a href="/blog/2016/01/18/trello-tribute-with-phoenix-and-react-pt-5/">Database seeding and sign in controller</a></li> <li><a href="/blog/2016/01/20/trello-tribute-with-phoenix-and-react-pt-6/">Front-end authentication with React and Redux</a></li> <li><a href="/blog/2016/01/25/trello-tribute-with-phoenix-and-react-pt-7/">Sockets and channels</a></li> <li><a href="/blog/2016/01/28/trello-tribute-with-phoenix-and-react-pt-8/">Listing and creating boards</a></li> <li><a href="/blog/2016/02/04/trello-tribute-with-phoenix-and-react-pt-9/">Adding new board members</a></li> <li><a href="/blog/2016/02/15/trello-tribute-with-phoenix-and-react-pt-10/">Tracking connected board members</a></li> <li><a href="/blog/2016/02/24/trello-tribute-with-phoenix-and-react-pt-11/">Adding lists and cards</a></li> <li><a href="/blog/2016/03/04/trello-tribute-with-phoenix-and-react-pt-12/">Deploying our application on Heroku</a></li> </ol> <a href="https://phoenix-trello.herokuapp.com/"><i class="fa fa-cloud"></i> Live demo</a> | <a href="https://github.com/bigardone/phoenix-trello"><i class="fa fa-github"></i> Source code</a> </div> <h2>User sign up</h2> <p>In the <a title="Part 3" href="/blog/2016/01/12/trello-tribute-with-phoenix-and-react-pt-3">last post</a> we created the <code>User</code> model with its validations and the necessary changeset transformation to generate the encrypted password, we also updated our router file and created the <code>RegistrationController</code> where a new user request is handled and returns the user in <strong>JSON</strong> and its <strong>jwt</strong> token for authenticating future requests. Now let&#39;s move on to the front-end side.</p> <h3>Preparing the React router</h3> <p>The main goal is to have two public routes, <code>/sign_in</code> and <code>/sign_up</code>, which any visitor is going to be able to visit in order to log into the application or register a new user account.</p> <p>On the other hand we are going to need a <code>/</code> as the root route to display all the boards belonging to the user and finally a <code>/boards/:id</code> route to display the selected board by the user. To access these last two routes, the user must be authenticated, otherwise we&#39;ll redirect him to the registration screen.</p> <p>So let&#39;s update the <strong>react-router</strong> <code>routes</code> file to represent this:</p> <pre><code class="javascript">// web/static/js/routes/index.js
+
+import { IndexRoute, Route }        from &#39;react-router&#39;;
+import React                        from &#39;react&#39;;
+import MainLayout                   from &#39;../layouts/main&#39;;
+import AuthenticatedContainer       from &#39;../containers/authenticated&#39;;
+import HomeIndexView                from &#39;../views/home&#39;;
+import RegistrationsNew             from &#39;../views/registrations/new&#39;;
+import SessionsNew                  from &#39;../views/sessions/new&#39;;
+import BoardsShowView               from &#39;../views/boards/show&#39;;
+
+export default (
+  &lt;Route component={MainLayout}&gt;
+    &lt;Route path=&quot;/sign_up&quot; component={RegistrationsNew} /&gt;
+    &lt;Route path=&quot;/sign_in&quot; component={SessionsNew} /&gt;
+
+    &lt;Route path=&quot;/&quot; component={AuthenticatedContainer}&gt;
+      &lt;IndexRoute component={HomeIndexView} /&gt;
+
+      &lt;Route path=&quot;/boards/:id&quot; component={BoardsShowView} /&gt;
+    &lt;/Route&gt;
+  &lt;/Route&gt;
+);
+</code></pre> <p>The tricky part is the <code>AuthenticatedContainer</code>, let&#39;s take a look at it:</p> <pre><code class="javascript">// web/static/js/containers/authenticated.js
+
+import React        from &#39;react&#39;;
+import { connect }  from &#39;react-redux&#39;;
+import { routeActions } from &#39;redux-simple-router&#39;;
+
+class AuthenticatedContainer extends React.Component {
+  componentDidMount() {
+    const { dispatch, currentUser } = this.props;
+
+    if (localStorage.getItem(&#39;phoenixAuthToken&#39;)) {
+      dispatch(Actions.currentUser());
+    } else {
+      dispatch(routeActions.push(&#39;/sign_up&#39;));
+    }
+  }
+
+  render() {
+    // ...
+  }
+}
+
+const mapStateToProps = (state) =&gt; ({
+  currentUser: state.session.currentUser,
+});
+
+export default connect(mapStateToProps)(AuthenticatedContainer);
+
+</code></pre> <p>What we basically do here is, when the component mounts, check if the <strong>jwt</strong> token is present in the browser&#39;s local storage. Later on we will see how to set it, but for now let&#39;s just imagine that it doesn&#39;t exist, so thanks to the <strong>redux-simple-router</strong> library we will redirect the user to the sign up page.</p> <h3>The sign up view component</h3> <p>This is what we will render to the user once we detect that he is not authenticated:</p> <pre><code class="javascript">// web/static/js/views/registrations/new.js
+
+import React, {PropTypes}   from &#39;react&#39;;
+import { connect }          from &#39;react-redux&#39;;
+import { Link }             from &#39;react-router&#39;;
+
+import { setDocumentTitle, renderErrorsFor } from &#39;../../utils&#39;;
+import Actions              from &#39;../../actions/registrations&#39;;
+
+class RegistrationsNew extends React.Component {
+  componentDidMount() {
+    setDocumentTitle(&#39;Sign up&#39;);
+  }
+
+  _handleSubmit(e) {
+    e.preventDefault();
+
+    const { dispatch } = this.props;
+
+    const data = {
+      first_name: this.refs.firstName.value,
+      last_name: this.refs.lastName.value,
+      email: this.refs.email.value,
+      password: this.refs.password.value,
+      password_confirmation: this.refs.passwordConfirmation.value,
+    };
+
+    dispatch(Actions.signUp(data));
+  }
+
+  render() {
+    const { errors } = this.props;
+
+    return (
+      &lt;div className=&quot;view-container registrations new&quot;&gt;
+        &lt;main&gt;
+          &lt;header&gt;
+            &lt;div className=&quot;logo&quot; /&gt;
+          &lt;/header&gt;
+          &lt;form onSubmit={::this._handleSubmit}&gt;
+            &lt;div className=&quot;field&quot;&gt;
+              &lt;input ref=&quot;firstName&quot; type=&quot;text&quot; placeholder=&quot;First name&quot; required={true} /&gt;
+              {renderErrorsFor(errors, &#39;first_name&#39;)}
+            &lt;/div&gt;
+            &lt;div className=&quot;field&quot;&gt;
+              &lt;input ref=&quot;lastName&quot; type=&quot;text&quot; placeholder=&quot;Last name&quot; required={true} /&gt;
+              {renderErrorsFor(errors, &#39;last_name&#39;)}
+            &lt;/div&gt;
+            &lt;div className=&quot;field&quot;&gt;
+              &lt;input ref=&quot;email&quot; type=&quot;email&quot; placeholder=&quot;Email&quot; required={true} /&gt;
+              {renderErrorsFor(errors, &#39;email&#39;)}
+            &lt;/div&gt;
+            &lt;div className=&quot;field&quot;&gt;
+              &lt;input ref=&quot;password&quot; type=&quot;password&quot; placeholder=&quot;Password&quot; required={true} /&gt;
+              {renderErrorsFor(errors, &#39;password&#39;)}
+            &lt;/div&gt;
+            &lt;div className=&quot;field&quot;&gt;
+              &lt;input ref=&quot;passwordConfirmation&quot; type=&quot;password&quot; placeholder=&quot;Confirm password&quot; required={true} /&gt;
+              {renderErrorsFor(errors, &#39;password_confirmation&#39;)}
+            &lt;/div&gt;
+            &lt;button type=&quot;submit&quot;&gt;Sign up&lt;/button&gt;
+          &lt;/form&gt;
+          &lt;Link to=&quot;/sign_in&quot;&gt;Sign in&lt;/Link&gt;
+        &lt;/main&gt;
+      &lt;/div&gt;
+    );
+  }
+}
+
+const mapStateToProps = (state) =&gt; ({
+  errors: state.registration.errors,
+});
+
+export default connect(mapStateToProps)(RegistrationsNew);
+</code></pre> <p>Not very much to say about this component... it changes the document&#39;s title when it mounts, it also renders the sign up form and dispatches the result of the <code>signUp</code> registration action creator.</p> <h3>The action creator</h3> <p>When the previous form is submitted we want to send the data to the server where it will be processed:</p> <pre><code class="javascript">// web/static/js/actions/registrations.js
+
+import { pushPath }  from &#39;redux-simple-router&#39;;
+import Constants     from &#39;../constants&#39;;
+import { httpPost }  from &#39;../utils&#39;;
+
+const Actions = {};
+
+Actions.signUp = (data) =&gt; {
+  return dispatch =&gt; {
+    httpPost(&#39;/api/v1/registrations&#39;, {user: data})
+    .then((data) =&gt; {
+      localStorage.setItem(&#39;phoenixAuthToken&#39;, data.jwt);
+
+      dispatch({
+        type: Constants.CURRENT_USER,
+        currentUser: data.user,
+      });
+
+      dispatch(pushPath(&#39;/&#39;));
+    })
+    .catch((error) =&gt; {
+      error.response.json()
+      .then((errorJSON) =&gt; {
+        dispatch({
+          type: Constants.REGISTRATIONS_ERROR,
+          errors: errorJSON.errors,
+        });
+      });
+    });
+  };
+};
+
+export default Actions;
+
+</code></pre> <p>When the <code>RegistrationsNew</code> component calls this action creator passing the form data, a new <strong>POST</strong> request is sent to the server. The request is filtered by <strong>Phoenix</strong>&#39;s router and processed by the <code>RegistrationController</code> we previously created in the <a href="https://blog.diacode.com/trello-clone-with-phoenix-and-react-pt-3">previous blog post</a>. If the result is successful then the returned <code>jwt</code> token is stored into the <code>localStorage</code>, the created user data is dispatched in the <code>CURRENT_USER</code> action and it finally redirects the user to the root path. On the contrary, if there is any error related to the registration data, it will dispatch <code>REGISTRATIONS_ERROR</code> action with the errors so we can show them in the form to the user.</p> <p>For these http requests we are going to lean on the <a title="Isomorphic fetch package" href="https://github.com/matthew-andrews/isomorphic-fetch">isomorphic-fetch</a> package used from our utility file which includes some helpers for this purpose:</p> <pre><code class="javascript">// web/static/js/utils/index.js
+
+import React        from &#39;react&#39;;
+import fetch        from &#39;isomorphic-fetch&#39;;
+import { polyfill } from &#39;es6-promise&#39;;
+
+export function checkStatus(response) {
+  if (response.status &gt;= 200 &amp;&amp; response.status &lt; 300) {
+    return response;
+  } else {
+    var error = new Error(response.statusText);
+    error.response = response;
+    throw error;
+  }
+}
+
+export function parseJSON(response) {
+  return response.json();
+}
+
+export function httpPost(url, data) {
+  const headers = {
+    Authorization: localStorage.getItem(&#39;phoenixAuthToken&#39;),
+    Accept: &#39;application/json&#39;,
+    &#39;Content-Type&#39;: &#39;application/json&#39;,
+  }
+
+  const body = JSON.stringify(data);
+
+  return fetch(url, {
+    method: &#39;post&#39;,
+    headers: headers,
+    body: body,
+  })
+  .then(checkStatus)
+  .then(parseJSON);
+}
+
+// ...
+
+</code></pre> <h3>The reducers</h3> <p>The final step is to handle these actions results with the reducers so that we can create the new state tree the application needs. First let&#39;s take a look to the <code>session</code> reducer where the <code>currentUser</code> is going to be set:</p> <pre><code class="javascript">// web/static/js/reducers/session.js
+
+import Constants from &#39;../constants&#39;;
+
+const initialState = {
+  currentUser: null,
+};
+
+export default function reducer(state = initialState, action = {}) {
+  switch (action.type) {
+    case Constants.CURRENT_USER:
+      return { ...state, currentUser: action.currentUser };
+
+    default:
+      return state;
+  }
+}
+
+</code></pre> <p>In case there is any kind of registration errors we also need to update the new state with them so they can be displayed to the user. Let&#39;s add them in the <code>registration</code> reducer:</p> <pre><code class="javascript">// web/static/js/reducers/registration.js
+
+
+import Constants from &#39;../constants&#39;;
+
+const initialState = {
+  errors: null,
+};
+
+export default function reducer(state = initialState, action = {}) {
+  switch (action.type) {
+    case Constants.REGISTRATIONS_ERROR:
+      return {...state, errors: action.errors};
+
+    default:
+      return state;
+  }
+}
+</code></pre> <p>Note that for displaying the errors we are calling the <code>renderErrorsFor</code> function from the utils file:</p> <pre><code class="javascript">// web/static/js/utils/index.js
+
+// ...
+
+export function renderErrorsFor(errors, ref) {
+  if (!errors) return false;
+
+  return errors.map((error, i) =&gt; {
+    if (error[ref]) {
+      return (
+        &lt;div key={i} className=&quot;error&quot;&gt;
+          {error[ref]}
+        &lt;/div&gt;
+      );
+    }
+  });
+}
+</code></pre> <p>And that&#39;s all for the registration process. In the next post we will see how existing users can authenticate into the application and have access to their private stuff. Meanwhile, don&#39;t forget to check out the live demo and final source code:</p> <div class=btn-wrapper> <a href="https://phoenix-trello.herokuapp.com/" target=_blank class=btn><i class="fa fa-cloud"></i> Live demo</a> <a href="https://github.com/bigardone/phoenix-trello" target=_blank class=btn><i class="fa fa-github"></i> Source code</a> </div> <p>Happy coding!</p> <div id=disqus_thread></div> <script>
+  /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+  var disqus_shortname = 'codeloveandboards'; // required: replace example with your forum shortname
+  
+  /* * * DON'T EDIT BELOW THIS LINE * * */
+  (function() {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script> <noscript> Please enable JavaScript to view the <a href='//disqus.com/?ref_noscript'>comments powered by Disqus.</a> </noscript> <a class=dsq-brlink href='//disqus.com'> comments powered by <span class=logo-disqus>Disqus</span> </a> </article> </section> </div> </section> <footer id=main_footer> <ul class=article-nav> <li class=previous> <a href="/blog/2016/01/12/trello-tribute-with-phoenix-and-react-pt-3/"><h4>previous post</h4> <h3> Trello tribute with Phoenix and React (pt.3) </h3> <div class=meta-data> <hr> posted Jan 12, 2016 on elixir, phoenix, ecto </div> </a> </li> <li class=next> <a href="/blog/2016/01/18/trello-tribute-with-phoenix-and-react-pt-5/"><h4>next post</h4> <h3> Trello tribute with Phoenix and React (pt.5) </h3> <div class=meta-data> <hr> posted Jan 18, 2016 on elixir, phoenix, ecto </div> </a> </li> </ul> <section> <div class=container> <div class=center> <ul> <li> <a href='/blog'>Archives</a> </li> <li> <a href='//feeds.feedburner.com/CodeLoveAndBoards' target=_blank>RSS</a> </li> </ul> Copyright © 2017 - Ricardo García Vega - Code, Love & Boards! </div> </div> </section> </footer> <script src="../../../../../javascripts/blog-5ddb0520.js"></script> <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  
+  ga('create', 'UA-37802122-1', 'codeloveandboards.com');
+  ga('send', 'pageview');
+</script> <script>
+  _StatHat.push(["_trackCount", "g2pcD9xou7DlR0DtndiwvSBBYU5k", 1.0]);
+</script> </body> </html>

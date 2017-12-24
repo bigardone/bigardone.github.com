@@ -1,0 +1,80 @@
+<!DOCTYPE html> <!--[if lt IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8 lt-ie7" lang=en-us><![endif]--> <!--[if IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8" lang=en-us><![endif]--> <!--[if IE 8]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if IE 9]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if lt IE 10]><html class="no-js lt-ie10" lang=en-us><![endif]--> <!--[if !IE]>><![endif]--> <html class=no-js lang=en> <head> <title>Simulando enumeradores en nuestros modelos - Code, Love & Boards</title> <meta charset=utf-8 content='text/html' http-equiv=content-type> <meta content='ie=edge,chrome=1' http-equiv=x-ua-compatible> <meta content='A blog about coding web apps, loving life and board sports by Ricardo García Vega' name=description> <meta content='Ricardo García Vega - http://twitter.com/bigardone' name=author> <meta content='rails, models' name=keywords> <meta content='initial-scale=1.0,user-scalable=no,maximum-scale=1,width=device-width' name=viewport> <link href='//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css' rel=stylesheet> <link href="//fonts.googleapis.com/css?family=Montserrat:400,700|Lora:400,700" media=screen rel=stylesheet /> <link href="../../../../../stylesheets/blog-ed6b1e0f.css" media=all rel=stylesheet /> <link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/styles/tomorrow.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/highlight.min.js'></script> <link href='/images/apple-touch-icon-57x57-6e598dc4.png' rel=apple-touch-icon sizes=57x57> <link href='/images/apple-touch-icon-114x114-5be964ba.png' rel=apple-touch-icon sizes=114x114> <link href='/images/apple-touch-icon-72x72-70084a85.png' rel=apple-touch-icon sizes=72x72> <link href='/images/apple-touch-icon-144x144-1dbb56c1.png' rel=apple-touch-icon sizes=144x144> <link href='/images/apple-touch-icon-60x60-d05a5ea9.png' rel=apple-touch-icon sizes=60x60> <link href='/images/apple-touch-icon-120x120-5dafce59.png' rel=apple-touch-icon sizes=120x120> <link href='/images/apple-touch-icon-76x76-b2c0d784.png' rel=apple-touch-icon sizes=76x76> <link href='/images/apple-touch-icon-152x152-45595360.png' rel=apple-touch-icon sizes=152x152> <link href='/images/favicon-160x160-944ce76e.png' rel=icon sizes=160x160 type='image/png'> <link href='/images/favicon-96x96-b7e4e089.png' rel=icon sizes=96x96 type='image/png'> <link href='/images/favicon-32x32-b7f34a79.png' rel=icon sizes=32x32 type='image/png'> <link href='/images/favicon-16x16-2712c528.png' rel=icon sizes=16x16 type='image/png'> <meta content='#9f00a7' name=msapplication-TileColor> <meta content='/images/mstile-144x144-028d4c4c.png' name=msapplication-TileImage> <script>
+  var _StatHat = _StatHat || [];
+  _StatHat.push(['_setUser', 'NzIzMCDaNaL5bvEP1HQkMYwfYsQe']);
+  (function() {
+          var sh = document.createElement('script'); sh.type = 'text/javascript';
+          sh.async = true;
+          sh.src = '//www.stathat.com/javascripts/api.js';
+          var s = document.getElementsByTagName('script')[0];
+          s.parentNode.insertBefore(sh, s);
+  })();
+</script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Simulando enumeradores en nuestros modelos</h1> <h3></h3> <div class=meta-data> <hr> posted May 19, 2013 on <a class=tag href="/blog/tags/rails.html">rails</a> <a class=tag href="/blog/tags/models.html">models</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <p>Es muy común que en nuestros modelos hagamos el uso de <strong>enumeradores</strong> para posteriormente usarlos para asignarle un valor a alguno de sus atributos como su tipo, estado, ó similar. Hace poco he visto una manera <a href="//rails-bestpractices.com/posts/708-clever-enums-in-rails" target=_blank>muy sencilla</a> de implementar esto y me gustaría compartirla con los que no la conozcáis :)</p> <p>Supongamos que tenemos en nuestra aplicación tenemos el siguiente modelo:</p> <pre><code class="ruby">class SurfBoard &lt; ActiveRecord::Base
+
+  attr_accessible :tipo
+
+end
+</code></pre> <p>Queremos que el atributo <strong>tipo</strong> defina los distintos tipos de tablas de surf que un usuario va poder seleccionar a la hora de crear una nueva instancia. Además queremos controlar que el valor de <strong>tipo</strong> esté dentro de una lista de valores que nosotros controlemos, ya que dependiendo de ese valor queremos variar la funcionalidad de algunas partes de nuestra aplicación.</p> <p>Lo primero que podríamos hacer sería crear una constante con el array de los valores posibles para este atributo:</p> <pre><code class="ruby">class SurfBoard &lt; ActiveRecord::Base
+
+  TIPOS = [&#39;shortboard&#39;, &#39;egg&#39;, &#39;fish&#39;, &#39;funboard&#39;, &#39;malibu&#39;, &#39;gun&#39;, &#39;longboard&#39;]
+
+  attr_accessible :tipo
+
+end
+</code></pre> <p>El problema de esta forma de implementación es que cuando quieras asignar el tipo de la tabla, tienes que hacerlo &quot;manualmente&quot;, asignando uno de los valores permitidos a mano en tu código, lo que puede dar a lugar a problemas si no se tiene cuidado a la hora de escribir, provocando datos no consistentes y un funcionamiento no deseado de la aplicación:</p> <pre><code class="ruby">surf_board = SurfBoard.new tipo: &#39;fsih&#39; # Oh my! Me bailado una letra por teclear rápido
+</code></pre> <p>Para solventar esto, podemos hacer dos cosas muy sencillas. Lo primero va a ser añadir una validación al atributo <strong>tipo</strong>, y lo segundo va a ser usar en <strong>hash</strong> en vez de un simple array para almacenar los valores permitidos:</p> <pre><code class="ruby">class SurfBoard &lt; ActiveRecord::Base
+
+  TIPOS = {
+    shortboard: &#39;shortboard&#39;,
+    egg: &#39;egg&#39;,
+    fish: &#39;fish&#39;,
+    funboard: &#39;funboard&#39;,
+    malibu: &#39;malibu&#39;,
+    gun: &#39;gun&#39;,
+    longboard: &#39;longboard&#39;
+  }
+
+  attr_accessible :tipo
+
+  validates :tipo, inclusion: {in: TIPOS.values}
+
+end
+</code></pre> <p>De esta manera ya no vamos a poder asignar por error un valor no permitido al <strong>tipo</strong> de nuestra tabla:</p> <pre><code class="ruby">surf_board = SurfBoard.new(tipo: SurfBoard::TIPOS[:fish])
+</code></pre> <p>Aunque este método es más seguro que el anterior, aún nos obliga a tener volver en nuestro editor a la clase <strong>SurfBoard</strong> para acordarnos de los valores permitidos y también a usar el método <code>Hash.values</code> para usarlo en validaciones, rellenar <strong>selects</strong> en nuestras vistas, etc.</p> <p>Para optimizarlo aún más, vamos a mezclar ambos casos, usando en vez de un array simple, un array de constantes:</p> <pre><code class="ruby">class SurfBoard &lt; ActiveRecord::Base
+
+  TIPOS = [
+    TIPO_SHORTBOARD = &#39;shortboard&#39;,
+    TIPO_EGG = &#39;egg&#39;,
+    TIPO_FISH = &#39;fish&#39;,
+    TIPO_FUNBOARD = &#39;funboard&#39;,
+    TIPO_MALIBU = &#39;malibu&#39;,
+    TIPO_GUN = &#39;gun&#39;,
+    TIPO_LONGBOARD = &#39;longboard&#39;
+  ]
+
+  attr_accessible :tipo
+
+  validates :tipo, inclusion: {in: TIPOS}
+
+end
+</code></pre> <p>Ahora para asignar un tipo a nuestra tabla solo tenemos que hacer refencia a la constante de su tipo:</p> <pre><code class="ruby">surf_board = SurfBoard.new tipo: SurfBoard::TIPO_FISH
+</code></pre> <p>Además ya no tenemos que usar el método <code>Hash#values</code> y a la hora de programar si nuestro editor soporta auto completado nos listará todos los tipos para que seleccionemos uno, en vez de tener que abrir nuestra clase <strong>SurfBoard</strong> para ver que valores puede aceptar.</p> <p>¿Qué os parece este approach? ¿Alguien conoce alguna otra implementación que le guste más?</p> <div id=disqus_thread></div> <script>
+  /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+  var disqus_shortname = 'codeloveandboards'; // required: replace example with your forum shortname
+  
+  /* * * DON'T EDIT BELOW THIS LINE * * */
+  (function() {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script> <noscript> Please enable JavaScript to view the <a href='//disqus.com/?ref_noscript'>comments powered by Disqus.</a> </noscript> <a class=dsq-brlink href='//disqus.com'> comments powered by <span class=logo-disqus>Disqus</span> </a> </article> </section> </div> </section> <footer id=main_footer> <ul class=article-nav> <li class=previous> <a href="/blog/2013/05/12/cuatro-gemas-de-ruby-que-te-ayudaran-con-tus-modelos-y-base-de-datos/"><h4>previous post</h4> <h3> Cuatro gemas de Ruby que te ayudarán con tus modelos y base de datos. </h3> <div class=meta-data> <hr> posted May 12, 2013 on ruby, rails, gems, data base </div> </a> </li> <li class=next> <a href="/blog/2013/06/06/limpiando-y-organizando-tus-vistas-en-rails/"><h4>next post</h4> <h3> Limpiando y organizando tus vistas en Rails </h3> <div class=meta-data> <hr> posted Jun 6, 2013 on ruby, rails, views </div> </a> </li> </ul> <section> <div class=container> <div class=center> <ul> <li> <a href='/blog'>Archives</a> </li> <li> <a href='//feeds.feedburner.com/CodeLoveAndBoards' target=_blank>RSS</a> </li> </ul> Copyright © 2017 - Ricardo García Vega - Code, Love & Boards! </div> </div> </section> </footer> <script src="../../../../../javascripts/blog-5ddb0520.js"></script> <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  
+  ga('create', 'UA-37802122-1', 'codeloveandboards.com');
+  ga('send', 'pageview');
+</script> <script>
+  _StatHat.push(["_trackCount", "g2pcD9xou7DlR0DtndiwvSBBYU5k", 1.0]);
+</script> </body> </html>

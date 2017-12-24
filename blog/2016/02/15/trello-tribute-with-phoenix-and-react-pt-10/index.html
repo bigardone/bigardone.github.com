@@ -1,0 +1,254 @@
+<!DOCTYPE html> <!--[if lt IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8 lt-ie7" lang=en-us><![endif]--> <!--[if IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8" lang=en-us><![endif]--> <!--[if IE 8]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if IE 9]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if lt IE 10]><html class="no-js lt-ie10" lang=en-us><![endif]--> <!--[if !IE]>><![endif]--> <html class=no-js lang=en> <head> <title>Trello tribute with Phoenix and React (pt.10) - Code, Love & Boards</title> <meta charset=utf-8 content='text/html' http-equiv=content-type> <meta content='ie=edge,chrome=1' http-equiv=x-ua-compatible> <meta content='Tracking connected board members with GenServer' name=description> <meta content='Ricardo García Vega - http://twitter.com/bigardone' name=author> <meta content='elixir, phoenix, genserver, react, redux' name=keywords> <meta content='initial-scale=1.0,user-scalable=no,maximum-scale=1,width=device-width' name=viewport> <link href='//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css' rel=stylesheet> <link href="//fonts.googleapis.com/css?family=Montserrat:400,700|Lora:400,700" media=screen rel=stylesheet /> <link href="../../../../../stylesheets/blog-ed6b1e0f.css" media=all rel=stylesheet /> <link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/styles/tomorrow.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/highlight.min.js'></script> <link href='/images/apple-touch-icon-57x57-6e598dc4.png' rel=apple-touch-icon sizes=57x57> <link href='/images/apple-touch-icon-114x114-5be964ba.png' rel=apple-touch-icon sizes=114x114> <link href='/images/apple-touch-icon-72x72-70084a85.png' rel=apple-touch-icon sizes=72x72> <link href='/images/apple-touch-icon-144x144-1dbb56c1.png' rel=apple-touch-icon sizes=144x144> <link href='/images/apple-touch-icon-60x60-d05a5ea9.png' rel=apple-touch-icon sizes=60x60> <link href='/images/apple-touch-icon-120x120-5dafce59.png' rel=apple-touch-icon sizes=120x120> <link href='/images/apple-touch-icon-76x76-b2c0d784.png' rel=apple-touch-icon sizes=76x76> <link href='/images/apple-touch-icon-152x152-45595360.png' rel=apple-touch-icon sizes=152x152> <link href='/images/favicon-160x160-944ce76e.png' rel=icon sizes=160x160 type='image/png'> <link href='/images/favicon-96x96-b7e4e089.png' rel=icon sizes=96x96 type='image/png'> <link href='/images/favicon-32x32-b7f34a79.png' rel=icon sizes=32x32 type='image/png'> <link href='/images/favicon-16x16-2712c528.png' rel=icon sizes=16x16 type='image/png'> <meta content='#9f00a7' name=msapplication-TileColor> <meta content='/images/mstile-144x144-028d4c4c.png' name=msapplication-TileImage> <script>
+  var _StatHat = _StatHat || [];
+  _StatHat.push(['_setUser', 'NzIzMCDaNaL5bvEP1HQkMYwfYsQe']);
+  (function() {
+          var sh = document.createElement('script'); sh.type = 'text/javascript';
+          sh.async = true;
+          sh.src = '//www.stathat.com/javascripts/api.js';
+          var s = document.getElementsByTagName('script')[0];
+          s.parentNode.insertBefore(sh, s);
+  })();
+</script> <link href='https://blog.diacode.com/trello-clone-with-phoenix-and-react-pt-10' rel=canonical> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Trello tribute with Phoenix and React (pt.10)</h1> <h3></h3> <div class=meta-data> <hr> posted Feb 15, 2016 on <a class=tag href="/blog/tags/elixir.html">elixir</a> <a class=tag href="/blog/tags/phoenix.html">phoenix</a> <a class=tag href="/blog/tags/genserver.html">genserver</a> <a class=tag href="/blog/tags/react.html">react</a> <a class=tag href="/blog/tags/redux.html">redux</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <div class=index> <p>This post belongs to the <strong>Trello tribute with Phoenix Framework and React</strong> series.</p> <ol> <li><a href="/blog/2016/01/04/trello-tribute-with-phoenix-and-react-pt-1">Intro and selected stack</a></li> <li><a href="/blog/2016/01/11/trello-tribute-with-phoenix-and-react-pt-2">Phoenix Framework project setup</a></li> <li><a href="/blog/2016/01/12/trello-tribute-with-phoenix-and-react-pt-3">The User model and JWT auth</a></li> <li><a href="/blog/2016/01/14/trello-tribute-with-phoenix-and-react-pt-4/">Front-end for sign up with React and Redux</a></li> <li><a href="/blog/2016/01/18/trello-tribute-with-phoenix-and-react-pt-5/">Database seeding and sign in controller</a></li> <li><a href="/blog/2016/01/20/trello-tribute-with-phoenix-and-react-pt-6/">Front-end authentication with React and Redux</a></li> <li><a href="/blog/2016/01/25/trello-tribute-with-phoenix-and-react-pt-7/">Sockets and channels</a></li> <li><a href="/blog/2016/01/28/trello-tribute-with-phoenix-and-react-pt-8/">Listing and creating boards</a></li> <li><a href="/blog/2016/02/04/trello-tribute-with-phoenix-and-react-pt-9/">Adding new board members</a></li> <li><a href="/blog/2016/02/15/trello-tribute-with-phoenix-and-react-pt-10/">Tracking connected board members</a></li> <li><a href="/blog/2016/02/24/trello-tribute-with-phoenix-and-react-pt-11/">Adding lists and cards</a></li> <li><a href="/blog/2016/03/04/trello-tribute-with-phoenix-and-react-pt-12/">Deploying our application on Heroku</a></li> </ol> <a href="https://phoenix-trello.herokuapp.com/"><i class="fa fa-cloud"></i> Live demo</a> | <a href="https://github.com/bigardone/phoenix-trello"><i class="fa fa-github"></i> Source code</a> </div> <p><small><strong> Disclaimer:</br> This post is written before the Presence functionality and intended to be a small introduction to the basics of the GenServer behaviour. </strong></small></p> <h2>Tracking connect board members</h2> <p>Recalling <a title="Part 9" href="/blog/2016/02/04/trello-tribute-with-phoenix-and-react-pt-9">last part</a>, we supplied our users with the ability of adding new members to their boards. When an existing user email was added, the new relationship between users and boards was created and the new user was broadcasted along the channel so his avatar would be displayed to all connected members of the board. At first this is cool, but we can do it much better and useful if we could just highlight the members that are currently online and viewing the board. Let&#39;s get started!</p> <h3>The problem</h3> <p>Before continuing let&#39;s first think about what do we want to achieve. So basically we have a board and multiple members that can suddenly visit its url automatically connecting them to the board channel. When this happens, the member&#39;s avatar should be displayed without opacity, contrary to offline members avatars which are displayed semitransparent to differentiate them.</p> <p><img src="/images/blog/trello_tribute_pt_9/board_4-933d1b88.jpg"/></p> <p>When a connected member leaves the board&#39;s url, signs out or even closes his browser we want to broadcast again this event to all connected users in the board channel so his avatar gets semitransparent again, reflecting the user is no longer viewing the board. Let&#39;s think about some ways we could achieve this and their drawbacks:</p> <ol> <li>Managing the connected members list on the front-end in the <strong>Redux</strong> store. This can sound as a valid approach at first but it will only work for members which are already connected to the board channel. Recently connected users will not have that data on their application state.</li> <li>Using the database to keep track of connected members. This could also be valid, but will force us to constantly be hitting the database to ask for connected members and update it whenever a members connects or leaves, not to mention mixing data with a very specific user behavior.</li> </ol> <p>So where can we store this information so it&#39;s accessible to all users in a fast and efficient way? Easy. In a... wait for it... long running stateful process.</p> <h3>The GenServer behavior</h3> <p>Although <em>long running stateful process</em> might sound a bit intimidating at first, it&#39;s a lot more easier to implement than we might expect, thanks to <strong>Elixir</strong> and it&#39;s <a title="GenServer behaviour" href="//elixir-lang.org/docs/stable/elixir/GenServer.html">GensServer</a> behavior.</p> <blockquote> <p>A GenServer is a process as any other Elixir process and it can be used to keep state, execute code asynchronously and so on.</p> </blockquote> <p>Imagine it as a small process running in our server with a map containing the list of connected user ids per board. Something like this:</p> <pre><code class="elixir">%{
+  &quot;1&quot; =&gt; [1, 2, 3],
+  &quot;2&quot; =&gt; [4, 5]
+}
+</code></pre> <p>Now imagine that this process ​had a public interface to init itself and update its state map, for adding or removing boards and connected users. Well, that&#39;s basically a <strong>GenServer</strong> process, and I say <em>basically</em> because it will also have underlying advantages like tracing, error reporting and supervision capabilities.</p> <h3>The BoardChannel Monitor</h3> <p>So let&#39;s create our very basic version of this process which is going to keep track of the list of board connected members:</p> <pre><code class="elixir"># /lib/phoenix_trello/board_channel/monitor.ex
+
+defmodule PhoenixTrello.BoardChannel.Monitor do
+  use GenServer
+
+  #####
+  # Client API
+
+  def start_link(initial_state) do
+   GenServer.start_link(__MODULE__, initial_state, name: __MODULE__)
+  end
+end
+</code></pre> <p>When working with <strong>GenServer</strong> we have to think both in the external client API functions and the server implementation of them. The first we need to implement is the <code>start_link</code> one, which will really start our <strong>GenServer</strong> passing the initial state, in our case an empty map, as an argument among the module and the name of the server. We want this process to start when our application starts too, so let&#39;s add it to the children list of our application supervision tree:</p> <pre><code class="elixir"># /lib/phoenix_trello.ex
+
+defmodule PhoenixTrello do
+  use Application
+
+  def start(_type, _args) do
+    import Supervisor.Spec, warn: false
+
+    children = [
+      # ...
+      worker(PhoenixTrello.BoardChannel.Monitor, [%{}]),
+      # ...
+    ]
+
+    # ...
+  end
+end
+</code></pre> <p>By doing this, every time our application starts it will automatically call the <code>start_link</code> function we&#39;ve just created passing the <code>%{}</code> empty map as initial state. If the <code>Monitor</code> happened to break for any reason, the application will also automatically restart it again with a new empty map. Cool, isn&#39;t it? Now that we have setup everything let&#39;s beging with adding members to the <code>Monitor</code>&#39;s state map.</p> <h3>Handling joining members</h3> <p>For this we need to add both the client function and it&#39;s server callback handler:</p> <pre><code class="ruby"># /lib/phoenix_trello/board_channel/monitor.ex
+
+defmodule PhoenixTrello.BoardChannel.Monitor do
+  use GenServer
+
+  #####
+  # Client API
+
+  # ...
+
+  def member_joined(board, member) do
+   GenServer.call(__MODULE__, {:member_joined, board, member})
+  end
+
+  #####
+ # Server callbacks
+
+ def handle_call({:member_joined, board, member}, _from, state) do
+   state = case Map.get(state, board) do
+     nil -&gt;
+       state = state
+       |&gt; Map.put(board, [member])
+
+       {:reply, [member], state}
+     members -&gt;
+       state = state
+       |&gt; Map.put(board, Enum.uniq([member | members]))
+
+       {:reply, Map.get(state, board), state}
+   end
+ end
+end
+</code></pre> <p>When calling the <code>member_joined/2</code> function passing a board and a user, we will internally make a call to the <strong>GenServer</strong> process with the message <code>{:member_joined, board, member}</code>. Thus why we need to add a server callback handler for it. The <a title="GenServer handle_call/3" href="//elixir-lang.org/docs/stable/elixir/GenServer.html#c:handle_call/3"><code>handle_call/3</code></a> callback function from <code>GenServer</code> receives the request message, the caller, and the current state. So in our case we will try to get the board from the state, and add the user to the list of users for it. In case we don&#39;t have that board yet, we&#39;ll add it with a new list containing the joined user. As response we will return the user list belonging to the board.</p> <p>Having this done, where should we call the <code>member_joined</code> method? In the <strong>BoardChannel</strong> while the user joins:</p> <pre><code class="elixir"># /web/channels/board_channel.ex
+
+defmodule PhoenixTrello.BoardChannel do
+  use PhoenixTrello.Web, :channel
+
+  alias PhoenixTrello.{User, Board, UserBoard, List, Card, Comment, CardMember}
+  alias PhoenixTrello.BoardChannel.Monitor
+
+  def join(&quot;boards:&quot; &lt;&gt; board_id, _params, socket) do
+    current_user = socket.assigns.current_user
+    board = get_current_board(socket, board_id)
+
+    connected_users = Monitor.user_joined(board_id, current_user.id)
+
+    send(self, {:after_join, connected_users})
+
+    {:ok, %{board: board}, assign(socket, :board, board)}
+  end
+
+  def handle_info({:after_join, connected_users}, socket) do
+    broadcast! socket, &quot;user:joined&quot;, %{users: connected_users}
+
+    {:noreply, socket}
+  end
+
+  # ...
+end
+</code></pre> <p>So when he joins we use the new <code>Monitor</code> to track him, and broadcast through the socket the updated list of users currently in the board. Now we can handle this broadcast in the front-end to update the application state with the new list of connected users:</p> <pre><code class="javascript">// /web/static/js/actions/current_board.js
+
+import Constants  from &#39;../constants&#39;;
+
+const Actions = {
+
+  // ...
+  connectToChannel: (socket, boardId) =&gt; {
+    return dispatch =&gt; {
+      const channel = socket.channel(`boards:${boardId}`);
+      // ...
+
+      channel.on(&#39;user:joined&#39;, (msg) =&gt; {
+        dispatch({
+          type: Constants.CURRENT_BOARD_CONNECTED_USERS,
+          users: msg.users,
+        });
+      });
+    };
+  }
+}
+</code></pre> <p>The only thing left is to change the avatar&#39;s opacity depending on whether the board member is listed in this array or not:</p> <pre><code class="javascript">// /web/static/js/components/boards/users.js
+
+export default class BoardUsers extends React.Component {
+  _renderUsers() {
+    return this.props.users.map((user) =&gt; {
+      const index = this.props.connectedUsers.findIndex((cu) =&gt; {
+        return cu.id === user.id;
+      });
+
+      const classes = classnames({ connected: index != -1 });
+
+      return (
+        &lt;li className={classes} key={user.id}&gt;
+          &lt;ReactGravatar className=&quot;react-gravatar&quot; email={user.email} https/&gt;
+        &lt;/li&gt;
+      );
+    });
+  }
+
+  // ...
+}
+</code></pre> <h3>Handling member disconnection</h3> <p>The process when a user leaves the board channel is almost the same. Let&#39;s first update the <code>Monitor</code> to add the necessary client function and its server callback handler:</p> <pre><code class="elixir"># /lib/phoenix_trello/board_channel/monitor.ex
+
+defmodule PhoenixTrello.BoardChannel.Monitor do
+  use GenServer
+
+  #####
+  # Client API
+
+  # ...
+
+  def member_left(board, member) do
+    GenServer.call(__MODULE__, {:member_left, board, member})
+  end
+
+  #####
+  # Server callbacks
+
+  # ...
+
+  def handle_call({:member_left, board, member}, _from, state) do
+    new_members = state
+      |&gt; Map.get(board)
+      |&gt; List.delete(member)
+
+    state = state
+      |&gt; Map.update!(board, fn(_) -&gt; new_members end)
+
+    {:reply, new_members, state}
+  end
+end
+</code></pre> <p>As you can see, it&#39;s almost the same functionality as the <code>member_joined</code> but reversed. It looks for the board in the state and deletes the member, replacing the existing members list with this new one and returning it in the response. As in the join functionality we are also going to call this function from the <code>BoardChannel</code> so let&#39;s update it:</p> <pre><code class="elixir"># /web/channels/board_channel.ex
+
+defmodule PhoenixTrello.BoardChannel do
+  use PhoenixTrello.Web, :channel
+  # ...
+
+  def terminate(_reason, socket) do
+    board_id = Board.slug_id(socket.assigns.board)
+    user_id = socket.assigns.current_user.id
+
+    broadcast! socket, &quot;user:left&quot;, %{users: Monitor.user_left(board_id, user_id)}
+
+    :ok
+  end
+end
+</code></pre> <p>When the connection to the channel terminates, it will broadcast the updated list of members through the socket just like we did before. To terminate the channel connection we will create an action creator that we&#39;ll use once the current board view is unmounted, and we also need to add the handler for the <code>user:left</code> broadcast:</p> <pre><code class="javascript">// /web/static/js/actions/current_board.js
+
+import Constants  from &#39;../constants&#39;;
+
+const Actions = {
+
+  // ...
+
+  connectToChannel: (socket, boardId) =&gt; {
+    return dispatch =&gt; {
+      const channel = socket.channel(`boards:${boardId}`);
+      // ...
+
+      channel.on(&#39;user:left&#39;, (msg) =&gt; {
+        dispatch({
+          type: Constants.CURRENT_BOARD_CONNECTED_USERS,
+          users: msg.users,
+        });
+      });
+    };
+  },
+
+  leaveChannel: (channel) =&gt; {
+    return dispatch =&gt; {
+      channel.leave();
+    };
+  },
+}
+</code></pre> <p>Don&#39;t forget to update the <code>BoardsShowView</code> component to dispatch the <code>leaveChannel</code> action creator when it unmounts:</p> <pre><code class="javascript">// /web/static/js/views/boards/show.js
+
+import Actions              from &#39;../../actions/current_board&#39;;
+// ...
+
+class BoardsShowView extends React.Component {
+  // ...
+
+  componentWillUnmount() {
+    const { dispatch,  currentBoard} = this.props;
+
+    dispatch(Actions.leaveChannel(currentBoard.channel));
+  }
+
+}
+ // ...
+</code></pre> <p>And that&#39;s it! To test it just open two different browsers and sign in with a different user on each. Then navigate to the same board wit both and and play around entering and leaving with the other. You&#39;ll se his avatar transitioning from semitransparent and back again, which is pretty cool.</p> <p>I hope you have enjoyed working with <strong>GenServer</strong> as much as I did the first time. But we have only scratched the surface. <strong>GenServer</strong> and <strong>Supervisors</strong> are very powerful tools <strong>Elixir</strong> offers us, which are completely native and bullet proof, without the need of third party dependencies contrary to <strong>Redis</strong>, for instance. In the next post we will continue creating lists and cards in realtime with the help of the socket and channels. Meanwhile, don&#39;t forget to check out the live demo and final source code:</p> <div class=btn-wrapper> <a href="https://phoenix-trello.herokuapp.com/" target=_blank class=btn><i class="fa fa-cloud"></i> Live demo</a> <a href="https://github.com/bigardone/phoenix-trello" target=_blank class=btn><i class="fa fa-github"></i> Source code</a> </div> <p>Happy coding!</p> <div id=disqus_thread></div> <script>
+  /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+  var disqus_shortname = 'codeloveandboards'; // required: replace example with your forum shortname
+  
+  /* * * DON'T EDIT BELOW THIS LINE * * */
+  (function() {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script> <noscript> Please enable JavaScript to view the <a href='//disqus.com/?ref_noscript'>comments powered by Disqus.</a> </noscript> <a class=dsq-brlink href='//disqus.com'> comments powered by <span class=logo-disqus>Disqus</span> </a> </article> </section> </div> </section> <footer id=main_footer> <ul class=article-nav> <li class=previous> <a href="/blog/2016/02/04/trello-tribute-with-phoenix-and-react-pt-9/"><h4>previous post</h4> <h3> Trello tribute with Phoenix and React (pt.9) </h3> <div class=meta-data> <hr> posted Feb 4, 2016 on elixir, phoenix, react, redux </div> </a> </li> <li class=next> <a href="/blog/2016/02/24/trello-tribute-with-phoenix-and-react-pt-11/"><h4>next post</h4> <h3> Trello tribute with Phoenix and React (pt.11) </h3> <div class=meta-data> <hr> posted Feb 24, 2016 on elixir, phoenix, react, redux </div> </a> </li> </ul> <section> <div class=container> <div class=center> <ul> <li> <a href='/blog'>Archives</a> </li> <li> <a href='//feeds.feedburner.com/CodeLoveAndBoards' target=_blank>RSS</a> </li> </ul> Copyright © 2017 - Ricardo García Vega - Code, Love & Boards! </div> </div> </section> </footer> <script src="../../../../../javascripts/blog-5ddb0520.js"></script> <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  
+  ga('create', 'UA-37802122-1', 'codeloveandboards.com');
+  ga('send', 'pageview');
+</script> <script>
+  _StatHat.push(["_trackCount", "g2pcD9xou7DlR0DtndiwvSBBYU5k", 1.0]);
+</script> </body> </html>

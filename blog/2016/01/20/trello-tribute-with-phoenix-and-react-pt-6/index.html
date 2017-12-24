@@ -1,0 +1,379 @@
+<!DOCTYPE html> <!--[if lt IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8 lt-ie7" lang=en-us><![endif]--> <!--[if IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8" lang=en-us><![endif]--> <!--[if IE 8]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if IE 9]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if lt IE 10]><html class="no-js lt-ie10" lang=en-us><![endif]--> <!--[if !IE]>><![endif]--> <html class=no-js lang=en> <head> <title>Trello tribute with Phoenix and React (pt.6) - Code, Love & Boards</title> <meta charset=utf-8 content='text/html' http-equiv=content-type> <meta content='ie=edge,chrome=1' http-equiv=x-ua-compatible> <meta content='Handling user authentication from the front-end with React and Redux.' name=description> <meta content='Ricardo García Vega - http://twitter.com/bigardone' name=author> <meta content='elixir, phoenix, react, redux' name=keywords> <meta content='initial-scale=1.0,user-scalable=no,maximum-scale=1,width=device-width' name=viewport> <link href='//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css' rel=stylesheet> <link href="//fonts.googleapis.com/css?family=Montserrat:400,700|Lora:400,700" media=screen rel=stylesheet /> <link href="../../../../../stylesheets/blog-ed6b1e0f.css" media=all rel=stylesheet /> <link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/styles/tomorrow.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/highlight.min.js'></script> <link href='/images/apple-touch-icon-57x57-6e598dc4.png' rel=apple-touch-icon sizes=57x57> <link href='/images/apple-touch-icon-114x114-5be964ba.png' rel=apple-touch-icon sizes=114x114> <link href='/images/apple-touch-icon-72x72-70084a85.png' rel=apple-touch-icon sizes=72x72> <link href='/images/apple-touch-icon-144x144-1dbb56c1.png' rel=apple-touch-icon sizes=144x144> <link href='/images/apple-touch-icon-60x60-d05a5ea9.png' rel=apple-touch-icon sizes=60x60> <link href='/images/apple-touch-icon-120x120-5dafce59.png' rel=apple-touch-icon sizes=120x120> <link href='/images/apple-touch-icon-76x76-b2c0d784.png' rel=apple-touch-icon sizes=76x76> <link href='/images/apple-touch-icon-152x152-45595360.png' rel=apple-touch-icon sizes=152x152> <link href='/images/favicon-160x160-944ce76e.png' rel=icon sizes=160x160 type='image/png'> <link href='/images/favicon-96x96-b7e4e089.png' rel=icon sizes=96x96 type='image/png'> <link href='/images/favicon-32x32-b7f34a79.png' rel=icon sizes=32x32 type='image/png'> <link href='/images/favicon-16x16-2712c528.png' rel=icon sizes=16x16 type='image/png'> <meta content='#9f00a7' name=msapplication-TileColor> <meta content='/images/mstile-144x144-028d4c4c.png' name=msapplication-TileImage> <script>
+  var _StatHat = _StatHat || [];
+  _StatHat.push(['_setUser', 'NzIzMCDaNaL5bvEP1HQkMYwfYsQe']);
+  (function() {
+          var sh = document.createElement('script'); sh.type = 'text/javascript';
+          sh.async = true;
+          sh.src = '//www.stathat.com/javascripts/api.js';
+          var s = document.getElementsByTagName('script')[0];
+          s.parentNode.insertBefore(sh, s);
+  })();
+</script> <link href='https://blog.diacode.com/trello-clone-with-phoenix-and-react-pt-6' rel=canonical> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Trello tribute with Phoenix and React (pt.6)</h1> <h3></h3> <div class=meta-data> <hr> posted Jan 20, 2016 on <a class=tag href="/blog/tags/elixir.html">elixir</a> <a class=tag href="/blog/tags/phoenix.html">phoenix</a> <a class=tag href="/blog/tags/react.html">react</a> <a class=tag href="/blog/tags/redux.html">redux</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <div class=index> <p>This post belongs to the <strong>Trello tribute with Phoenix Framework and React</strong> series.</p> <ol> <li><a href="/blog/2016/01/04/trello-tribute-with-phoenix-and-react-pt-1">Intro and selected stack</a></li> <li><a href="/blog/2016/01/11/trello-tribute-with-phoenix-and-react-pt-2">Phoenix Framework project setup</a></li> <li><a href="/blog/2016/01/12/trello-tribute-with-phoenix-and-react-pt-3">The User model and JWT auth</a></li> <li><a href="/blog/2016/01/14/trello-tribute-with-phoenix-and-react-pt-4/">Front-end for sign up with React and Redux</a></li> <li><a href="/blog/2016/01/18/trello-tribute-with-phoenix-and-react-pt-5/">Database seeding and sign in controller</a></li> <li><a href="/blog/2016/01/20/trello-tribute-with-phoenix-and-react-pt-6/">Front-end authentication with React and Redux</a></li> <li><a href="/blog/2016/01/25/trello-tribute-with-phoenix-and-react-pt-7/">Sockets and channels</a></li> <li><a href="/blog/2016/01/28/trello-tribute-with-phoenix-and-react-pt-8/">Listing and creating boards</a></li> <li><a href="/blog/2016/02/04/trello-tribute-with-phoenix-and-react-pt-9/">Adding new board members</a></li> <li><a href="/blog/2016/02/15/trello-tribute-with-phoenix-and-react-pt-10/">Tracking connected board members</a></li> <li><a href="/blog/2016/02/24/trello-tribute-with-phoenix-and-react-pt-11/">Adding lists and cards</a></li> <li><a href="/blog/2016/03/04/trello-tribute-with-phoenix-and-react-pt-12/">Deploying our application on Heroku</a></li> </ol> <a href="https://phoenix-trello.herokuapp.com/"><i class="fa fa-cloud"></i> Live demo</a> | <a href="https://github.com/bigardone/phoenix-trello"><i class="fa fa-github"></i> Source code</a> </div> <h2>User sign in front-end</h2> <p>Now that the <a title="Part 5" href="/blog/2016/01/18/trello-tribute-with-phoenix-and-react-pt-5.html.markdown">back-end functionality</a> is ready to handle sign in requests let&#39;s move on to the front-end and see how to build and send these requests and how to use the returned data to allow the user access to private routes.</p> <h3>The routes files</h3> <p>Before continuing let&#39;s take a look again at our React routes file:</p> <pre><code class="javascript">// web/static/js/routes/index.js
+
+import { IndexRoute, Route }        from &#39;react-router&#39;;
+import React                        from &#39;react&#39;;
+import MainLayout                   from &#39;../layouts/main&#39;;
+import AuthenticatedContainer       from &#39;../containers/authenticated&#39;;
+import HomeIndexView                from &#39;../views/home&#39;;
+import RegistrationsNew             from &#39;../views/registrations/new&#39;;
+import SessionsNew                  from &#39;../views/sessions/new&#39;;
+import BoardsShowView               from &#39;../views/boards/show&#39;;
+import CardsShowView               from &#39;../views/cards/show&#39;;
+
+export default (
+  &lt;Route component={MainLayout}&gt;
+    &lt;Route path=&quot;/sign_up&quot; component={RegistrationsNew} /&gt;
+    &lt;Route path=&quot;/sign_in&quot; component={SessionsNew} /&gt;
+
+    &lt;Route path=&quot;/&quot; component={AuthenticatedContainer}&gt;
+      &lt;IndexRoute component={HomeIndexView} /&gt;
+
+      &lt;Route path=&quot;/boards/:id&quot; component={BoardsShowView}&gt;
+        &lt;Route path=&quot;cards/:id&quot; component={CardsShowView}/&gt;
+      &lt;/Route&gt;
+    &lt;/Route&gt;
+  &lt;/Route&gt;
+);
+
+</code></pre> <p>As we saw in <a title="Part 4" href="/blog/2016/01/14/trello-tribute-with-phoenix-and-react-pt-4/">part 4</a>, the <code>AuthenticatedContainer</code> is going to prevent unauthenticated users from accessing the boards views unless the <strong>jwt</strong> token returned from the sign in process is present and valid.</p> <h3>The view component</h3> <p>Now we need to create the <code>SessionsNew</code> component where the sign in form will be rendered:</p> <pre><code class="javascript">import React, {PropTypes}   from &#39;react&#39;;
+import { connect }          from &#39;react-redux&#39;;
+import { Link }             from &#39;react-router&#39;;
+
+import { setDocumentTitle } from &#39;../../utils&#39;;
+import Actions              from &#39;../../actions/sessions&#39;;
+
+class SessionsNew extends React.Component {
+  componentDidMount() {
+    setDocumentTitle(&#39;Sign in&#39;);
+  }
+
+  _handleSubmit(e) {
+    e.preventDefault();
+
+    const { email, password } = this.refs;
+    const { dispatch } = this.props;
+
+    dispatch(Actions.signIn(email.value, password.value));
+  }
+
+  _renderError() {
+    const { error } = this.props;
+
+    if (!error) return false;
+
+    return (
+      &lt;div className=&quot;error&quot;&gt;
+        {error}
+      &lt;/div&gt;
+    );
+  }
+
+  render() {
+    return (
+      &lt;div className=&#39;view-container sessions new&#39;&gt;
+        &lt;main&gt;
+          &lt;header&gt;
+            &lt;div className=&quot;logo&quot; /&gt;
+          &lt;/header&gt;
+          &lt;form onSubmit={::this._handleSubmit}&gt;
+            {::this._renderError()}
+            &lt;div className=&quot;field&quot;&gt;
+              &lt;input ref=&quot;email&quot; type=&quot;Email&quot; placeholder=&quot;Email&quot; required=&quot;true&quot; defaultValue=&quot;john@phoenix-trello.com&quot;/&gt;
+            &lt;/div&gt;
+            &lt;div className=&quot;field&quot;&gt;
+              &lt;input ref=&quot;password&quot; type=&quot;password&quot; placeholder=&quot;Password&quot; required=&quot;true&quot; defaultValue=&quot;12345678&quot;/&gt;
+            &lt;/div&gt;
+            &lt;button type=&quot;submit&quot;&gt;Sign in&lt;/button&gt;
+          &lt;/form&gt;
+          &lt;Link to=&quot;/sign_up&quot;&gt;Create new account&lt;/Link&gt;
+        &lt;/main&gt;
+      &lt;/div&gt;
+    );
+  }
+}
+
+const mapStateToProps = (state) =&gt; (
+  state.session
+);
+
+export default connect(mapStateToProps)(SessionsNew);
+</code></pre> <p>It basically renders the form and calls the <code>signIn</code>action creator when submitting it. It will also be connected to the store to get its props which will be updated through the session reducer, so we can display validation errors to the user.</p> <h3>The action creator</h3> <p>Following the user&#39;s interaction flow, let&#39;s create the sessions action creator:</p> <pre><code class="javascript">// web/static/js/actions/sessions.js
+
+import { routeActions }                   from &#39;redux-simple-router&#39;;
+import Constants                          from &#39;../constants&#39;;
+import { Socket }                         from &#39;phoenix&#39;;
+import { httpGet, httpPost, httpDelete }  from &#39;../utils&#39;;
+
+function setCurrentUser(dispatch, user) {
+  dispatch({
+    type: Constants.CURRENT_USER,
+    currentUser: user,
+  });
+
+  // ...
+};
+
+const Actions = {
+  signIn: (email, password) =&gt; {
+    return dispatch =&gt; {
+      const data = {
+        session: {
+          email: email,
+          password: password,
+        },
+      };
+
+      httpPost(&#39;/api/v1/sessions&#39;, data)
+      .then((data) =&gt; {
+        localStorage.setItem(&#39;phoenixAuthToken&#39;, data.jwt);
+        setCurrentUser(dispatch, data.user);
+        dispatch(routeActions.push(&#39;/&#39;));
+      })
+      .catch((error) =&gt; {
+        error.response.json()
+        .then((errorJSON) =&gt; {
+          dispatch({
+            type: Constants.SESSIONS_ERROR,
+            error: errorJSON.error,
+          });
+        });
+      });
+    };
+  },
+
+  // ...
+};
+
+export default Actions;
+
+</code></pre> <p>The <code>signIn</code> function will make a <code>POST</code> request sending as parameters the <code>email</code> and <code>password</code> previously provided by the user. If the authentication on the back-end is successful then it will store the returned <code>jwt</code> token in the <code>localStorage</code> and dispatch the <code>currentUser</code> <strong>JSON</strong> to the store. If, for any reason, there&#39;s a error authenticating the user, it will instead dispatch the errors so we can display them in the sign in form.</p> <h3>The reducer</h3> <p>Now let&#39;s create the <code>session</code> reducer:</p> <pre><code class="javascript">// web/static/js/reducers/session.js
+
+import Constants from &#39;../constants&#39;;
+
+const initialState = {
+  currentUser: null,
+  error: null,
+};
+
+export default function reducer(state = initialState, action = {}) {
+  switch (action.type) {
+    case Constants.CURRENT_USER:
+      return { ...state, currentUser: action.currentUser, error: null };
+
+    case Constants.SESSIONS_ERROR:
+      return { ...state, error: action.error };
+
+    default:
+      return state;
+  }
+}
+
+</code></pre> <p>Not very much to say about it as it&#39;s quite self-explanatory so let&#39;s modify the <code>authenticated</code> container so it&#39;s aware of the new state:</p> <h3>The authenticated container</h3> <pre><code class="javascript">// web/static/js/containers/authenticated.js
+
+import React            from &#39;react&#39;;
+import { connect }      from &#39;react-redux&#39;;
+import Actions          from &#39;../actions/sessions&#39;;
+import { routeActions } from &#39;redux-simple-router&#39;;
+import Header           from &#39;../layouts/header&#39;;
+
+class AuthenticatedContainer extends React.Component {
+  componentDidMount() {
+    const { dispatch, currentUser } = this.props;
+    const phoenixAuthToken = localStorage.getItem(&#39;phoenixAuthToken&#39;);
+
+    if (phoenixAuthToken &amp;&amp; !currentUser) {
+      dispatch(Actions.currentUser());
+    } else if (!phoenixAuthToken) {
+      dispatch(routeActions.push(&#39;/sign_in&#39;));
+    }
+  }
+
+  render() {
+    const { currentUser, dispatch } = this.props;
+
+    if (!currentUser) return false;
+
+    return (
+      &lt;div className=&quot;application-container&quot;&gt;
+        &lt;Header
+          currentUser={currentUser}
+          dispatch={dispatch}/&gt;
+
+        &lt;div className=&quot;main-container&quot;&gt;
+          {this.props.children}
+        &lt;/div&gt;
+      &lt;/div&gt;
+    );
+  }
+}
+
+const mapStateToProps = (state) =&gt; ({
+  currentUser: state.session.currentUser,
+});
+
+export default connect(mapStateToProps)(AuthenticatedContainer);
+
+</code></pre> <p>When this component gets mounted, if there is an authentication token but not a <code>currentUser</code> in the store, it will call the <code>currentUser</code> action creator to retrieve the user&#39;s data from the back-end. Let&#39;s add it:</p> <pre><code class="javascript">// web/static/js/actions/sessions.js
+// ...
+
+const Actions = {
+  // ...
+
+  currentUser: () =&gt; {
+    return dispatch =&gt; {
+      httpGet(&#39;/api/v1/current_user&#39;)
+      .then(function(data) {
+        setCurrentUser(dispatch, data);
+      })
+      .catch(function(error) {
+        console.log(error);
+        dispatch(routeActions.push(&#39;/sign_in&#39;));
+      });
+    };
+  },
+
+  // ...
+}
+
+// ...
+</code></pre> <p>This gets us covered if the user reloads the browser or he just visits the root url again without signing out before. Following our previous steps, after signing the user and setting the <code>currentUser</code> in the state, the component will render normally displaying the header component and its nested children routes.</p> <h3>The header component</h3> <p>This component will render the user&#39;s gravatar and name along with the link to the boards url and the sign out button.</p> <pre><code class="javascript">// web/static/js/layouts/header.js
+
+import React          from &#39;react&#39;;
+import { Link }       from &#39;react-router&#39;;
+import Actions        from &#39;../actions/sessions&#39;;
+import ReactGravatar  from &#39;react-gravatar&#39;;
+
+export default class Header extends React.Component {
+  constructor() {
+    super();
+  }
+
+  _renderCurrentUser() {
+    const { currentUser } = this.props;
+
+    if (!currentUser) {
+      return false;
+    }
+
+    const fullName = [currentUser.first_name, currentUser.last_name].join(&#39; &#39;);
+
+    return (
+      &lt;a className=&quot;current-user&quot;&gt;
+        &lt;ReactGravatar email={currentUser.email} https /&gt; {fullName}
+      &lt;/a&gt;
+    );
+  }
+
+  _renderSignOutLink() {
+    if (!this.props.currentUser) {
+      return false;
+    }
+
+    return (
+      &lt;a href=&quot;#&quot; onClick={::this._handleSignOutClick}&gt;&lt;i className=&quot;fa fa-sign-out&quot;/&gt; Sign out&lt;/a&gt;
+    );
+  }
+
+  _handleSignOutClick(e) {
+    e.preventDefault();
+
+    this.props.dispatch(Actions.signOut());
+  }
+
+  render() {
+    return (
+      &lt;header className=&quot;main-header&quot;&gt;
+        &lt;nav&gt;
+          &lt;ul&gt;
+            &lt;li&gt;
+              &lt;Link to=&quot;/&quot;&gt;&lt;i className=&quot;fa fa-columns&quot;/&gt; Boards&lt;/Link&gt;
+            &lt;/li&gt;
+          &lt;/ul&gt;
+        &lt;/nav&gt;
+        &lt;Link to=&#39;/&#39;&gt;
+          &lt;span className=&#39;logo&#39;/&gt;
+        &lt;/Link&gt;
+        &lt;nav className=&quot;right&quot;&gt;
+          &lt;ul&gt;
+            &lt;li&gt;
+              {this._renderCurrentUser()}
+            &lt;/li&gt;
+            &lt;li&gt;
+              {this._renderSignOutLink()}
+            &lt;/li&gt;
+          &lt;/ul&gt;
+        &lt;/nav&gt;
+      &lt;/header&gt;
+    );
+  }
+}
+
+</code></pre> <p>When the user clicks the sign out button it calls the <code>signOut</code> method of the <code>session</code> action creator. Let&#39;s add it then:</p> <pre><code class="javascript">// web/static/js/actions/sessions.js
+// ...
+
+const Actions = {
+  // ...
+
+  signOut: () =&gt; {
+    return dispatch =&gt; {
+      httpDelete(&#39;/api/v1/sessions&#39;)
+      .then((data) =&gt; {
+        localStorage.removeItem(&#39;phoenixAuthToken&#39;);
+
+        dispatch({
+          type: Constants.USER_SIGNED_OUT,
+        });
+
+        dispatch(routeActions.push(&#39;/sign_in&#39;));
+      })
+      .catch(function(error) {
+        console.log(error);
+      });
+    };
+  },
+
+  // ...
+}
+
+// ...
+</code></pre> <p>It will send a <code>DELETE</code> request against the back-end and, when successful, it will remove the <code>phoenixAuthToken</code> from the <code>localStorage</code> and dispatch the <code>USER_SIGNED_OUT</code> action reseting the <code>currentUser</code> from the state using the previously defined session reducer:</p> <pre><code class="javascript">// web/static/js/reducers/session.js
+
+import Constants from &#39;../constants&#39;;
+
+const initialState = {
+  currentUser: null,
+  error: null,
+};
+
+export default function reducer(state = initialState, action = {}) {
+  switch (action.type) {
+    // ...
+
+    case Constants.USER_SIGNED_OUT:
+      return initialState;
+
+    // ...
+  }
+}
+
+</code></pre> <h3>One more thing</h3> <p>Although we are done with the user sign in process, there is a crucial functionality we haven&#39;t implemented yet, which is going to be the core of all the future features we will code: <strong>the user socket and its channels</strong>. It&#39;s so important that I&#39;d rather prefer leaving it for the next post where we will see how the <code>UserSocket</code> looks like and how to connect to it so we can have bidirectional channels between our front-end and the back-end, displaying changes to the user in realtime. Meanwhile, don&#39;t forget to check out the live demo and final source code:</p> <div class=btn-wrapper> <a href="https://phoenix-trello.herokuapp.com/" target=_blank class=btn><i class="fa fa-cloud"></i> Live demo</a> <a href="https://github.com/bigardone/phoenix-trello" target=_blank class=btn><i class="fa fa-github"></i> Source code</a> </div> <p>Happy coding!</p> <div id=disqus_thread></div> <script>
+  /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+  var disqus_shortname = 'codeloveandboards'; // required: replace example with your forum shortname
+  
+  /* * * DON'T EDIT BELOW THIS LINE * * */
+  (function() {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script> <noscript> Please enable JavaScript to view the <a href='//disqus.com/?ref_noscript'>comments powered by Disqus.</a> </noscript> <a class=dsq-brlink href='//disqus.com'> comments powered by <span class=logo-disqus>Disqus</span> </a> </article> </section> </div> </section> <footer id=main_footer> <ul class=article-nav> <li class=previous> <a href="/blog/2016/01/18/trello-tribute-with-phoenix-and-react-pt-5/"><h4>previous post</h4> <h3> Trello tribute with Phoenix and React (pt.5) </h3> <div class=meta-data> <hr> posted Jan 18, 2016 on elixir, phoenix, ecto </div> </a> </li> <li class=next> <a href="/blog/2016/01/25/trello-tribute-with-phoenix-and-react-pt-7/"><h4>next post</h4> <h3> Trello tribute with Phoenix and React (pt.7) </h3> <div class=meta-data> <hr> posted Jan 25, 2016 on elixir, phoenix, react, redux </div> </a> </li> </ul> <section> <div class=container> <div class=center> <ul> <li> <a href='/blog'>Archives</a> </li> <li> <a href='//feeds.feedburner.com/CodeLoveAndBoards' target=_blank>RSS</a> </li> </ul> Copyright © 2017 - Ricardo García Vega - Code, Love & Boards! </div> </div> </section> </footer> <script src="../../../../../javascripts/blog-5ddb0520.js"></script> <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  
+  ga('create', 'UA-37802122-1', 'codeloveandboards.com');
+  ga('send', 'pageview');
+</script> <script>
+  _StatHat.push(["_trackCount", "g2pcD9xou7DlR0DtndiwvSBBYU5k", 1.0]);
+</script> </body> </html>

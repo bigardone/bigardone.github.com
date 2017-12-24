@@ -1,0 +1,156 @@
+<!DOCTYPE html> <!--[if lt IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8 lt-ie7" lang=en-us><![endif]--> <!--[if IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8" lang=en-us><![endif]--> <!--[if IE 8]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if IE 9]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if lt IE 10]><html class="no-js lt-ie10" lang=en-us><![endif]--> <!--[if !IE]>><![endif]--> <html class=no-js lang=en> <head> <title>React state management fun with Redux - Code, Love & Boards</title> <meta charset=utf-8 content='text/html' http-equiv=content-type> <meta content='ie=edge,chrome=1' http-equiv=x-ua-compatible> <meta content='A blog about coding web apps, loving life and board sports by Ricardo García Vega' name=description> <meta content='Ricardo García Vega - http://twitter.com/bigardone' name=author> <meta content='react, redux' name=keywords> <meta content='initial-scale=1.0,user-scalable=no,maximum-scale=1,width=device-width' name=viewport> <link href='//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css' rel=stylesheet> <link href="//fonts.googleapis.com/css?family=Montserrat:400,700|Lora:400,700" media=screen rel=stylesheet /> <link href="../../../../../stylesheets/blog-ed6b1e0f.css" media=all rel=stylesheet /> <link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/styles/tomorrow.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/highlight.min.js'></script> <link href='/images/apple-touch-icon-57x57-6e598dc4.png' rel=apple-touch-icon sizes=57x57> <link href='/images/apple-touch-icon-114x114-5be964ba.png' rel=apple-touch-icon sizes=114x114> <link href='/images/apple-touch-icon-72x72-70084a85.png' rel=apple-touch-icon sizes=72x72> <link href='/images/apple-touch-icon-144x144-1dbb56c1.png' rel=apple-touch-icon sizes=144x144> <link href='/images/apple-touch-icon-60x60-d05a5ea9.png' rel=apple-touch-icon sizes=60x60> <link href='/images/apple-touch-icon-120x120-5dafce59.png' rel=apple-touch-icon sizes=120x120> <link href='/images/apple-touch-icon-76x76-b2c0d784.png' rel=apple-touch-icon sizes=76x76> <link href='/images/apple-touch-icon-152x152-45595360.png' rel=apple-touch-icon sizes=152x152> <link href='/images/favicon-160x160-944ce76e.png' rel=icon sizes=160x160 type='image/png'> <link href='/images/favicon-96x96-b7e4e089.png' rel=icon sizes=96x96 type='image/png'> <link href='/images/favicon-32x32-b7f34a79.png' rel=icon sizes=32x32 type='image/png'> <link href='/images/favicon-16x16-2712c528.png' rel=icon sizes=16x16 type='image/png'> <meta content='#9f00a7' name=msapplication-TileColor> <meta content='/images/mstile-144x144-028d4c4c.png' name=msapplication-TileImage> <script>
+  var _StatHat = _StatHat || [];
+  _StatHat.push(['_setUser', 'NzIzMCDaNaL5bvEP1HQkMYwfYsQe']);
+  (function() {
+          var sh = document.createElement('script'); sh.type = 'text/javascript';
+          sh.async = true;
+          sh.src = '//www.stathat.com/javascripts/api.js';
+          var s = document.getElementsByTagName('script')[0];
+          s.parentNode.insertBefore(sh, s);
+  })();
+</script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>React state management fun with Redux</h1> <h3></h3> <div class=meta-data> <hr> posted Oct 16, 2015 on <a class=tag href="/blog/tags/react.html">react</a> <a class=tag href="/blog/tags/redux.html">redux</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <p>Some months ago <a href="//martyjs.org/" target=_blank>Marty.js</a> creator announced that <em>v0.10</em> was going to be the last major release. This were sad news to me as I&#39;ve been using <strong>Marty</strong> as my <strong>Flux</strong> implementation of choice for several months in many different projects, I have also written some posts about it and I really love it. He also commented that he had started using <strong>Redux</strong> and recommended everyone to check it out. So that&#39;s what I did.</p> <h2>Redux to the rescue</h2> <p>After visiting <a href="//redux.js.org/">Redux&#39;s</a> website and reading it&#39;s documentation I ended up with the following conclusions about it:</p> <ul> <li>First of all it&#39;s not a <strong>Flux</strong> implementation. It&#39;s inspired on it, but it handles the <em>state</em> in a different way and it&#39;s not dependent on <strong>React</strong> at all, you can use it to handle the <em>state</em> for what ever you might need, not only <strong>React</strong> components.</li> <li>It doesn&#39;t have all the bunch of different concepts other <strong>Flux</strong> implementations do, meaning that it&#39;s really simple to understand and use.</li> <li>Instead of having multiple <em>stores</em> there&#39;s only one keeping all the <em>state</em> of the application.</li> <li>Actions are the same as in other <strong>Flux</strong> implementations. They are the starting point of a change in the <em>state</em>.</li> <li>The <em>state</em> object in the <em>store</em> is immutable and the <em>store</em> is the only one capable of replacing it. We have to use <em>reducer functions</em> to tell the <em>store</em> what is the next new <em>state</em> we want to have.</li> <li>Thanks to it&#39;s React bindings we can map the <em>state</em> to component <em>props</em>, so we have stateless components.</li> </ul> <p>So wrapping up, we have a single <em>store</em> with all the <em>state</em> of the application. To trigger a status update we use <em>action creators</em> functions which return an <em>action</em> object that has a type to identify it and the data for the change. To apply this changes we have to write a <em>reducer function</em> which will return the new state combining the current state and the data provided by the action.</p> <h2>A little less talk and a lot more Redux action</h2> <p>Now that we now the basics, let&#39;s start coding some real stuff. I have cloned my good old Rails and Flux project and re-factored to use Redux instead of Marty. </p> <p><a href="//rails-and-redux.herokuapp.com" target=_blank> <img src="/images/blog/rails_and_redux/redux-8ae62a28.jpg" alt="Rails and Flux" style="background: #fff;"/> </a> <div class=btn-wrapper> <a href="//rails-and-redux.herokuapp.com/" target=_blank class=btn><i class="fa fa-cloud"></i> Live demo</a> <a href="https://github.com/bigardone/rails_and_redux" target=_blank class=btn><i class="fa fa-github"></i> Source code</a> </div></p> <h3>Designing the state tree</h3> <p>Since I&#39;ve started working with <strong>Redux</strong>, I like starting writing my reducers first, so I can design how the <em>state</em> is going to look like. </p> <pre><code class="coffee"># app/frontend/reducers/index.coffee
+
+{ combineReducers } = require &#39;redux&#39;
+
+module.exports = combineReducers
+  people: require &#39;./people&#39;
+  person: require &#39;./person&#39;
+  ...
+</code></pre> <p>We combine all the <em>reducers</em> so the <em>state</em> will have a <code>people</code> object with all the list of contacts, search and pagination related data:</p> <pre><code class="coffee"># app/frontend/reducers/people.coffee
+
+initialState =
+  people: null
+  meta: {}
+  search: &#39;&#39;
+  isLoading: false
+  pageNumber: 1
+
+module.exports = (state = initialState, action) -&gt;
+  state
+</code></pre> <p>And also a <code>person</code> object storing the data of the person we click to see his details.</p> <pre><code class="coffee"># app/frontend/reducers/person.coffee
+
+initialState =
+  person: {}
+  isLoading: false
+
+module.exports = (state = initialState, action) -&gt;
+    state
+</code></pre> <h3>Connecting components to Redux</h3> <p>Now that we have our state tree designed, let&#39;s connect one of our components to the <em>store</em> and specify what state is going to be passed as props to it.</p> <pre><code class="coffee"># app/frontend/components/people/list.cjsx
+
+{ connect } = require &#39;react-redux&#39;
+PersonCard = require &#39;./card&#39;
+
+List = React.createClass
+  displayName: &#39;PeopleSection&#39;
+
+  _renderPeople: &lt;-&gt;    &lt;/-&gt;
+    @props.people.map (person) -&gt;
+      &lt;PersonCard key={person.id} {...person}/&gt;
+
+  render: -&gt;
+    &lt;div&gt;
+      &lt;div className=&quot;cards-wrapper&quot;&gt;
+        {@_renderPeople()}
+      &lt;/div&gt;
+    &lt;/div&gt;
+
+mapStateToProps = (state) -&gt;
+  state.people
+
+module.exports = connect(mapStateToProps)(List)
+</code></pre> <p>We&#39;re rendering <code>PersonCard</code> components iterating over the <em>people</em> prop. As we are connecting it to the store and mapping it to the <code>state.people</code> object, the component will have <em>people</em>, <em>meta</em>, <em>search</em>, <em>isLoading</em> and <em>pageNumber</em> as props. Easy as pie!</p> <h3>Retrieving the initial list of people</h3> <p>So right now the component will render an empty list because we have no people in our initial state. To get the initial list and update the state we need to create an <em>action</em>, so let&#39;s do it.</p> <pre><code class="coffee"># app/frontend/actions/people.coffee
+
+fetch = require &#39;isomorphic-fetch&#39;
+{ RECEIVE_PEOPLE, SET_SEARCH } = require &#39;../constants&#39;
+
+module.exports =
+  fetchPeople: (params = {}) -&gt;
+    (dispatch) =&gt;
+      fetch(Routes.api_v1_people_path(params))
+      .then (req) =&gt;
+        req.json()
+      .then (json) =&gt;
+        dispatch @receivePeople(json)
+
+  receivePeople: (json) -&gt;
+    type: RECEIVE_PEOPLE
+    people: json.people
+    meta: json.meta
+</code></pre> <p>With the <code>fetchPeople</code> action creator we&#39;re making a call to the Rails back-end API and dispatching the <code>RECEIVE_PEOPLE</code> action with the resulting response. No we need to reflect this in the <em>state</em>, so let&#39;s change the previous <em>reducer</em> to return the new <em>state</em> tree when this <em>action</em> gets dispatched:</p> <pre><code class="coffee"># app/frontend/reducers/people.coffee
+
+initialState =
+  people: null
+  meta: {}
+  search: &#39;&#39;
+  isLoading: false
+  pageNumber: 1
+
+module.exports = (state = initialState, action) -&gt;
+  switch action.type
+    when constants.RECEIVE_PEOPLE
+      newState =
+        people: action.people
+        meta: action.meta
+
+      Object.assign {}, state, newState
+
+    else
+      state
+</code></pre> <p>Now it is evaluating the actions type and if it corresponds to the one it&#39;s expecting, we create a new state tree merging the existing one with the returned <code>people</code> array and <code>metadata</code> object from the action. The <em>store</em> will replace the current state with this one returned, causing the component to render again and showing the people cards.</p> <p>Now we only have to call the <em>action creator</em> once the component renders for the first time:</p> <pre><code class="coffee"># app/frontend/components/people/list.cjsx
+
+{ connect } = require &#39;react-redux&#39;
+PersonCard = require &#39;./card&#39;
+actions = require &#39;../../actions&#39;
+
+List = React.createClass
+  displayName: &#39;PeopleSection&#39;
+
+  componentDidMount: -&gt;
+    { dispatch } = @props
+    dispatch actions.people.fetchPeople()
+....
+</code></pre> <p>And that&#39;s it.</p> <h3>Paginating results</h3> <p>To show the next page of results we need to call the back-end passing the page number we want. To do so let&#39;s update a bit more our component:</p> <pre><code class="coffee"># app/frontend/components/people/list.cjsx
+
+{ connect } = require &#39;react-redux&#39;
+PaginatorSection = require &#39;../paginator/paginator_section&#39;
+PersonCard = require &#39;./card&#39;
+actions = require &#39;../../actions&#39;
+
+List = React.createClass
+  displayName: &#39;PeopleSection&#39;
+
+  componentDidMount: -&gt;
+    @_fetchPeople()
+
+  _fetchPeople: (pageNumber = @props.pageNumber)-&gt;
+    { dispatch } = @props
+    dispatch actions.people.fetchPeople(page: pageNumber)
+
+  render: -&gt;
+    &lt;div&gt;
+      &lt;PaginatorSection totalPages={@props.meta.total_pages} currentPage={@props.meta.current_page} pageNumberClicked={@_fetchPeople}/&gt;
+      &lt;div className=&quot;cards-wrapper&quot;&gt;
+        {@_renderPeople()}
+      &lt;/div&gt;
+    &lt;/div&gt;
+</code></pre> <p>When a page link is clicked the <code>PaginatorSection</code> component calls the <code>_fetchPeople</code> function passing the <code>pageNumber</code> which calls the previously described <code>fetchPeople</code> action creator, and beginning the cycle again.</p> <h3>Conclusion</h3> <p>Although this is a very simple example of how to use <strong>Redux</strong>, it&#39;s good enough to show how easy is using it. I have to say that at the beginning of switching from Marty I was very confused and I missed a lot of concepts I already was using. But now that I use it almost every day <strong>I just love it</strong>. Managing the state in my <strong>React</strong> applications has being reduced to writing simple <em>action creators</em> and <em>reducer</em> functions, with no surprises or unwanted side effects. If you want to learn more check out it&#39;s awesome <a href="//redux.js.org/" target=_blank>official documentation</a> and also the source code of the <a href="https://github.com/bigardone/rails_and_redux" target=_blank>example project</a> we&#39;re you&#39;ll find a bit more complex functionality like searching and using <strong>react-router</strong> for navigating to a person&#39;s detail page and backwards.</p> <p>Long live <strong>Redux</strong>!</p> <div id=disqus_thread></div> <script>
+  /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+  var disqus_shortname = 'codeloveandboards'; // required: replace example with your forum shortname
+  
+  /* * * DON'T EDIT BELOW THIS LINE * * */
+  (function() {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script> <noscript> Please enable JavaScript to view the <a href='//disqus.com/?ref_noscript'>comments powered by Disqus.</a> </noscript> <a class=dsq-brlink href='//disqus.com'> comments powered by <span class=logo-disqus>Disqus</span> </a> </article> </section> </div> </section> <footer id=main_footer> <ul class=article-nav> <li class=previous> <a href="/blog/2015/06/19/rails-and-flux-with-marty-js-iv-implementing-flux/"><h4>previous post</h4> <h3> Rails and Flux with Marty.js IV: Implementing Flux </h3> <div class=meta-data> <hr> posted Jun 19, 2015 on rails, reactjs, flux, webpack </div> </a> </li> <li class=next> <a href="/blog/2015/12/19/looking-forward-to-2016/"><h4>next post</h4> <h3> Looking forward to 2016 </h3> <div class=meta-data> <hr> posted Dec 19, 2015 on code, love </div> </a> </li> </ul> <section> <div class=container> <div class=center> <ul> <li> <a href='/blog'>Archives</a> </li> <li> <a href='//feeds.feedburner.com/CodeLoveAndBoards' target=_blank>RSS</a> </li> </ul> Copyright © 2017 - Ricardo García Vega - Code, Love & Boards! </div> </div> </section> </footer> <script src="../../../../../javascripts/blog-5ddb0520.js"></script> <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  
+  ga('create', 'UA-37802122-1', 'codeloveandboards.com');
+  ga('send', 'pageview');
+</script> <script>
+  _StatHat.push(["_trackCount", "g2pcD9xou7DlR0DtndiwvSBBYU5k", 1.0]);
+</script> </body> </html>

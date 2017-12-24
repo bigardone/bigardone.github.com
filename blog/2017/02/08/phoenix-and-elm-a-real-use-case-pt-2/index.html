@@ -1,0 +1,455 @@
+<!DOCTYPE html> <!--[if lt IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8 lt-ie7" lang=en-us><![endif]--> <!--[if IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8" lang=en-us><![endif]--> <!--[if IE 8]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if IE 9]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if lt IE 10]><html class="no-js lt-ie10" lang=en-us><![endif]--> <!--[if !IE]>><![endif]--> <html class=no-js lang=en> <head> <title>Phoenix and Elm, a real use case (pt. 2) - Code, Love & Boards</title> <meta charset=utf-8 content='text/html' http-equiv=content-type> <meta content='ie=edge,chrome=1' http-equiv=x-ua-compatible> <meta content='Rendering the initial contact list' name=description> <meta content='Ricardo García Vega - http://twitter.com/bigardone' name=author> <meta content='elixir, phoenix, elm, ecto, postgresql' name=keywords> <meta content='initial-scale=1.0,user-scalable=no,maximum-scale=1,width=device-width' name=viewport> <link href='//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css' rel=stylesheet> <link href="//fonts.googleapis.com/css?family=Montserrat:400,700|Lora:400,700" media=screen rel=stylesheet /> <link href="../../../../../stylesheets/blog-ed6b1e0f.css" media=all rel=stylesheet /> <link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/styles/tomorrow.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/highlight.min.js'></script> <link href='/images/apple-touch-icon-57x57-6e598dc4.png' rel=apple-touch-icon sizes=57x57> <link href='/images/apple-touch-icon-114x114-5be964ba.png' rel=apple-touch-icon sizes=114x114> <link href='/images/apple-touch-icon-72x72-70084a85.png' rel=apple-touch-icon sizes=72x72> <link href='/images/apple-touch-icon-144x144-1dbb56c1.png' rel=apple-touch-icon sizes=144x144> <link href='/images/apple-touch-icon-60x60-d05a5ea9.png' rel=apple-touch-icon sizes=60x60> <link href='/images/apple-touch-icon-120x120-5dafce59.png' rel=apple-touch-icon sizes=120x120> <link href='/images/apple-touch-icon-76x76-b2c0d784.png' rel=apple-touch-icon sizes=76x76> <link href='/images/apple-touch-icon-152x152-45595360.png' rel=apple-touch-icon sizes=152x152> <link href='/images/favicon-160x160-944ce76e.png' rel=icon sizes=160x160 type='image/png'> <link href='/images/favicon-96x96-b7e4e089.png' rel=icon sizes=96x96 type='image/png'> <link href='/images/favicon-32x32-b7f34a79.png' rel=icon sizes=32x32 type='image/png'> <link href='/images/favicon-16x16-2712c528.png' rel=icon sizes=16x16 type='image/png'> <meta content='#9f00a7' name=msapplication-TileColor> <meta content='/images/mstile-144x144-028d4c4c.png' name=msapplication-TileImage> <script>
+  var _StatHat = _StatHat || [];
+  _StatHat.push(['_setUser', 'NzIzMCDaNaL5bvEP1HQkMYwfYsQe']);
+  (function() {
+          var sh = document.createElement('script'); sh.type = 'text/javascript';
+          sh.async = true;
+          sh.src = '//www.stathat.com/javascripts/api.js';
+          var s = document.getElementsByTagName('script')[0];
+          s.parentNode.insertBefore(sh, s);
+  })();
+</script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Phoenix and Elm, a real use case (pt. 2)</h1> <h3></h3> <div class=meta-data> <hr> posted Feb 8, 2017 on <a class=tag href="/blog/tags/elixir.html">elixir</a> <a class=tag href="/blog/tags/phoenix.html">phoenix</a> <a class=tag href="/blog/tags/elm.html">elm</a> <a class=tag href="/blog/tags/ecto.html">ecto</a> <a class=tag href="/blog/tags/postgresql.html">postgresql</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <div class=index> <p>This post belongs to the <strong>Phoenix and Elm, a real use case</strong> series.</p> <ol> <li><a href="/blog/2017/02/02/phoenix-and-elm-a-real-use-case-pt-1/">Introduction to creating a SPA with Phoenix and Elm</a></li> <li><a href="/blog/2017/02/08/phoenix-and-elm-a-real-use-case-pt-2/">Rendering the initial contact list</a></li> <li><a href="/blog/2017/02/14/phoenix-and-elm-a-real-use-case-pt-3/">Adding full text search and pagination navigation to the contact list</a></li> <li><a href="/blog/2017/02/23/phoenix-and-elm-a-real-use-case-pt-4/">Better state with union types, search resetting and keyed nodes.</a></li> <li><a href="/blog/2017/03/07/phoenix-and-elm-a-real-use-case-pt-5/">Implementing Elm routing</a></li> <li><a href="/blog/2017/03/19/phoenix-and-elm-a-real-use-case-pt-6/">Poenix and Elm communication through WebSockets</a></li> </ol> <a href="https://phoenix-and-elm.herokuapp.com/" target=_blank><i class="fa fa-cloud"></i> Live demo</a> | <a href="https://github.com/bigardone/phoenix-and-elm" target=_blank><i class="fa fa-github"></i> Source code</a> </div> <h2>Initial contact list</h2> <p>In the <a href="/blog/2017/02/02/phoenix-and-elm-a-real-use-case-pt-1/">previous part</a> we setup the project and created the very basic <strong>Elm</strong> main module. Today we are going to render the first page of contacts, so let&#39;s get started with the backend part. I say page because we want to paginate the list of contacts instead of displaying all of them to the user. For this, we first need to install an <strong>Elixir</strong> dependency to help us with the pagination functionality. The library I usually use for this purpose is <a href="https://github.com/drewolson/scrivener_ecto">scrivener_ecto</a>, so let&#39;s add it to the <code>mix.exs</code> file:</p> <pre><code class="ruby"># mix.exs
+
+defmodule PhoenixAndElm.Mixfile do
+  use Mix.Project
+
+  # ...
+
+  def application do
+    [mod: {PhoenixAndElm, []},
+      applications: [
+       # ...
+       :scrivener_ecto
+      ]
+    ]
+  end
+
+  defp deps
+    [
+      # ...
+      {:scrivener_ecto, &quot;~&gt; 1.0&quot;}
+    ]
+end
+</code></pre> <p>After running the necessary <code>mix deps.get</code>, we have to add some basic configuration to the <code>repo.ex</code> file:</p> <pre><code class="ruby"># lib/phoenix_and_elm/repo.ex
+
+defmodule PhoenixAndElm.Repo do
+  use Ecto.Repo, otp_app: :phoenix_and_elm
+
+  use Scrivener, page_size: 9
+end
+</code></pre> <p>Let&#39;s continue by adding, to the <code>router.ex</code> file, the new route we are going to use for fetching contacts:</p> <pre><code class="ruby"># web/router.ex
+
+defmodule PhoenixAndElm.Router do
+  use PhoenixAndElm.Web, :router
+
+  # ...
+
+  pipeline :api do
+    plug :accepts, [&quot;json&quot;]
+  end
+
+  # Other scopes may use custom stacks.
+  scope &quot;/api&quot;, PhoenixAndElm do
+    pipe_through :api
+
+    resources &quot;/contacts&quot;, ContactController, only: [:index]
+  end
+
+  # ...
+end
+</code></pre> <p>Next, let&#39;s create the <code>ContactController</code> module that is going to return the that list:</p> <pre><code class="ruby"># web/controllers/contact_controller.ex
+
+defmodule PhoenixAndElm.ContactController do
+  use PhoenixAndElm.Web, :controller
+
+  alias PhoenixAndElm.Contact
+
+  def index(conn, params) do
+    page = Contact
+      |&gt; order_by(:first_name)
+      |&gt; Repo.paginate(params)
+
+    render conn, page: page
+  end
+end
+</code></pre> <p>Note that we are using a new <code>paginate</code> function that you might not have seen before in <strong>Ecto</strong>. This is added by <code>scrivener</code> and uses the <code>page</code> and <code>page_size</code> keys in the params map to return the requested page from the database. To return the JSON structure we need in the <strong>Elm</strong> front-end, let&#39;s edit the <code>ContactView</code> module:</p> <pre><code class="ruby"># web/views/contact_view.ex
+
+defmodule PhoenixAndElm.ContactView do
+  use PhoenixAndElm.Web, :view
+
+  def render(&quot;index.json&quot;, %{page: page}), do: page
+end
+</code></pre> <p>The final result is a <code>Scrivener.Page</code> struct encoded to <strong>JSON</strong>, where the entries key is a list of the <code>Contact</code> model struct. We do not need to encode all the keys of our contacts, so let&#39;s update our model module to exclude the keys we do not need:</p> <pre><code class="ruby"># web/models/contact.ex
+
+defmodule PhoenixAndElm.Contact do
+  use PhoenixAndElm.Web, :model
+
+  @derive {Poison.Encoder, except: [:__meta__, :inserted_at, :updated_at]}
+
+  # ...
+end
+</code></pre> <p>So far, so good. I do not think we are missing anything important in regards to the backend, so we are ready to move on to the front-end part and talk a little about how elm works as a framework.</p> <h3>The Elm Architecture</h3> <p>As I mentioned in the last post, one of my favorite things about <strong>Elm</strong> is that is not only a language but also a framework for building web apps. It is based on a pattern, called <a href="https://guide.elm-lang.org/architecture/">The Elm Architecture</a> and has inspired other popular frameworks such as <strong>Redux</strong>. It has three main parts which are the <strong>Model</strong> or state of the application, the <strong>Update</strong> which modifies the model, and finally the <strong>View</strong> which renders the state as Html. Does it sound familiar? I&#39;m pretty sure it does :) Having this in mind, let&#39;s create the first of the <strong>Elm</strong> modules we need.</p> <h3>The Model</h3> <p>I like to organize my <strong>Elm</strong> applications into multiple folders, usually based on the different routes or screens it is going to have. In each of this folders, I like to have as well different files for each of the distinct parts of <strong>The Elm Architecture</strong> involved. The final result looks like this:</p> <pre><code>.
+├── Contact
+│   └── View.elm
+├── ContactList
+│   └── View.elm
+├── Main.elm
+├── Model.elm
+├── Types.elm
+├── Update.elm
+└── View.elm
+</code></pre> <p>This way I have all the modules organized, and I know exactly where is everything. Moreover, I find it easier to scale when the application starts to grow and to refactor if needed. This said, let&#39;s start by defining the initial structure of the application&#39;s state, a.k.a the <code>Model</code>:</p> <pre><code class="elm">-- web/elm/Model.elm
+
+module Model exposing (..)
+
+
+type alias Model =
+    { contactList : ContactList
+    , error : Maybe String
+    }
+
+
+type alias ContactList =
+    { entries : List Contact
+    , page_number : Int
+    , total_entries : Int
+    , total_pages : Int
+    }
+
+
+type alias Contact =
+    { id : Int
+    , first_name : String
+    , last_name : String
+    , gender : Int
+    , birth_date : String
+    , location : String
+    , phone_number : String
+    , email : String
+    , headline : String
+    , picture : String
+    }
+</code></pre> <p>The initial state of the application consists of:</p> <ul> <li><code>contactList</code> which is a <code>ContactList</code> record representing the <code>Page</code> struct from <strong>scrivener</strong> we saw earlier. Its entries key is a list of <code>Contact</code> records that map the <code>Contact</code> model we created in the last part.</li> <li><code>error</code> which is set in case there is any error while requesting the contact list to the backend.</li> </ul> <p>If you are not familiar with <strong>Elm&#39;s</strong> <code>Maybe</code>, it is the way to handle non-existing values as <strong>Elm</strong> does not have the concept of <code>null</code>. In the end, it is just a union type that can have two different values, <code>Nothing</code> or <code>Just value</code>.</p> <p>We need some default values to populate the application&#39;s state once it starts, so let&#39;s add a couple of helper functions to the module:</p> <pre><code class="elm">-- web/elm/Model.elm
+
+module Model exposing (..)
+
+-- ...
+
+
+ initialContactList : ContactList
+ initialContactList =
+    { entries = []
+    , page_number = 1
+    , total_entries = 0
+    , total_pages = 0
+    }
+
+
+initialModel : Model
+initialModel =
+    { contactList = initialContactList
+    , error = Nothing
+    }
+</code></pre> <h3>The Messages</h3> <p>Next thing we want to define are the messages that are triggered and to which our application reacts, so le&#39;ts create the <code>Messages</code> module:</p> <pre><code class="elm">-- web/elm/Messages.elm
+
+module Messages exposing (..)
+
+import Http
+import Model exposing (ContactList)
+
+
+type Msg
+    = FetchResult (Result Http.Error ContactList)
+
+</code></pre> <p>For now, we only need the <code>FetchResult</code> message, which has the <a href="//package.elm-lang.org/packages/elm-lang/core/5.1.1/Result">Result</a> of the Http request for fetching the first page of contacts.</p> <h3>The Update</h3> <p>Messages get triggered in the application, but it still needs to treat these messages to update the state depending on them. Here is where the update function comes into play, getting called every time our program receives a new message:</p> <pre><code class="elm">-- web/elm/Update.elm
+
+module Update exposing (..)
+
+import Messages exposing (..)
+import Model exposing (..)
+
+
+update : Msg -&gt; Model -&gt; ( Model, Cmd Msg )
+update msg model =
+    case msg of
+        FetchResult (Ok response) -&gt;
+            { model | contactList = response } ! []
+
+        FetchResult (Err error) -&gt;
+            { model | error = Just &quot;Something went wrong...&quot; } ! []
+</code></pre> <p>The update function receives the <code>msg</code> triggered along with the current model, evaluates the message type and returns a new updated version of the model along with a command if needed. If you have used <strong>Redux</strong> before, you can see the similarities with its reducers concept. In our case, if the message is of type <code>FetchResult</code> (Ok response) it means that the <code>Result</code> of the <code>Http</code> request has success and it returns a new version of the model with the received contact list. On the other hand, if it receives an error, a new version with the error updated is returned. Don&#39;t worry about how to trigger this message; we will get to that point in a bit.</p> <h3>The View</h3> <p>Now that we have defined the model and how to update it, it is time to define how to render it in the browser. For this, we need to implement the <code>View</code> module:</p> <pre><code class="elm">-- web/elm/View.elm
+
+module View exposing (..)
+
+import ContactList.View exposing (indexView)
+import Html exposing (..)
+import Html.Attributes exposing (..)
+import Messages exposing (..)
+import Model exposing (..)
+
+
+view : Model -&gt; Html Msg
+view model =
+    section
+        []
+        [ headerView
+        , div []
+            [ indexView model ]
+        ]
+
+
+headerView : Html Msg
+headerView =
+    header
+        [ class &quot;main-header&quot; ]
+        [ h1
+            []
+            [ text &quot;Phoenix and Elm: A real use case&quot; ]
+        ]
+</code></pre> <p>To prevent having a huge view file, let&#39;s create two additional view modules to render the list and each of the contacts:</p> <pre><code class="elm">-- web/elm/ContactList/View.elm
+
+module ContactList.View exposing (indexView)
+
+import Contact.View exposing (contactView)
+import Html exposing (..)
+import Html.Attributes exposing (..)
+import Messages exposing (..)
+import Model exposing (..)
+
+
+indexView : Model -&gt; Html Msg
+indexView model =
+    div
+        [ id &quot;home_index&quot; ]
+        [ div
+            []
+            [ contactsList model ]
+        ]
+
+
+contactsList : Model -&gt; Html Msg
+contactsList model =
+    if model.contactList.total_entries &gt; 0 then
+        model.contactList.entries
+            |&gt; List.map contactView
+            |&gt; div [ class &quot;cards-wrapper&quot; ]
+    else
+        let
+            classes =
+                classList
+                    [ ( &quot;warning&quot;, True ) ]
+        in
+            div
+                [ classes ]
+                [ span
+                    [ class &quot;fa-stack&quot; ]
+                    [ i [ class &quot;fa fa-meh-o fa-stack-2x&quot; ] [] ]
+                , h4
+                    []
+                    [ text &quot;No contacts found...&quot; ]
+                ]
+
+</code></pre> <p>In case the are entries (total_entries &gt; 0), it calls the <code>contactView</code> function on each entry returning a list of Html representing the contacts cards. Otherwise, it renders a warning message. Let&#39;s take a closer look at the contactView function:</p> <pre><code class="elm">-- web/elm/Contact/View.elm
+
+module Contact.View exposing (..)
+
+import Html exposing (..)
+import Html.Attributes exposing (..)
+import Messages exposing (..)
+import Model exposing (..)
+
+
+contactView : Contact -&gt; Html Msg
+contactView model =
+    let
+        classes =
+            classList
+                [ ( &quot;card&quot;, True )
+                , ( &quot;male&quot;, model.gender == 0 )
+                , ( &quot;female&quot;, model.gender == 1 )
+                ]
+
+        fullName =
+            model.first_name ++ &quot; &quot; ++ model.last_name
+    in
+        div
+            [ classes ]
+            [ div
+                [ class &quot;inner&quot; ]
+                [ header
+                    []
+                    [ div
+                        [ class &quot;avatar-wrapper&quot; ]
+                        [ img
+                            [ class &quot;avatar&quot;
+                            , src model.picture
+                            ]
+                            []
+                        ]
+                    , div
+                        [ class &quot;info-wrapper&quot; ]
+                        [ h4
+                            []
+                            [ text fullName ]
+                        , ul
+                            [ class &quot;meta&quot; ]
+                            [ li
+                                []
+                                [ i
+                                    [ class &quot;fa fa-map-marker&quot; ]
+                                    []
+                                , text model.location
+                                ]
+                            , li
+                                []
+                                [ i
+                                    [ class &quot;fa fa-birthday-cake&quot; ]
+                                    []
+                                , text model.birth_date
+                                ]
+                            ]
+                        ]
+                    ]
+                , div
+                    [ class &quot;card-body&quot; ]
+                    [ div
+                        [ class &quot;headline&quot; ]
+                        [ p [] [ text model.headline ] ]
+                    , ul
+                        [ class &quot;contact-info&quot; ]
+                        [ li
+                            []
+                            [ i
+                                [ class &quot;fa fa-phone&quot; ]
+                                []
+                            , text model.phone_number
+                            ]
+                        , li
+                            []
+                            [ i
+                                [ class &quot;fa fa-envelope&quot; ]
+                                []
+                            , text model.email
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+
+
+</code></pre> <h3>The Main</h3> <p>Having all the previous modules ready leads us to the final step which wires up everything together. We need to update the basic <code>Main</code> module we created in the last post, and make it return a <code>Program</code>:</p> <pre><code class="elm">-- web/elm/Main.elm
+
+module Main exposing (..)
+
+import Commands exposing (fetch)
+import Html
+import Messages exposing (Msg(..))
+import Model exposing (..)
+import Update exposing (..)
+import View exposing (view)
+
+
+init : ( Model, Cmd Msg )
+init =
+    initialModel ! [ fetch ]
+
+
+main : Program Never Model Msg
+main =
+    Html.program
+        { init = init
+        , view = view
+        , update = update
+        , subscriptions = always &lt;| Sub.none
+        }
+
+</code></pre> <p>In addition to the view and update functions we have already implemented, <code>Html.program</code> receives the <code>init</code> function that populates the model with the initial state and calls an initial command... but, what are commands? In <strong>Elm</strong>, if we want to do stuff like making Http requests or handling messages from web sockets or any other thing that has side effects, we need to use commands. In our case, as the model is initially populated empty, the first thing we have to do is to request the first page to the backend. Let&#39;s create a <strong>Commands</strong> module and see how to achieve it:</p> <pre><code class="elm">-- web/elm/Commands.elm
+
+module Commands exposing (..)
+
+import Decoders exposing (contactListDecoder)
+import Http
+import Messages exposing (Msg(..))
+
+
+fetch : Cmd Msg
+fetch =
+    let
+        apiUrl =
+            &quot;/api/contacts&quot;
+
+        request =
+            Http.get apiUrl contactListDecoder
+    in
+        Http.send FetchResult request
+
+</code></pre> <p><a href="//package.elm-lang.org/packages/elm-lang/http/latest">Http</a> is an <strong>Elm</strong> library to make Http requests that we need to install using <code>elm package install elm-lang/http -y</code>. The fetch function calls <code>Http.send</code> passing the <code>Msg</code> to trigger when the request is made, updating the model with the result with the update function we have implemented previously. As the Http request is going to return JSON from the backend, we need to transform it into something that our application understands, in this case, a <code>ContactList</code> record. Therefore, we pass the <code>contactListDecoder</code> to the request to decode the result. Let&#39;s add the <code>Decoders</code> module and implement the function:</p> <pre><code class="elm">-- web/elm/Decoders.elm
+
+module Decoders exposing (..)
+
+import Json.Decode as JD exposing (..)
+import Json.Decode.Extra exposing ((|:))
+import Model exposing (..)
+
+
+contactListDecoder : JD.Decoder ContactList
+contactListDecoder =
+    succeed
+        ContactList
+        |: (field &quot;entries&quot; (list contactDecoder))
+        |: (field &quot;page_number&quot; int)
+        |: (field &quot;total_entries&quot; int)
+        |: (field &quot;total_pages&quot; int)
+
+
+contactDecoder : JD.Decoder Contact
+contactDecoder =
+    succeed
+        Contact
+        |: (field &quot;id&quot; int)
+        |: (field &quot;first_name&quot; string)
+        |: (field &quot;last_name&quot; string)
+        |: (field &quot;gender&quot; int)
+        |: (field &quot;birth_date&quot; string)
+        |: (field &quot;location&quot; string)
+        |: (field &quot;phone_number&quot; string)
+        |: (field &quot;email&quot; string)
+        |: (field &quot;headline&quot; string)
+        |: (field &quot;picture&quot; string)
+</code></pre> <p>As you can see, decoders map fields in the <code>Model</code>, one by one. The <code>|:</code> is not in the <strong>Elm</strong> core packages, and we need to install an additional package to use it, runing <code>elm package install elm-community/json-extra -y</code>.</p> <h3>The final result</h3> <p>Last but not least, let&#39;s add some styling. For this particular project I have chosen to write the stylesheets using <a href="//stylus-lang.com/">stylus</a>, so we have to install the <a href="https://github.com/brunch/stylus-brunch">stylus-brunch</a> and <a href="https://github.com/tj/nib">nib</a> packages and add them to the <code>brunch-config.js</code> file:</p> <pre><code class="bash">$ npm install --save-dev stylus-brunch nib
+</code></pre> <pre><code class="javascript">// brunch-config.js
+
+exports.config = {
+  // ...
+
+  plugins: {
+    // ...
+
+    stylus: {
+      plugins: [&#39;nib&#39;]
+    }
+  }
+
+  // ...
+}
+</code></pre> <p>I do not want to spend any more time talking about the styles and make you lose the focus, so just copy them from <a href="https://github.com/bigardone/phoenix-and-elm/tree/master/web/static/css/modules">here</a>.</p> <p>With all these changes and after populating the database using a <a href="https://github.com/bigardone/phoenix-and-elm/blob/tutorial/part-2/priv/repo/seeds.exs">simple seeds file</a>, we can start the <strong>Phoenix</strong> server, visit <a href="//localhost:4000">http://localhost:4000</a> and see something similar to this:</p> <p><img src="/images/blog/phoenix_and_elm/part-2-76a841de.jpg" alt="Final result" style="background: #fff;"/></p> <p>Wow! This part is getting longer than I expected, so let&#39;s leave it here for now. In the next part, we are going to implement the pagination and search functionalities, which involve adding full-text search support for the contacts table. In the meantime, take a look the <a href="https://github.com/bigardone/phoenix-and-elm/blob/tutorial/part-2/priv/repo/seeds.exs">branch</a> I have prepared with everything we have done so far.</p> <p>Happy coding!</p> <div class=btn-wrapper> <a href="https://phoenix-and-elm.herokuapp.com/" target=_blank class=btn><i class="fa fa-cloud"></i> Live demo</a> <a href="https://github.com/bigardone/phoenix-and-elm" target=_blank class=btn><i class="fa fa-github"></i> Source code</a> </div> <div id=disqus_thread></div> <script>
+  /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+  var disqus_shortname = 'codeloveandboards'; // required: replace example with your forum shortname
+  
+  /* * * DON'T EDIT BELOW THIS LINE * * */
+  (function() {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script> <noscript> Please enable JavaScript to view the <a href='//disqus.com/?ref_noscript'>comments powered by Disqus.</a> </noscript> <a class=dsq-brlink href='//disqus.com'> comments powered by <span class=logo-disqus>Disqus</span> </a> </article> </section> </div> </section> <footer id=main_footer> <ul class=article-nav> <li class=previous> <a href="/blog/2017/02/02/phoenix-and-elm-a-real-use-case-pt-1/"><h4>previous post</h4> <h3> Phoenix and Elm, a real use case (pt. 1) </h3> <div class=meta-data> <hr> posted Feb 2, 2017 on elixir, phoenix, elm, ecto, postgresql </div> </a> </li> <li class=next> <a href="/blog/2017/02/14/phoenix-and-elm-a-real-use-case-pt-3/"><h4>next post</h4> <h3> Phoenix and Elm, a real use case (pt. 3) </h3> <div class=meta-data> <hr> posted Feb 14, 2017 on elixir, phoenix, elm, ecto, postgresql </div> </a> </li> </ul> <section> <div class=container> <div class=center> <ul> <li> <a href='/blog'>Archives</a> </li> <li> <a href='//feeds.feedburner.com/CodeLoveAndBoards' target=_blank>RSS</a> </li> </ul> Copyright © 2017 - Ricardo García Vega - Code, Love & Boards! </div> </div> </section> </footer> <script src="../../../../../javascripts/blog-5ddb0520.js"></script> <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  
+  ga('create', 'UA-37802122-1', 'codeloveandboards.com');
+  ga('send', 'pageview');
+</script> <script>
+  _StatHat.push(["_trackCount", "g2pcD9xou7DlR0DtndiwvSBBYU5k", 1.0]);
+</script> </body> </html>

@@ -1,0 +1,407 @@
+<!DOCTYPE html> <!--[if lt IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8 lt-ie7" lang=en-us><![endif]--> <!--[if IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8" lang=en-us><![endif]--> <!--[if IE 8]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if IE 9]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if lt IE 10]><html class="no-js lt-ie10" lang=en-us><![endif]--> <!--[if !IE]>><![endif]--> <html class=no-js lang=en> <head> <title>Phoenix and Elm, a real use case (pt. 6) - Code, Love & Boards</title> <meta charset=utf-8 content='text/html' http-equiv=content-type> <meta content='ie=edge,chrome=1' http-equiv=x-ua-compatible> <meta content='Phoenix and Elm communication through WebSockets' name=description> <meta content='Ricardo García Vega - http://twitter.com/bigardone' name=author> <meta content='elixir, phoenix, elm' name=keywords> <meta content='initial-scale=1.0,user-scalable=no,maximum-scale=1,width=device-width' name=viewport> <link href='//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css' rel=stylesheet> <link href="//fonts.googleapis.com/css?family=Montserrat:400,700|Lora:400,700" media=screen rel=stylesheet /> <link href="../../../../../stylesheets/blog-ed6b1e0f.css" media=all rel=stylesheet /> <link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/styles/tomorrow.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/highlight.min.js'></script> <link href='/images/apple-touch-icon-57x57-6e598dc4.png' rel=apple-touch-icon sizes=57x57> <link href='/images/apple-touch-icon-114x114-5be964ba.png' rel=apple-touch-icon sizes=114x114> <link href='/images/apple-touch-icon-72x72-70084a85.png' rel=apple-touch-icon sizes=72x72> <link href='/images/apple-touch-icon-144x144-1dbb56c1.png' rel=apple-touch-icon sizes=144x144> <link href='/images/apple-touch-icon-60x60-d05a5ea9.png' rel=apple-touch-icon sizes=60x60> <link href='/images/apple-touch-icon-120x120-5dafce59.png' rel=apple-touch-icon sizes=120x120> <link href='/images/apple-touch-icon-76x76-b2c0d784.png' rel=apple-touch-icon sizes=76x76> <link href='/images/apple-touch-icon-152x152-45595360.png' rel=apple-touch-icon sizes=152x152> <link href='/images/favicon-160x160-944ce76e.png' rel=icon sizes=160x160 type='image/png'> <link href='/images/favicon-96x96-b7e4e089.png' rel=icon sizes=96x96 type='image/png'> <link href='/images/favicon-32x32-b7f34a79.png' rel=icon sizes=32x32 type='image/png'> <link href='/images/favicon-16x16-2712c528.png' rel=icon sizes=16x16 type='image/png'> <meta content='#9f00a7' name=msapplication-TileColor> <meta content='/images/mstile-144x144-028d4c4c.png' name=msapplication-TileImage> <script>
+  var _StatHat = _StatHat || [];
+  _StatHat.push(['_setUser', 'NzIzMCDaNaL5bvEP1HQkMYwfYsQe']);
+  (function() {
+          var sh = document.createElement('script'); sh.type = 'text/javascript';
+          sh.async = true;
+          sh.src = '//www.stathat.com/javascripts/api.js';
+          var s = document.getElementsByTagName('script')[0];
+          s.parentNode.insertBefore(sh, s);
+  })();
+</script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Phoenix and Elm, a real use case (pt. 6)</h1> <h3></h3> <div class=meta-data> <hr> posted Mar 19, 2017 on <a class=tag href="/blog/tags/elixir.html">elixir</a> <a class=tag href="/blog/tags/phoenix.html">phoenix</a> <a class=tag href="/blog/tags/elm.html">elm</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <div class=index> <p>This post belongs to the <strong>Phoenix and Elm, a real use case</strong> series.</p> <ol> <li><a href="/blog/2017/02/02/phoenix-and-elm-a-real-use-case-pt-1/">Introduction to creating a SPA with Phoenix and Elm</a></li> <li><a href="/blog/2017/02/08/phoenix-and-elm-a-real-use-case-pt-2/">Rendering the initial contact list</a></li> <li><a href="/blog/2017/02/14/phoenix-and-elm-a-real-use-case-pt-3/">Adding full text search and pagination navigation to the contact list</a></li> <li><a href="/blog/2017/02/23/phoenix-and-elm-a-real-use-case-pt-4/">Better state with union types, search resetting and keyed nodes.</a></li> <li><a href="/blog/2017/03/07/phoenix-and-elm-a-real-use-case-pt-5/">Implementing Elm routing</a></li> <li><a href="/blog/2017/03/19/phoenix-and-elm-a-real-use-case-pt-6/">Poenix and Elm communication through WebSockets</a></li> </ol> <a href="https://phoenix-and-elm.herokuapp.com/" target=_blank><i class="fa fa-cloud"></i> Live demo</a> | <a href="https://github.com/bigardone/phoenix-and-elm" target=_blank><i class="fa fa-github"></i> Source code</a> </div> <h2>Phoenix and Elm WebSockets support</h2> <p>In the <a href="/blog/2017/03/07/phoenix-and-elm-a-real-use-case-pt-5/">last part</a>, we refactored our application to add <strong>Elm</strong> routing and added the show contact route. These changes include adding a new API endpoint in the <code>ContactController</code> module to return a given contact&#39;s JSON representation. However, since I started using <strong>Phoenix</strong>, I have found myself using fewer controllers, and more <strong>WebSockets</strong> and <strong>Phoenix&#39;s</strong> channels. The main reasons for doing this are:</p> <ul> <li>They are much faster than Http requests.</li> <li>Once the connection is established, and the authentication is accomplished, you do not need to authenticate future requests and rely on cookies for it.</li> <li>Its <strong>PubSub</strong> system opens a new world of possibilities.</li> </ul> <p>That being said, today we are going to replace the current <strong>API</strong> controller we have with a new <strong>Phoenix</strong> <strong>channel</strong> and learn how to add support for this new channel in <strong>Elm</strong>. Let&#39;s do this!</p> <h3>Phoenix changes</h3> <p>First of all, let&#39;s get rid of what we are not going to need anymore. This includes deleting the <code>ContactContoller</code> file, located in <code>web/controllers/contact_controller.ex</code> and the <code>ContactView</code> in <code>web/views/contact_view.ex</code>. We also need to update the <code>router</code> file to remove the <strong>API</strong> pipeline:</p> <pre><code class="elixir"># web/router.ex
+
+defmodule PhoenixAndElm.Router do
+  use PhoenixAndElm.Web, :router
+
+  pipeline :browser do
+    plug :accepts, [&quot;html&quot;]
+    plug :fetch_session
+    plug :fetch_flash
+    plug :protect_from_forgery
+    plug :put_secure_browser_headers
+  end
+
+  scope &quot;/&quot;, PhoenixAndElm do
+    pipe_through :browser # Use the default browser stack
+
+    get &quot;/*path&quot;, PageController, :index
+  end
+end
+</code></pre> <p>Once we have removed the unnecessary stuff, let&#39;s create the channel which is going to replace the old <code>ContactController</code>. First, we need to declare it in the <code>UserSocket</code> module:</p> <pre><code class="elixir"># web/channels/user_socket.ex
+
+defmodule PhoenixAndElm.UserSocket do
+  use Phoenix.Socket
+
+  ## Channels
+  channel &quot;contacts&quot;, PhoenixAndElm.ContactsChannel
+
+  # ...
+end
+</code></pre> <p>Next step is to create the <code>ContactsChannel</code> module in the same folder:</p> <pre><code class="elixir"># web/channels/contacts_channel.ex
+
+defmodule PhoenixAndElm.ContactsChannel do
+  use Phoenix.Channel
+  alias PhoenixAndElm.{Contact, Repo}
+  import Ecto.Query, only: [order_by: 2]
+
+  require Logger
+
+  def join(&quot;contacts&quot;, _, socket), do: {:ok, socket}
+
+  def handle_in(&quot;contacts:fetch&quot;, params, socket) do
+    Logger.info &quot;Handling contacts...&quot;
+
+    search = Map.get(params, &quot;search&quot;) || &quot;&quot;
+
+    page = Contact
+    |&gt; Contact.search(search)
+    |&gt; order_by(:first_name)
+    |&gt; Repo.paginate(params)
+
+    {:reply, {:ok, page}, socket}
+  end
+
+  def handle_in(&quot;contact:&quot; &lt;&gt; contact_id, _, socket) do
+    Logger.info &quot;Handling contact...&quot;
+
+    contact = Contact
+    |&gt; Repo.get(contact_id)
+
+    case contact do
+      nil -&gt;
+        {:reply, {:error, %{error: &quot;Contact no found&quot;}}, socket}
+      _ -&gt;
+        {:reply, {:ok, contact}, socket}
+    end
+  end
+end
+</code></pre> <p>The <code>ContactsChannel</code> handles two events:</p> <ul> <li><code>contacts:fetch</code> wich handles contact search and pagination like the old index action of the <code>ContactController</code>.</li> <li><code>contacts:id</code> which returns a given contact&#39;s data, just like the old show action.</li> </ul> <p>Depending on the environment the application is running, the socket <strong>URL</strong> will probably change. The front-end application needs to know the <strong>URL</strong> to create the connection, so we need it to pass it somehow. The easiest way of doing so is by creating a helper method in a <strong>Phoenix</strong> view and call it to assign it to javascript globally. Let&#39;s add the helper method in the <code>LayoutView</code> module:</p> <pre><code class="elixir"># web/views/layout_view.ex
+
+defmodule PhoenixAndElm.LayoutView do
+  use PhoenixAndElm.Web, :view
+
+  def socket_url, do: System.get_env(&quot;WEBSOCKECT_URL&quot;) || &quot;ws://localhost:4000/socket/websocket&quot;
+end
+</code></pre> <p>The <code>socket_url</code> function returns the value in the <code>WEBSOCKECT_URL</code> system variable, or the default one if not set. Now we can update the main template file to call this function and set value in javascript:</p> <pre><code class="elixir"># web/templates/layout/app.html.eex
+
+&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+  # ...
+
+  &lt;body&gt;
+    # ...
+
+    &lt;script&gt;window.socketUrl = &#39;&lt;%= PhoenixAndElm.LayoutView.socket_url %&gt;&#39;;&lt;/script&gt;
+    &lt;script src=&quot;&lt;%= static_path(@conn, &quot;/js/app.js&quot;) %&gt;&quot;&gt;&lt;/script&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</code></pre> <p>Once the <code>socketUrl</code> value is set, we can use it in the <code>app.js</code> file:</p> <pre><code class="javascript">// web/static/js/app.js
+
+import Elm from &#39;./main&#39;;
+
+const elmDiv = document.querySelector(&#39;#elm_target&#39;);
+
+if (elmDiv) {
+  const socketUrl = window.socketUrl;
+
+  Elm.Main.embed(elmDiv, { socketUrl });
+}
+</code></pre> <p>Cool, but how does <strong>Elm</strong> handle this values?</p> <h3>Program with flags</h3> <p>Conveniently, <strong>Elm</strong> has the concept of flags which are values that can be received from <strong>JavaScript</strong> while creating the application. To use flags, we need to do some refactoring in the application, so let&#39;s start by editing the <code>Main</code> module:</p> <pre><code class="elm">-- web/elm/Main.elm
+
+module Main exposing (..)
+
+-- ...
+
+init : Flags -&gt; Navigation.Location -&gt; ( Model, Cmd Msg )
+init flags location =
+    let
+        currentRoute =
+            parse location
+
+        model =
+            initialModel flags currentRoute
+    in
+        urlUpdate model
+
+
+main : Program Flags Model Msg
+main =
+    Navigation.programWithFlags UrlChange
+        { init = init
+        , view = view
+        , update = update
+        , subscriptions = always &lt;| Sub.none
+        }
+</code></pre> <p>The <code>main</code> function now has a Flags type in its definition, that is passed to the init function and from there to the <code>initialModel</code>. Let&#39;s move on to the <code>Model</code> module to implement this type:</p> <pre><code class="elm"> -- web/elm/Model.elm
+
+ module Model exposing (..)
+
+ -- ...
+
+type alias Flags =
+    { socketUrl : String }
+
+
+type alias Model =
+    { -- ---
+    , flags : Flags
+    }
+
+
+initialModel : Flags -&gt; Route -&gt; Model
+initialModel flags route =
+    { -- ...
+    , flags = flags
+    }
+</code></pre> <p>The <code>Flags</code> type is a record containing a <code>socketUrl</code> key. As we want to initialize this value with the flags received from javascript, we pass it to the <code>initialModel</code> function. If we now refresh the browser and take a closer look at the debugger history, we can see how the flags key is already set:</p> <p><img src="/images/blog/phoenix_and_elm/flags-a6d4b95d.jpg" alt=Flags style="background: #fff;"/></p> <p>Now we are ready to start implementing the socket communication between the <strong>Elm</strong> program and the <strong>Phoenix</strong> backend.</p> <h3>The elm-phoenix package</h3> <p>There are many different ways to add <strong>WebSockets</strong> support in <strong>Elm</strong>, but my favorite one so far is using the <a href="https://github.com/saschatimme/elm-phoenix">elm-phoenix</a> package. This package is an effect manager, so at the moment is not in the elm package repository. Therefore, its installation can be tricky depending on your <strong>Phoenix</strong> configuration, so easiest way I have found is by <a href="https://github.com/saschatimme/elm-phoenix/archive/master.zip">downloading</a> it and adding the source files into a vendor folder. Before doing this, let&#39;s move all of our <strong>Elm</strong> module files into a new <code>web/elm/src</code> folder. After doing it, it should look like this:</p> <pre><code>web/elm
+├── elm-package.json
+├── elm-stuff
+└── src
+    ├── Commands.elm
+    ├── Common
+    │   └── View.elm
+    ├── Contact
+    │   └── View.elm
+    ├── ContactList
+    │   └── View.elm
+    ├── Decoders.elm
+    ├── Main.elm
+    ├── Messages.elm
+    ├── Model.elm
+    ├── Routing.elm
+    ├── Update.elm
+    └── View.elm
+</code></pre> <p>Next, create a new <code>web/elm/vendor</code> folder and copy there the <code>elm-phoenix</code> source files:</p> <pre><code>web/elm
+├── elm-package.json
+├── elm-stuff
+├── src
+└── vendor
+    ├── Phoenix
+    │   ├── Channel.elm
+    │   ├── Internal
+    │   │   ├── Channel.elm
+    │   │   ├── Helpers.elm
+    │   │   ├── Message.elm
+    │   │   └── Socket.elm
+    │   ├── Push.elm
+    │   └── Socket.elm
+    └── Phoenix.elm
+</code></pre> <p>Now we have to make the <strong>Elm</strong> compiler aware of these changes, so let&#39;s update the <code>elm-package.json</code> file:</p> <pre><code class="json">// web/elm/elm-package.json
+
+{
+    &quot;version&quot;: &quot;1.0.0&quot;,
+    &quot;summary&quot;: &quot;helpful summary of your project, less than 80 characters&quot;,
+    &quot;repository&quot;: &quot;https://github.com/user/project.git&quot;,
+    &quot;license&quot;: &quot;BSD3&quot;,
+    &quot;source-directories&quot;: [
+        &quot;./src&quot;,
+        &quot;./vendor&quot;
+    ],
+    // ...
+}
+</code></pre> <p>We also need to change <strong>Brunch&#39;s</strong> configuration; otherwise, the build is not going to succeed:</p> <pre><code class="javascript">// brunch-config.js
+
+exports.config = {
+  // ...
+
+  // Configure your plugins
+  plugins: {
+    // ...
+
+    elmBrunch: {
+      elmFolder: &#39;web/elm&#39;,
+      mainModules: [&#39;src/Main.elm&#39;],
+      outputFolder: &#39;../static/js&#39;,
+      makeParameters: [&#39;--debug&#39;],
+    },
+
+    //...
+  }
+}
+</code></pre> <p>Finally, <code>elm-phoenix</code> depends on the <a href="//package.elm-lang.org/packages/elm-lang/websocket/latest">elm-lang/websocket</a> package, so let&#39;s install it:</p> <pre><code>$ cd web/elm &amp;&amp; elm-package install elm-lang/websocket -y
+</code></pre> <p>After doing this and restarting the <strong>Phoenix</strong> server, everything should be working as before. In case it does not, here is the <a href="https://github.com/bigardone/phoenix-and-elm/commit/03bc44cf6c4465e650b1412c4571012200664606">commit</a> with all these changes.</p> <h3>The Subscriptions module</h3> <p>In order to listen to external input, such as mouse events or location changes, <strong>Elm</strong> uses subscriptions. In our case, as we are using <code>elm-phoenix</code>, we want to handle <strong>WebSockets</strong> events and make the application respond to them. Let&#39;s create a new <code>Subscriptions</code> module:</p> <pre><code class="elm">-- web/elm/src/Subscriptions.elm
+
+module Subscriptions exposing (..)
+
+import Messages exposing (Msg(..))
+import Model exposing (Model)
+import Phoenix
+import Phoenix.Channel as Channel exposing (Channel)
+import Phoenix.Socket as Socket exposing (Socket)
+
+
+subscriptions : Model -&gt; Sub Msg
+subscriptions model =
+    Phoenix.connect (socket model.flags.socketUrl) [ contacts ]
+
+
+socket : String -&gt; Socket Msg
+socket socketUrl =
+    Socket.init socketUrl
+
+
+contacts : Channel Msg
+contacts =
+    Channel.init &quot;contacts&quot;
+        |&gt; Channel.withDebug
+</code></pre> <p>The <code>subscriptions</code> function prepares the socket and the channel we want to join, using the program&#39;s flags to set the <code>socketUrl</code>. In our case, we only have a single channel, so we do not need to add extra configuration to check which channel or channels it has to join, but if you feel curious about how to join multiple channels, there is an excellent <a href="https://github.com/saschatimme/elm-phoenix/blob/master/example/web/elm/src/Chat.elm#L233">demo example</a> in the official repo. In our case, we are good to continue, so let&#39;s update the <code>Main</code> module, so the main program uses the new <code>subscriptions</code> function:</p> <pre><code class="elm">-- web/elm/src/Main.elm
+
+module Main exposing (..)
+
+import Subscriptions exposing (subscriptions)
+
+-- ...
+
+main : Program Flags Model Msg
+main =
+    Navigation.programWithFlags UrlChange
+        { init = init
+        , view = view
+        , update = update
+        , subscriptions = subscriptions
+        }
+</code></pre> <p>If we refresh the browser and check our browser&#39;s console, we can see two log messages, one when the program tries to join the <code>ContactsChannel</code> and another one when the join result is successful:</p> <p><img src="/images/blog/phoenix_and_elm/socket-connect-714dec42.jpg" alt="Socket connection" style="background: #fff;"/></p> <h3>Commands refactoring</h3> <p>Now that we have the connection to the <strong>WebSocket</strong> ready, we need to refactor the <code>Commands</code> module to replace the old <strong>Http</strong> requests with <code>WebSocket</code> ones:</p> <pre><code class="elm">-- web/elm/src/Commands.elm
+
+module Commands exposing (..)
+
+import Phoenix exposing (..)
+import Phoenix.Push as Push
+-- ...
+
+fetch : String -&gt; Int -&gt; String -&gt; Cmd Msg
+fetch socketUrl page search =
+    let
+        payload =
+            JE.object
+                [ ( &quot;page&quot;, JE.int page )
+                , ( &quot;search&quot;, JE.string search )
+                ]
+
+        push =
+            Push.init &quot;contacts&quot; &quot;contacts:fetch&quot;
+                |&gt; Push.withPayload payload
+                |&gt; Push.onOk FetchSuccess
+                |&gt; Push.onError FetchError
+    in
+        Phoenix.push socketUrl push
+
+
+fetchContact : String -&gt; Int -&gt; Cmd Msg
+fetchContact socketUrl id =
+    let
+        push =
+            Push.init &quot;contacts&quot; (&quot;contact:&quot; ++ toString id)
+                |&gt; Push.onOk FetchContactSuccess
+                |&gt; Push.onError FetchContactError
+    in
+        Phoenix.push socketUrl push
+</code></pre> <p>The <code>fetch</code> function now receives one more parameter with the <code>socketUrl</code> value that it is going to need to send the request. It first creates a <strong>JSON</strong> payload with the page and search, just like the old <strong>Http</strong> one. Next, it creates a <code>push</code>, from the <code>elm-phoenix</code> package, in which passes the <strong>Phoenix&#39;s</strong> channel name and the event, in this case <code>contacts:fetch</code>. It attaches the previously created payload using <code>withPayload</code> and sets the messages for both the <code>onOk</code> and <code>onError</code> callbacks, triggered depending on the result. Finally, it sends the push to the <code>socketUrl</code>.</p> <p>On the other hand, <code>fetchContact</code> is more simple. It creates a <code>push</code> to the same channel, but for the <code>contact:*</code> where <code>*</code> is the id of the contact we want to fetch. It only sets the messages for the <code>onOk</code> and <code>onError</code> callbacks, and finally sends the push through the <code>socketUrl</code>.</p> <h3>Messages and the Update module</h3> <p>At this point, the compiler must be some errors related to the new messages we have added in the <code>Commands</code> module, but we have not declared it yet. So let&#39;s edit the <code>Messages</code> module to fix this:</p> <pre><code class="elm">-- web/elm/src/Messages.elm
+
+module Messages exposing (..)
+
+import Json.Encode as JE
+import Navigation
+import Routing exposing (Route)
+
+
+type Msg
+    -- Remove this -&gt; = FetchResult (Result Http.Error ContactList)
+    = FetchSuccess JE.Value          -- Add this
+    | FetchError JE.Value            -- Add this
+    | Paginate Int
+    | HandleSearchInput String
+    | HandleFormSubmit
+    | ResetSearch
+    | UrlChange Navigation.Location
+    | NavigateTo Route
+    -- Remove this -&gt; | FetchContactResult (Result Http.Error Contact)
+    | FetchContactSuccess JE.Value   -- Add this
+    | FetchContactError JE.Value     -- Add this
+</code></pre> <p>The previous <code>FetchResult</code> was receiving a <code>Result</code>, but now both success and error callbacks, which receive a <strong>JSON</strong> value, which need to be decoded by the <code>update</code> function, and we also need to update the commands calls to pass the <code>socketUrl</code> parameter, so let&#39;s edit the <code>Update</code> module:</p> <pre><code class="elm">-- web/elm/src/Update.elm
+
+module Update exposing (..)
+
+-- ...
+
+update : Msg -&gt; Model -&gt; ( Model, Cmd Msg )
+update msg model =
+    case msg of
+        FetchSuccess raw -&gt;
+            case JD.decodeValue contactListDecoder raw of
+                Ok payload -&gt;
+                    { model | contactList = Success payload } ! []
+
+                Err err -&gt;
+                    { model | contactList = Failure &quot;Error while decoding contact list&quot; } ! []
+
+        FetchError raw -&gt;
+            { model | contactList = Failure &quot;Error while fetching contact list&quot; } ! []
+
+        Paginate pageNumber -&gt;
+            model ! [ fetch model.flags.socketUrl pageNumber model.search ]
+
+        -- ...
+
+        HandleFormSubmit -&gt;
+            { model | contactList = Requesting } ! [ fetch model.flags.socketUrl 1 model.search ]
+
+        ResetSearch -&gt;
+            { model | search = &quot;&quot; } ! [ fetch model.flags.socketUrl 1 &quot;&quot; ]
+
+        -- ...
+
+        FetchContactSuccess raw -&gt;
+            case JD.decodeValue contactDecoder raw of
+                Ok payload -&gt;
+                    { model | contact = Success payload } ! []
+
+                Err err -&gt;
+                    { model | contact = Failure &quot;Error while decoding contact&quot; } ! []
+
+        FetchContactError raw -&gt;
+            { model | contact = Failure &quot;Contact not found&quot; } ! []
+
+</code></pre> <p>Both <code>FetchSuccess</code> and <code>FetchContactSuccess</code> branches decode the <code>raw</code> response received from the channel and, depending on the result, set the corresponding key value in the new model. On the other hand, <code>FetchError</code> and <code>FetchContactError</code> set a friendly error message. We are missing one thing, though; the <code>urlUpdate</code> function needs some minor editing as well:</p> <pre><code class="elm">-- web/elm/src/Update.elm
+
+module Update exposing (..)
+
+-- ...
+
+urlUpdate : Model -&gt; ( Model, Cmd Msg )
+urlUpdate model =
+    case model.route of
+        HomeIndexRoute -&gt;
+            case model.contactList of
+                NotRequested -&gt;
+                    model ! [ fetch model.flags.socketUrl 1 &quot;&quot; ]
+
+                _ -&gt;
+                    model ! []
+
+        ShowContactRoute id -&gt;
+            { model | contact = Requesting } ! [ fetchContact model.flags.socketUrl id ]
+
+        _ -&gt;
+            model ! []
+
+</code></pre> <p>That is pretty much it. If we now refresh the browser and navigate through the application, everything should just work as before. Yay! If you are missing anything, please check out the branch I have prepared with all the changes for this part. I hope you have enjoyed the series and thanks for all the support.</p> <p>Happy coding!</p> <div class=btn-wrapper> <a href="https://phoenix-and-elm.herokuapp.com/" target=_blank class=btn><i class="fa fa-cloud"></i> Live demo</a> <a href="https://github.com/bigardone/phoenix-and-elm" target=_blank class=btn><i class="fa fa-github"></i> Source code</a> </div> <div id=disqus_thread></div> <script>
+  /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+  var disqus_shortname = 'codeloveandboards'; // required: replace example with your forum shortname
+  
+  /* * * DON'T EDIT BELOW THIS LINE * * */
+  (function() {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script> <noscript> Please enable JavaScript to view the <a href='//disqus.com/?ref_noscript'>comments powered by Disqus.</a> </noscript> <a class=dsq-brlink href='//disqus.com'> comments powered by <span class=logo-disqus>Disqus</span> </a> </article> </section> </div> </section> <footer id=main_footer> <ul class=article-nav> <li class=previous> <a href="/blog/2017/03/07/phoenix-and-elm-a-real-use-case-pt-5/"><h4>previous post</h4> <h3> Phoenix and Elm, a real use case (pt. 5) </h3> <div class=meta-data> <hr> posted Mar 7, 2017 on elixir, phoenix, elm </div> </a> </li> <li class=next> <a href="/blog/2017/05/15/elm-and-the-outer-world/"><h4>next post</h4> <h3> Elm and the outer world </h3> <div class=meta-data> <hr> posted May 15, 2017 on elm </div> </a> </li> </ul> <section> <div class=container> <div class=center> <ul> <li> <a href='/blog'>Archives</a> </li> <li> <a href='//feeds.feedburner.com/CodeLoveAndBoards' target=_blank>RSS</a> </li> </ul> Copyright © 2017 - Ricardo García Vega - Code, Love & Boards! </div> </div> </section> </footer> <script src="../../../../../javascripts/blog-5ddb0520.js"></script> <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  
+  ga('create', 'UA-37802122-1', 'codeloveandboards.com');
+  ga('send', 'pageview');
+</script> <script>
+  _StatHat.push(["_trackCount", "g2pcD9xou7DlR0DtndiwvSBBYU5k", 1.0]);
+</script> </body> </html>

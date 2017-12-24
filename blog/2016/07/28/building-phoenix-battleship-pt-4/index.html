@@ -1,0 +1,177 @@
+<!DOCTYPE html> <!--[if lt IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8 lt-ie7" lang=en-us><![endif]--> <!--[if IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8" lang=en-us><![endif]--> <!--[if IE 8]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if IE 9]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if lt IE 10]><html class="no-js lt-ie10" lang=en-us><![endif]--> <!--[if !IE]>><![endif]--> <html class=no-js lang=en> <head> <title>Building Phoenix Battleship (pt. 4) - Code, Love & Boards</title> <meta charset=utf-8 content='text/html' http-equiv=content-type> <meta content='ie=edge,chrome=1' http-equiv=x-ua-compatible> <meta content="Placing ships on the board's grid" name=description> <meta content='Ricardo García Vega - http://twitter.com/bigardone' name=author> <meta content='elixir, phoenix, otp' name=keywords> <meta content='initial-scale=1.0,user-scalable=no,maximum-scale=1,width=device-width' name=viewport> <link href='//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css' rel=stylesheet> <link href="//fonts.googleapis.com/css?family=Montserrat:400,700|Lora:400,700" media=screen rel=stylesheet /> <link href="../../../../../stylesheets/blog-ed6b1e0f.css" media=all rel=stylesheet /> <link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/styles/tomorrow.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/highlight.min.js'></script> <link href='/images/apple-touch-icon-57x57-6e598dc4.png' rel=apple-touch-icon sizes=57x57> <link href='/images/apple-touch-icon-114x114-5be964ba.png' rel=apple-touch-icon sizes=114x114> <link href='/images/apple-touch-icon-72x72-70084a85.png' rel=apple-touch-icon sizes=72x72> <link href='/images/apple-touch-icon-144x144-1dbb56c1.png' rel=apple-touch-icon sizes=144x144> <link href='/images/apple-touch-icon-60x60-d05a5ea9.png' rel=apple-touch-icon sizes=60x60> <link href='/images/apple-touch-icon-120x120-5dafce59.png' rel=apple-touch-icon sizes=120x120> <link href='/images/apple-touch-icon-76x76-b2c0d784.png' rel=apple-touch-icon sizes=76x76> <link href='/images/apple-touch-icon-152x152-45595360.png' rel=apple-touch-icon sizes=152x152> <link href='/images/favicon-160x160-944ce76e.png' rel=icon sizes=160x160 type='image/png'> <link href='/images/favicon-96x96-b7e4e089.png' rel=icon sizes=96x96 type='image/png'> <link href='/images/favicon-32x32-b7f34a79.png' rel=icon sizes=32x32 type='image/png'> <link href='/images/favicon-16x16-2712c528.png' rel=icon sizes=16x16 type='image/png'> <meta content='#9f00a7' name=msapplication-TileColor> <meta content='/images/mstile-144x144-028d4c4c.png' name=msapplication-TileImage> <script>
+  var _StatHat = _StatHat || [];
+  _StatHat.push(['_setUser', 'NzIzMCDaNaL5bvEP1HQkMYwfYsQe']);
+  (function() {
+          var sh = document.createElement('script'); sh.type = 'text/javascript';
+          sh.async = true;
+          sh.src = '//www.stathat.com/javascripts/api.js';
+          var s = document.getElementsByTagName('script')[0];
+          s.parentNode.insertBefore(sh, s);
+  })();
+</script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Building Phoenix Battleship (pt. 4)</h1> <h3></h3> <div class=meta-data> <hr> posted Jul 28, 2016 on <a class=tag href="/blog/tags/elixir.html">elixir</a> <a class=tag href="/blog/tags/phoenix.html">phoenix</a> <a class=tag href="/blog/tags/otp.html">otp</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <div class=index> <p>This post belongs to the <strong>Building Phoenix Battleship</strong> series.</p> <ol> <li><a href="/blog/2016/04/29/building-phoenix-battleship-pt-1">Designing the game mechanics</a></li> <li><a href="/blog/2016/05/03/building-phoenix-battleship-pt-2/">The lobby channel and game supervision</a></li> <li><a href="/blog/2016/05/21/building-phoenix-battleship-pt-3/">The game setup</a></li> <li><a href="/blog/2016/07/28/building-phoenix-battleship-pt-4/">Placing ships on the board's grid</a></li> <li><a href="/blog/2016/08/08/building-phoenix-battleship-pt-5/">Let the battle begin!</a></li> <li>Coming soon...</li> </ol> </div> <h2>Placing ships on the board&#39;s grid</h2> <p>In the <a href="/blog/2016/05/21/building-phoenix-battleship-pt-3">last part</a> of these series, we covered everything related to the game setup, joining an existing game, creating players boards and returning the game state to the players. Now it is time to start with the fun part, and let the players place their corresponding so they can begin the battle.</p> <p><img class=center src="/images/blog/building_phoenix_battleship/diagram-3-0021c216.jpg"/></p> <h3>The BoardChannel</h3> <p>When a player joins an existing game, and his board <code>Agent</code> process is created and ready, the player can start placing his ships. Any ship can be selected by clicking on it in the ship selector. Clicking it twice will change its orientation from horizontal to vertical. Once selected, the player has to click on a cell from his game board to place it. Once a cell is clicked (selecting it as the starting position of the ship), a new message is sent to the <code>GameChannel</code> to place it in the player&#39;s <code>Board</code> process.</p> <pre><code class="elixir"># web/channels/game_channel.ex
+
+defmodule Battleship.GameChannel do
+  use Phoenix.Channel
+  ...
+
+  def handle_in(&quot;game:place_ship&quot;, %{&quot;ship&quot; =&gt; ship}, socket) do
+    player_id = socket.assigns.player_id
+    game_id = socket.assigns.game_id
+
+    ship = %Ship{
+      x: ship[&quot;x&quot;],
+      y: ship[&quot;y&quot;],
+      size: ship[&quot;size&quot;],
+      orientation: String.to_atom(ship[&quot;orientation&quot;])
+    }
+
+    case Board.add_ship(player_id, ship) do
+      {:ok, _} -&gt;
+        game = Game.get_data(game_id, player_id)
+        board = Board.get_opponents_data(player_id)
+
+        broadcast(socket, &quot;game:player:#{Game.get_opponents_id(game, player_id)}:opponents_board_changed&quot;, %{board: board})
+
+        {:reply, {:ok, %{game: game}}, socket}
+      {:error, reason} -&gt;
+        {:reply, {:error, %{reason: reason}}, socket}
+    end
+  end
+
+  ...
+end
+</code></pre> <p>Along with the <code>game:place_ship</code> message, the client is sending the ship&#39;s data, which consists of its starting cell coordinates (represented by <code>x</code> and <code>y</code>), its <code>size</code> and <code>orientation</code>. Using this data, we create a new <code>Ship</code> struct and call the <code>Board.add_ship(player_id, ship)</code> function, which will place the ship on the corresponding board. If the ship is placed correctly, we get the new game state for the current player, so it is returned to the client. We also need to tell the opponent that the player has placed a new ship, so we get the <em>public</em> board data (hiding the ships placements), and broadcast it to the opponents client. On the other hand, it there is an error in the ship placement, we notify it to the player.</p> <h3>The Ship module</h3> <p>Before continuing with the <code>Board.add_ship/2</code> implementation, let&#39;s define the <code>Ship</code> struct:</p> <pre><code class="ruby"># web/models/ship.ex
+
+defmodule Battleship.Ship do
+  defstruct [
+    x: 0,
+    y: 0,
+    size: 0,
+    orientation: :vertical,
+    coordinates: %{}
+  ]
+
+  def coordinates(%{x: x, y: y, size: size, orientation: :vertical}) do
+    Enum.map(y..(y + (size - 1)), &amp;coordinate_key(&amp;1, x))
+  end
+  def coordinates(%{x: x, y: y, size: size, orientation: :horizontal}) do
+    Enum.map((x..x + (size - 1)), &amp;coordinate_key(y, &amp;1))
+  end
+
+  defp coordinate_key(y, x), do: Enum.join([y, x], &quot;&quot;)
+end
+</code></pre> <p>It consists of the previously commented <code>x</code>, <code>y</code>, <code>size</code> and <code>orientation</code> keys, and a <code>coordinates</code> map, which stores any hit on any of its coordinates. The <code>coordinates/1</code> function returns a list of coordinates representing the ship, depending on its orientation and size.</p> <h3>The Board module</h3> <p>Now that the <code>Ship</code> module is defined, we can continue implementing the missing <code>Board</code> functionality:</p> <pre><code class="ruby"># lib/battleship/game/board.ex
+
+defmodule Battleship.Game.Board do
+  ...
+
+  @ships_sizes [5, 4, 3, 2, 2, 1, 1]
+  @size 10
+  @orientations [:horizontal, :vertical]
+
+  ...
+
+  def add_ship(_player_id, %Ship{size: size}) when not size in @ships_sizes, do: {:error, &quot;Invalid size&quot;}
+  def add_ship(_player_id, %Ship{x: x}) when x &gt; (@size - 1) or x &lt; 0, do: {:error, &quot;Invalid position&quot;}
+  def add_ship(_player_id, %Ship{y: y}) when y &gt; (@size - 1) or y &lt; 0, do: {:error, &quot;Invalid position&quot;}
+  def add_ship(_player_id, %Ship{orientation: orientation}) when not orientation in @orientations, do: {:error, &quot;Invalid orientation&quot;}
+  def add_ship(player_id, ship) do
+    board = Agent.get(ref(player_id), &amp;(&amp;1))
+
+    cond do
+      board.ready -&gt;
+        {:error, &quot;All ships are placed&quot;}
+      ship_already_placed?(board, ship) -&gt;
+        {:error, &quot;Ship already added&quot;}
+      ship_with_invalid_bounds?(ship) || ship_with_invalid_coordinates?(board, ship) -&gt;
+        {:error, &quot;Ship has invalid coordinates&quot;}
+      true -&gt;
+        new_board = board
+          |&gt; add_ship_to_grid(ship)
+          |&gt; set_hit_points
+          |&gt; set_is_ready
+
+        Agent.update(ref(player_id), fn(_) -&gt; new_board end)
+
+        {:ok, new_board}
+    end
+  end
+  ...
+
+  # Checks if a similar ship has been already placed
+  defp ship_already_placed?(%__MODULE__{ships: ships}, %Ship{size: size}) do
+    permited_amount = Enum.count(@ships_sizes, &amp;(&amp;1 == size))
+    Enum.count(ships, &amp;(&amp;1.size == size and ship_placed?(&amp;1))) == permited_amount
+  end
+
+  # Checks if the ship is inside the boards boundaries
+  defp ship_with_invalid_bounds?(%Ship{orientation: :horizontal} = ship) do
+    ship.x + ship.size &gt; @size
+  end
+  defp ship_with_invalid_bounds?(%Ship{orientation: :vertical} = ship) do
+    ship.y + ship.size &gt; @size
+  end
+
+  # Checks is the ship is overlaps an exisiting one
+  defp ship_with_invalid_coordinates?(board, ship) do
+    ship
+    |&gt; Ship.coordinates
+    |&gt; Enum.map(&amp;(board.grid[&amp;1] == @grid_value_ship))
+    |&gt; Enum.any?(&amp;(&amp;1 == true))
+  end
+
+  ...
+
+end
+</code></pre> <p><img class=center src="/images/blog/building_phoenix_battleship/ship-error-18d12efc.jpg"/></p> <p>Thanks to Elixir&#39;s <strong>pattern matching</strong> and <strong>guard clauses</strong>, we can add some basic and straightforward validation. Therefore, the first four <code>add_ship</code> function clauses validate size, position and orientation against the predefined configuration of the module, returning any possible <code>{:error, reason}</code>. In case these first validations succeed, we need to make more complex ones, so in the last clause we retrieve the board&#39;s state from the <code>Agent</code> process and check the following:</p> <ul> <li>If the board is ready, we return an error notifying that all ships have been already placed.</li> <li>If the player is trying to place a ship twice, we also need to return an error.</li> <li>Same if the ship is placed out of bounds or overlapping a previously added ship.</li> </ul> <p>If none of these happen, then we can add the ship to the grid, set the current hit points and check if the board is ready to start the battle:</p> <pre><code class="ruby"># lib/battleship/game/board.ex
+
+defmodule Battleship.Game.Board do
+  ...
+
+  def add_ship(player_id, ship) do
+    board = Agent.get(ref(player_id), &amp;(&amp;1))
+
+    cond do
+      ...
+
+      true -&gt;
+        new_board = board
+          |&gt; add_ship_to_grid(ship)
+          |&gt; set_hit_points
+          |&gt; set_is_ready
+
+        Agent.update(ref(player_id), fn(_) -&gt; new_board end)
+
+        {:ok, new_board}
+    end
+  end
+
+  ...
+
+  defp set_hit_points(board), do: %{board | hit_points: Enum.reduce(board.ships, 0, &amp;(&amp;1.size + &amp;2))}
+
+  defp set_is_ready(board), do: %{board | ready: Enum.all?(board.ships, &amp;ship_placed?(&amp;1))}
+
+  defp ship_placed?(ship), do: length(Map.keys(ship.coordinates)) != 0
+end
+</code></pre> <p>Note that board&#39;s total hit points are the sum of all its placed ships sizes, and it is ready when all ships have been placed. Finally, we have to update the board&#39;s process state with the new modifications by using the <code>Agent.update/1</code> function, and also return it in a tuple along with the <code>:ok</code> atom.</p> <p>Enough for now :) In the next part we are going to cover the functionality related to shooting, handling possible errors and what to do when one of the players leaves the game in the middle of the battle. Meanwhile, feel free to take a look to the final (but still in progress, though) source code or challenge a friend to a <a title="Phoenix Battleship" href="https://phoenix-battleship.herokuapp.com/">battleship game</a>.</p> <div class=btn-wrapper> <a href="https://phoenix-battleship.herokuapp.com/" target=_blank class=btn><i class="fa fa-cloud"></i> Live demo</a> <a href="https://github.com/bigardone/phoenix-battleship" target=_blank class=btn><i class="fa fa-github"></i> Source code</a> </div> <p>Happy coding!</p> <div id=disqus_thread></div> <script>
+  /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+  var disqus_shortname = 'codeloveandboards'; // required: replace example with your forum shortname
+  
+  /* * * DON'T EDIT BELOW THIS LINE * * */
+  (function() {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script> <noscript> Please enable JavaScript to view the <a href='//disqus.com/?ref_noscript'>comments powered by Disqus.</a> </noscript> <a class=dsq-brlink href='//disqus.com'> comments powered by <span class=logo-disqus>Disqus</span> </a> </article> </section> </div> </section> <footer id=main_footer> <ul class=article-nav> <li class=previous> <a href="/blog/2016/05/21/building-phoenix-battleship-pt-3/"><h4>previous post</h4> <h3> Building Phoenix Battleship (pt. 3) </h3> <div class=meta-data> <hr> posted May 21, 2016 on elixir, phoenix, otp </div> </a> </li> <li class=next> <a href="/blog/2016/08/08/building-phoenix-battleship-pt-5/"><h4>next post</h4> <h3> Building Phoenix Battleship (pt. 5) </h3> <div class=meta-data> <hr> posted Aug 8, 2016 on elixir, phoenix, otp </div> </a> </li> </ul> <section> <div class=container> <div class=center> <ul> <li> <a href='/blog'>Archives</a> </li> <li> <a href='//feeds.feedburner.com/CodeLoveAndBoards' target=_blank>RSS</a> </li> </ul> Copyright © 2017 - Ricardo García Vega - Code, Love & Boards! </div> </div> </section> </footer> <script src="../../../../../javascripts/blog-5ddb0520.js"></script> <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  
+  ga('create', 'UA-37802122-1', 'codeloveandboards.com');
+  ga('send', 'pageview');
+</script> <script>
+  _StatHat.push(["_trackCount", "g2pcD9xou7DlR0DtndiwvSBBYU5k", 1.0]);
+</script> </body> </html>

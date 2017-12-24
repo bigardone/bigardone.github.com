@@ -1,0 +1,238 @@
+<!DOCTYPE html> <!--[if lt IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8 lt-ie7" lang=en-us><![endif]--> <!--[if IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8" lang=en-us><![endif]--> <!--[if IE 8]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if IE 9]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if lt IE 10]><html class="no-js lt-ie10" lang=en-us><![endif]--> <!--[if !IE]>><![endif]--> <html class=no-js lang=en> <head> <title>Page specific JavaScript in Phoenix framework (pt.1) - Code, Love & Boards</title> <meta charset=utf-8 content='text/html' http-equiv=content-type> <meta content='ie=edge,chrome=1' http-equiv=x-ua-compatible> <meta content='Page specific JavaScript in Phoenix projects with Brunch' name=description> <meta content='Ricardo García Vega - http://twitter.com/bigardone' name=author> <meta content='elixir, phoenix, javascript, brunch' name=keywords> <meta content='initial-scale=1.0,user-scalable=no,maximum-scale=1,width=device-width' name=viewport> <link href='//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css' rel=stylesheet> <link href="//fonts.googleapis.com/css?family=Montserrat:400,700|Lora:400,700" media=screen rel=stylesheet /> <link href="../../../../../stylesheets/blog-ed6b1e0f.css" media=all rel=stylesheet /> <link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/styles/tomorrow.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/highlight.min.js'></script> <link href='/images/apple-touch-icon-57x57-6e598dc4.png' rel=apple-touch-icon sizes=57x57> <link href='/images/apple-touch-icon-114x114-5be964ba.png' rel=apple-touch-icon sizes=114x114> <link href='/images/apple-touch-icon-72x72-70084a85.png' rel=apple-touch-icon sizes=72x72> <link href='/images/apple-touch-icon-144x144-1dbb56c1.png' rel=apple-touch-icon sizes=144x144> <link href='/images/apple-touch-icon-60x60-d05a5ea9.png' rel=apple-touch-icon sizes=60x60> <link href='/images/apple-touch-icon-120x120-5dafce59.png' rel=apple-touch-icon sizes=120x120> <link href='/images/apple-touch-icon-76x76-b2c0d784.png' rel=apple-touch-icon sizes=76x76> <link href='/images/apple-touch-icon-152x152-45595360.png' rel=apple-touch-icon sizes=152x152> <link href='/images/favicon-160x160-944ce76e.png' rel=icon sizes=160x160 type='image/png'> <link href='/images/favicon-96x96-b7e4e089.png' rel=icon sizes=96x96 type='image/png'> <link href='/images/favicon-32x32-b7f34a79.png' rel=icon sizes=32x32 type='image/png'> <link href='/images/favicon-16x16-2712c528.png' rel=icon sizes=16x16 type='image/png'> <meta content='#9f00a7' name=msapplication-TileColor> <meta content='/images/mstile-144x144-028d4c4c.png' name=msapplication-TileImage> <script>
+  var _StatHat = _StatHat || [];
+  _StatHat.push(['_setUser', 'NzIzMCDaNaL5bvEP1HQkMYwfYsQe']);
+  (function() {
+          var sh = document.createElement('script'); sh.type = 'text/javascript';
+          sh.async = true;
+          sh.src = '//www.stathat.com/javascripts/api.js';
+          var s = document.getElementsByTagName('script')[0];
+          s.parentNode.insertBefore(sh, s);
+  })();
+</script> <link href='https://blog.diacode.com/page-specific-javascript-in-phoenix-framework-pt-1' rel=canonical> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Page specific JavaScript in Phoenix framework (pt.1)</h1> <h3></h3> <div class=meta-data> <hr> posted Apr 22, 2016 on <a class=tag href="/blog/tags/elixir.html">elixir</a> <a class=tag href="/blog/tags/phoenix.html">phoenix</a> <a class=tag href="/blog/tags/javascript.html">javascript</a> <a class=tag href="/blog/tags/brunch.html">brunch</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <div class=index> <p>This post belongs to the <strong>Page specific JavaScript in Phoenix framework</strong> series.</p> <ol> <li><a href="/blog/2016/04/22/page-specific-javascript-in-phoenix-framework-pt-1/">Brunch and ES6 approach</a></li> <li><a href="/blog/2016/04/26/page-specific-javascript-in-phoenix-framework-pt-2/">Webpack approach</a></li> </ol> </div> <p>Thanks to our personal experience working on legacy <strong>Rails</strong> applications, we&#39;ve been able to see several different approaches on how other developers usually organize <strong>JavaScript</strong> assets. Choosing the wrong approach, or not even having one, will give you some headaches in the future – in other words, just requiring everything in your manifest file (<code>application.js</code>) and relying on multiple document load handlers across serveral files with the hope that everything will just work fine is not a good idea. For our last projects (both client and internal ones) we&#39;ve been replacing the <strong>Asset Pipeline</strong> with <strong>Webpack</strong> to handle asset files requirement and build process, loving the result so far. That&#39;s why the first time I took a look at <strong>Phoenix</strong>&#39;s documentation and discovered that there was not such a thing as the <a title="Ruby on Rails Asset Pipeline" href="//guides.rubyonrails.org/v3.2/asset_pipeline.html">Asset Pipeline</a> I got instantly hooked by it.</p> <h2>Simple approach using Brunch and ES6</h2> <p>In order to build assets, <strong>Phoenix</strong> initially comes with <a title="Brunch.io" href="//brunch.io/">Brunch</a> out of the box, and not only that, it also comes configured to support <strong>ES6</strong> by default, including its modules syntax. Taking advantage of this, let&#39;s generate a very basic project and see how we can create a better way of organizing the JavaScript instead of putting everything we might need in <code>app.js</code> as if it was a <strong>Rails</strong> project.</p> <h3>Generating the project</h3> <p>Let&#39;s begin by installing the lates version on <strong>Phoenix</strong>:</p> <pre><code>$ mix archive.install https://github.com/phoenixframework/archives/raw/master/phoenix_new.ez &amp;&amp; mix local.phoenix
+
+Found existing archive(s): phoenix_new.ez.
+Are you sure you want to replace them? [Yn]
+* creating /Users/myuser/.mix/archives/phoenix_new.ez
+Found existing archive(s): phoenix_new.ez.
+Are you sure you want to replace them? [Yn]
+* creating /Users/myuser/.mix/archives/phoenix_new.ez
+</code></pre> <p>Now that we are up to date, let&#39;s generate a new <strong>Phoenix</strong> project:</p> <pre><code>$ mix phoenix.new phoenix_template
+
+* creating phoenix_template/config/config.exs
+* creating phoenix_template/config/dev.exs
+* creating phoenix_template/config/prod.exs
+* creating phoenix_template/config/prod.secret.exs
+* ...
+* ...
+
+We are all set! Run your Phoenix application:
+
+    $ cd phoenix_template
+    $ mix phoenix.server
+
+You can also run your app inside IEx (Interactive Elixir) as:
+
+    $ iex -S mix phoenix.server
+
+Before moving on, configure your database in config/dev.exs and run:
+
+    $ mix ecto.create
+</code></pre> <p>After following the instructions and running the server we can see that the new application is ready.</p> <p><img src="/images/blog/page-specific-javascript-phoenix/template-1-f11519ea.jpg"></p> <h3>Shared common JavaScript between views</h3> <p>Before continuing let&#39;s first think about what our good old web application is going to need. There&#39;s probably going to be some common js functionality shared across the whole application, like handling pulldown menus in the header, initialazing third party plugins, etc. Having this in mind we can create our first js module that will be in charge of all this common functionality that needs to be executed on every page:</p> <pre><code class="javascript">// web/static/js/views/main.js
+
+export default class MainView {
+  mount() {
+    // This will be executed when the document loads...
+    console.log(&#39;MainView mounted&#39;);
+  }
+
+  unmount() {
+    // This will be executed when the document unloads...
+    console.log(&#39;MainView unmounted&#39;);
+  }
+}
+</code></pre> <p>The <code>MainView</code> module will basically have to main functions:</p> <ul> <li><strong>mount</strong> which will be called every time the page loads and will contain all the initializing of common functionality needed.</li> <li><strong>umount</strong> which can be used to add any functionality needed to be executed when the document unloads. This might be useful in some situations like showing a confirm alert to the user when he tries to leave an edit view with unsaved changes, for example.</li> </ul> <p>Now let&#39;s update the main <code>app.js</code> file so it uses the new <code>MainView</code> module:</p> <pre><code class="javascript">// web/static/js/app.js
+
+import &#39;phoenix_html&#39;;
+import MainView from &#39;./views/main&#39;;
+
+function handleDOMContentLoaded() {
+  const view = new MainView();
+  view.mount();
+
+  window.currentView = view;
+}
+
+function handleDocumentUnload() {
+  window.currentView.unmount();
+}
+
+window.addEventListener(&#39;DOMContentLoaded&#39;, handleDOMContentLoaded, false);
+window.addEventListener(&#39;unload&#39;, handleDocumentUnload, false);
+</code></pre> <p>We add an event listener so when the <code>DOM</code> is completely loaded it initialzes the <code>MainView</code>, <em>mounts</em> it and assigns it globally. We are also doing the same for the <code>unload</code> event of the document. If we now open the web inspector, we can see the log message and verify everything that is working fine:</p> <p><img src="/images/blog/page-specific-javascript-phoenix/template-2-f52dad2b.jpg"></p> <p>We can see the log message, yay! Let&#39;s add one more route so we can navigate through both the root and the new one and check what happens:</p> <pre><code class="elixir"># web/router.ex
+
+defmodule PhoenixTemplate.Router do
+  use PhoenixTemplate.Web, :router
+
+  # ...
+  # ...
+
+  scope &quot;/&quot;, PhoenixTemplate do
+    pipe_through :browser # Use the default browser stack
+
+    get &quot;/&quot;, PageController, :index
+    get &quot;/new&quot;, PageController, :new
+  end
+end
+</code></pre> <p>We need to add the new action to the existing controller:</p> <pre><code class="elixir"># web/controllers/page_controller.ex
+
+defmodule PhoenixTemplate.PageController do
+  use PhoenixTemplate.Web, :controller
+
+  # ...
+
+  def new(conn, _params) do
+    render conn, &quot;new.html&quot;
+  end
+end
+</code></pre> <p>Next step is to create the new template and update the existing <code>index</code> one, so they display the current view module and template:</p> <pre><code class="elixir">&lt;!-- web/templates/page/index.html.eex --&gt;
+&lt;!-- web/templates/page/new.html.eex --&gt;
+
+&lt;div class=&quot;jumbotron&quot;&gt;
+  &lt;h2&gt;&lt;%= @view_module  %&gt;&lt;/h2&gt;
+  &lt;p class=&quot;lead&quot;&gt;&lt;%= @view_template %&gt;&lt;/p&gt;&lt;/p&gt;
+&lt;/div&gt;
+</code></pre> <p>Finally we have to update the main layout template with the navigation links:</p> <pre><code class="elixir">&lt;!-- web/templates/layout/app.html.eex --&gt;
+
+...
+...
+
+&lt;body&gt;
+    &lt;div class=&quot;container&quot;&gt;
+      &lt;header class=&quot;header&quot;&gt;
+        &lt;nav role=&quot;navigation&quot;&gt;
+          &lt;ul class=&quot;nav nav-pills pull-right&quot;&gt;
+            &lt;li&gt;&lt;%= link(&quot;Index&quot;, to: page_path(@conn, :index)) %&gt;&lt;/li&gt;
+            &lt;li&gt;&lt;%= link(&quot;New&quot;, to: page_path(@conn, :new)) %&gt;&lt;/li&gt;
+          &lt;/ul&gt;
+...
+...
+</code></pre> <p>Now we can click in the new link and check that it works just the same as before:</p> <p><img src="/images/blog/page-specific-javascript-phoenix/template-3-14745b04.jpg"></p> <p>From now on, every time we create a new route and it&#39;s view/template is shown to the user, all the common <strong>JavaScript</strong> functionality will be executed exactly the same as in any other route. But what happens I if we want to add some unique behaviour to a specific view/template?</p> <h3>View/tempate specific JavaScript</h3> <p>The main idea is to specify somehow in the <code>app.js</code> the <strong>JavaScript</strong> view we want to mount instead of the <code>MainView</code>, but executing all the common stuff as well. To do so we are going to create a helper function to generate the current view/template name which we&#39;ll use later to mount it. Let&#39;s add it to the <code>LayoutView</code> module:</p> <pre><code class="ruby"># web/views/layout_view.ex
+
+defmodule PhoenixTemplate.LayoutView do
+  use PhoenixTemplate.Web, :view
+
+  @doc &quot;&quot;&quot;
+  Generates name for the JavaScript view we want to use
+  in this combination of view/template.
+  &quot;&quot;&quot;
+  def js_view_name(conn, view_template) do
+    [view_name(conn), template_name(view_template)]
+    |&gt; Enum.reverse
+    |&gt; List.insert_at(0, &quot;view&quot;)
+    |&gt; Enum.map(&amp;String.capitalize/1)
+    |&gt; Enum.reverse
+    |&gt; Enum.join(&quot;&quot;)
+  end
+
+  # Takes the resource name of the view module and removes the
+  # the ending *_view* string.
+  defp view_name(conn) do
+    conn
+    |&gt; view_module
+    |&gt; Phoenix.Naming.resource_name
+    |&gt; String.replace(&quot;_view&quot;, &quot;&quot;)
+  end
+
+  # Removes the extion from the template and reutrns
+  # just the name.
+  defp template_name(template) when is_binary(template) do
+    template
+    |&gt; String.split(&quot;.&quot;)
+    |&gt; Enum.at(0)
+  end
+end
+</code></pre> <p>The result for the <em>Elixir.PhoenixTemplate.PageView</em> view and <em>index.html</em> template will be <code>PageIndexView</code>, and on the other hand, for the <strong>new.html</strong> template will be <code>PageNewView</code>. Now we need a place to set the returning name so that it&#39;s accessible to the <strong>JavaScript</strong>, so let&#39;s add it as a <code>data</code> attribute to the body tag:</p> <pre><code class="elixir">&lt;!-- web/templates/layout/app.html.eex --&gt;
+
+...
+...
+
+&lt;body data-js-view-name=&quot;&lt;%= js_view_name(@conn, @view_template) %&gt;&quot;&gt;
+
+...
+</code></pre> <p>After refreshing the browser and inspecting the source code it should look something like this:</p> <pre><code class="html">&lt;body data-js-view-name=&quot;PageIndexView&quot;&gt;
+</code></pre> <p>All right! So let&#39;s create a specific <strong>JavaScript</strong> view for the <strong>new.html</strong> template:</p> <pre><code class="javascript">// web/static/js/views/page/new.js
+
+import MainView from &#39;../main&#39;;
+
+export default class View extends MainView {
+  mount() {
+    super.mount();
+
+    // Specific logic here
+    console.log(&#39;PageNewView mounted&#39;);
+  }
+
+  unmount() {
+    super.unmount();
+
+    // Specific logic here
+    console.log(&#39;PageNewView unmounted&#39;);
+  }
+}
+</code></pre> <p>Note how <code>View</code> extends <code>MainView</code> and how we are calling its super functions in both <code>mount()</code> and <code>mount()</code>. This way it will run all the common functionality like in any other view/template before running any specifc logic. Now we need a mechanism to load the current view name module so we can call its <code>mount</code> and <code>unmount</code> methods, so let&#39;s write a simple loader module:</p> <pre><code class="javascript">// web/static/js/views/loader.js
+
+import MainView    from &#39;./main&#39;;
+import PageNewView from &#39;./page/new&#39;;
+
+// Collection of specific view modules
+const views = {
+  PageNewView,
+};
+
+export default function loadView(viewName) {
+  return views[viewName] || MainView;
+}
+</code></pre> <p>We need to import any specific page view we need to have and add it to the <code>views</code> object. The <code>loadView</code> function will try to return it by its <code>viewName</code> argument, returning the <code>MainView</code> if not found. Finally we need to change the code in the <code>app.js</code> file in order to use the <code>loadView</code> function:</p> <pre><code class="javascript">// web/static/js/app.js
+
+import &#39;phoenix_html&#39;;
+import loadView from &#39;./views/loader&#39;;
+
+function handleDOMContentLoaded() {
+  // Get the current view name
+  const viewName = document.getElementsByTagName(&#39;body&#39;)[0].dataset.jsViewName;
+
+  // Load view class and mount it
+  const ViewClass = loadView(viewName);
+  const view = new ViewClass();
+  view.mount();
+
+  window.currentView = view;
+}
+
+function handleDocumentUnload() {
+  window.currentView.unmount();
+}
+
+window.addEventListener(&#39;DOMContentLoaded&#39;, handleDOMContentLoaded, false);
+window.addEventListener(&#39;unload&#39;, handleDocumentUnload, false);
+</code></pre> <p>Note the subtle change in the <code>handleDOMContentLoaded</code>. It gets the <code>viewName</code> from the body&#39;s data attribute previously set by the <code>js_view_name/2</code> function. Then it uses the <code>loadView</code> function to get the view class by <code>viewName</code> and creates a new view object with it and calling its <code>mount</code> method. And with this, we are done! If we inspect the browser&#39;s console it should look somehting like this:</p> <p><img src="/images/blog/page-specific-javascript-phoenix/template-4-84339369.jpg"></p> <p>We can now see the 2 log messages resulting from calling the <code>mount</code> function of the <code>view</code> object which is a <code>PageNewView</code>. One message for the <code>super.mount()</code> call and the second one of its own.</p> <h3>Conclusion</h3> <p>Thanks to this small changes we can organize the <strong>JavaScript</strong> of a fresh new generated <strong>Phoenix</strong> project in a more tiddy and efficient way, without the need of any other third party libraries, appart from those which are initially added. Of course there can be several different ways of achieving something similar, like removing <strong>Brunch</strong> and using <strong>Webpack</strong> and it&#39;s dynamic module loading, which we will comment on the next post. Meanwhile, don&#39;t forget to check out the source code:</p> <div class=btn-wrapper> <a href="https://github.com/diacode/phoenix-template" target=_blank class=btn><i class="fa fa-github"></i> Source code</a> </div> <p>Happy coding!</p> <div id=disqus_thread></div> <script>
+  /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+  var disqus_shortname = 'codeloveandboards'; // required: replace example with your forum shortname
+  
+  /* * * DON'T EDIT BELOW THIS LINE * * */
+  (function() {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script> <noscript> Please enable JavaScript to view the <a href='//disqus.com/?ref_noscript'>comments powered by Disqus.</a> </noscript> <a class=dsq-brlink href='//disqus.com'> comments powered by <span class=logo-disqus>Disqus</span> </a> </article> </section> </div> </section> <footer id=main_footer> <ul class=article-nav> <li class=previous> <a href="/blog/2016/03/20/supervising-multiple-genserver-processes/"><h4>previous post</h4> <h3> Supervising multiple GenServer processes </h3> <div class=meta-data> <hr> posted Mar 20, 2016 on elixir, otp, genserver, supervisor </div> </a> </li> <li class=next> <a href="/blog/2016/04/26/page-specific-javascript-in-phoenix-framework-pt-2/"><h4>next post</h4> <h3> Page specific JavaScript in Phoenix framework (pt.2) </h3> <div class=meta-data> <hr> posted Apr 26, 2016 on elixir, phoenix, javascript, webpack </div> </a> </li> </ul> <section> <div class=container> <div class=center> <ul> <li> <a href='/blog'>Archives</a> </li> <li> <a href='//feeds.feedburner.com/CodeLoveAndBoards' target=_blank>RSS</a> </li> </ul> Copyright © 2017 - Ricardo García Vega - Code, Love & Boards! </div> </div> </section> </footer> <script src="../../../../../javascripts/blog-5ddb0520.js"></script> <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  
+  ga('create', 'UA-37802122-1', 'codeloveandboards.com');
+  ga('send', 'pageview');
+</script> <script>
+  _StatHat.push(["_trackCount", "g2pcD9xou7DlR0DtndiwvSBBYU5k", 1.0]);
+</script> </body> </html>

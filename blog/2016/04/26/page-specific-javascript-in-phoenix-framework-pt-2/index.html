@@ -1,0 +1,199 @@
+<!DOCTYPE html> <!--[if lt IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8 lt-ie7" lang=en-us><![endif]--> <!--[if IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8" lang=en-us><![endif]--> <!--[if IE 8]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if IE 9]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if lt IE 10]><html class="no-js lt-ie10" lang=en-us><![endif]--> <!--[if !IE]>><![endif]--> <html class=no-js lang=en> <head> <title>Page specific JavaScript in Phoenix framework (pt.2) - Code, Love & Boards</title> <meta charset=utf-8 content='text/html' http-equiv=content-type> <meta content='ie=edge,chrome=1' http-equiv=x-ua-compatible> <meta content='Page specific JavaScript in Phoenix projects with webpack' name=description> <meta content='Ricardo García Vega - http://twitter.com/bigardone' name=author> <meta content='elixir, phoenix, javascript, webpack' name=keywords> <meta content='initial-scale=1.0,user-scalable=no,maximum-scale=1,width=device-width' name=viewport> <link href='//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css' rel=stylesheet> <link href="//fonts.googleapis.com/css?family=Montserrat:400,700|Lora:400,700" media=screen rel=stylesheet /> <link href="../../../../../stylesheets/blog-ed6b1e0f.css" media=all rel=stylesheet /> <link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/styles/tomorrow.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/highlight.min.js'></script> <link href='/images/apple-touch-icon-57x57-6e598dc4.png' rel=apple-touch-icon sizes=57x57> <link href='/images/apple-touch-icon-114x114-5be964ba.png' rel=apple-touch-icon sizes=114x114> <link href='/images/apple-touch-icon-72x72-70084a85.png' rel=apple-touch-icon sizes=72x72> <link href='/images/apple-touch-icon-144x144-1dbb56c1.png' rel=apple-touch-icon sizes=144x144> <link href='/images/apple-touch-icon-60x60-d05a5ea9.png' rel=apple-touch-icon sizes=60x60> <link href='/images/apple-touch-icon-120x120-5dafce59.png' rel=apple-touch-icon sizes=120x120> <link href='/images/apple-touch-icon-76x76-b2c0d784.png' rel=apple-touch-icon sizes=76x76> <link href='/images/apple-touch-icon-152x152-45595360.png' rel=apple-touch-icon sizes=152x152> <link href='/images/favicon-160x160-944ce76e.png' rel=icon sizes=160x160 type='image/png'> <link href='/images/favicon-96x96-b7e4e089.png' rel=icon sizes=96x96 type='image/png'> <link href='/images/favicon-32x32-b7f34a79.png' rel=icon sizes=32x32 type='image/png'> <link href='/images/favicon-16x16-2712c528.png' rel=icon sizes=16x16 type='image/png'> <meta content='#9f00a7' name=msapplication-TileColor> <meta content='/images/mstile-144x144-028d4c4c.png' name=msapplication-TileImage> <script>
+  var _StatHat = _StatHat || [];
+  _StatHat.push(['_setUser', 'NzIzMCDaNaL5bvEP1HQkMYwfYsQe']);
+  (function() {
+          var sh = document.createElement('script'); sh.type = 'text/javascript';
+          sh.async = true;
+          sh.src = '//www.stathat.com/javascripts/api.js';
+          var s = document.getElementsByTagName('script')[0];
+          s.parentNode.insertBefore(sh, s);
+  })();
+</script> <link href='https://blog.diacode.com/page-specific-javascript-in-phoenix-framework-pt-2' rel=canonical> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Page specific JavaScript in Phoenix framework (pt.2)</h1> <h3></h3> <div class=meta-data> <hr> posted Apr 26, 2016 on <a class=tag href="/blog/tags/elixir.html">elixir</a> <a class=tag href="/blog/tags/phoenix.html">phoenix</a> <a class=tag href="/blog/tags/javascript.html">javascript</a> <a class=tag href="/blog/tags/webpack.html">webpack</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <div class=index> <p>This post belongs to the <strong>Page specific JavaScript in Phoenix framework</strong> series.</p> <ol> <li><a href="/blog/2016/04/22/page-specific-javascript-in-phoenix-framework-pt-1/">Brunch and ES6 approach</a></li> <li><a href="/blog/2016/04/26/page-specific-javascript-in-phoenix-framework-pt-2/">Webpack approach</a></li> </ol> </div> <h2>Simple approach using webpack</h2> <p>In the <a title="Part 1" href="/blog/2016/04/22/page-specific-javascript-in-phoenix-framework-pt-1">previous part</a> we designed a mechanism for organizing and requiring page specific <strong>JavaScript</strong> in a new <strong>Phoenix</strong> project using its defaul asset manager and build tool, <a title="Brunch.io" href="//brunch.io/">Brunch</a>. Another great thing about <strong>Phoenix</strong> is that it gives you plenty of freedom to use any other alternative like, for instance, <a title=webpack href="https://webpack.github.io/">webpack</a>. One of the cool things about <strong>webpack</strong> is its <a title="Dynamic requires" href="https://webpack.github.io/docs/context.html#dynamic-requires">dynamic requires</a> and we can take it as an advantage for building a more flexible and straightforward mechanism, removing the manual import of every js view module we did last time:</p> <pre><code class="javascript">// web/static/js/views/loader.js
+
+import MainView    from &#39;./main&#39;;
+import PageNewView from &#39;./page/new&#39;;
+import PageEditView from &#39;./page/edit&#39;;
+import UserShoView from &#39;./user/show&#39;;
+
+// Let&#39;s get rid of this!
+const views = {
+  PageNewView,
+  PageEditView,
+  UserShoView,
+};
+
+// ...
+</code></pre> <p>So let&#39;s get started!</p> <h3>Switching to webpack</h3> <p>Before continuing we have to make some minor changes to the project in order to switch from <strong>brunch</strong> to <strong>webpack</strong>. This changes can be found in this <a title=Commit href="https://github.com/diacode/phoenix-template/commit/ecec13cca08859e704563d83d96fa18500e7a2e4">commit</a>, but we are going to go through them right now. To begin with we need to remove the <code>brunch-config.js</code> file in the <code>./node_modules</code> folder. We also need to update the <code>package.json</code> file so we replace all the necessary packages needed:</p> <pre><code class="json">{
+  &quot;repository&quot;: {},
+  &quot;dependencies&quot;: {
+    &quot;phoenix&quot;: &quot;file:deps/phoenix&quot;,
+    &quot;phoenix_html&quot;: &quot;file:deps/phoenix_html&quot;
+  },
+  &quot;devDependencies&quot;: {
+    &quot;babel-core&quot;: &quot;^6.7.7&quot;,
+    &quot;babel-loader&quot;: &quot;^6.2.4&quot;,
+    &quot;babel-preset-es2015&quot;: &quot;^6.6.0&quot;,
+    &quot;copy-webpack-plugin&quot;: &quot;^2.1.3&quot;,
+    &quot;css-loader&quot;: &quot;^0.23.1&quot;,
+    &quot;extract-text-webpack-plugin&quot;: &quot;^1.0.1&quot;,
+    &quot;style-loader&quot;: &quot;^0.13.1&quot;,
+    &quot;webpack&quot;: &quot;^1.13.0&quot;
+  }
+}
+</code></pre> <p>Don&#39;t forget to run <code>npm install</code> after. Now we need to add a basic <strong>webpack</strong> configuration file:</p> <pre><code class="javascript">// webpack.config.js
+
+var ExtractTextPlugin = require(&#39;extract-text-webpack-plugin&#39;);
+var CopyWebpackPlugin = require(&#39;copy-webpack-plugin&#39;);
+
+module.exports = {
+  entry: [
+    &#39;./web/static/js/app.js&#39;,
+    &#39;./web/static/css/app.css&#39;,
+  ],
+  output: {
+    path: &#39;./priv/static&#39;,
+    filename: &#39;js/app.js&#39;,
+  },
+  module: {
+    loaders: [
+      {
+        test: /\.js$/,
+        exclude: /node_modules/,
+        loader: &#39;babel&#39;,
+        query: {
+          presets: [&#39;es2015&#39;],
+        },
+      },
+      {
+        test: /\.css$/,
+        loader: ExtractTextPlugin.extract(&#39;style&#39;, &#39;css&#39;),
+      },
+    ],
+  },
+  plugins: [
+    new ExtractTextPlugin(&#39;css/app.css&#39;),
+    new CopyWebpackPlugin([{ from: &#39;./web/static/assets&#39; }]),
+  ],
+};
+</code></pre> <p>The final step is to change the development configuration file to use <strong>webpack</strong> in the <code>watchers</code> section, removing <strong>brunch</strong>:</p> <pre><code class="elixir"># config/dev.exs
+
+use Mix.Config
+
+config :phoenix_template, PhoenixTemplate.Endpoint,
+  http: [port: 4000],
+  debug_errors: true,
+  code_reloader: true,
+  check_origin: false,
+  watchers: [node: [&quot;node_modules/webpack/bin/webpack.js&quot;, &quot;--watch&quot;, &quot;--color&quot;]]
+
+# ..
+# ..
+</code></pre> <p>Now we are ready for some <strong>JavaScript</strong> fun!</p> <h3>Dynamic view/tempate specific JavaScript</h3> <p>The main goal is to dynamically load a <strong>JavaScript</strong> view module depending on the current view and template the application is displaying to the user. In other words, if it&#39;s displaying the <code>new</code> template for the <code>PageView</code> view module, it will need to load a file located in <code>web/static/js/views/page/new.js</code>. Therefore, let&#39;s refactor the <code>PageView</code> module so instead of generating a name generates a path string:</p> <pre><code class="ruby"># web/views/layout_view.ex
+
+defmodule PhoenixTemplate.LayoutView do
+  use PhoenixTemplate.Web, :view
+
+  @doc &quot;&quot;&quot;
+  Generates path for the JavaScript view we want to use
+  in this combination of view/template.
+  &quot;&quot;&quot;
+  def js_view_path(conn, view_template) do
+    [view_name(conn), template_name(view_template)]
+    |&gt; Enum.join(&quot;/&quot;)
+  end
+
+  # Takes the resource name of the view module and removes the
+  # the ending *_view* string.
+  defp view_name(conn) do
+    conn
+    |&gt; view_module
+    |&gt; Phoenix.Naming.resource_name
+    |&gt; String.replace(&quot;_view&quot;, &quot;&quot;)
+  end
+
+  # Removes the extion from the template and reutrns
+  # just the name.
+  defp template_name(template) when is_binary(template) do
+    template
+    |&gt; String.split(&quot;.&quot;)
+    |&gt; Enum.at(0)
+  end
+end
+</code></pre> <p>We also need to update the <code>app.html.eex</code> layout so it references the new function:</p> <pre><code class="elixir">&lt;!-- web/templates/layout/app.html.eex --&gt;
+
+...
+...
+
+&lt;body data-js-view-path=&quot;&lt;%= js_view_path(@conn, @view_template) %&gt;&quot;&gt;
+
+...
+</code></pre> <p>After refreshing the browser and inspecting the source code it should look something like this:</p> <pre><code class="html">&lt;body data-js-view-path=&quot;page/index&quot;&gt;
+</code></pre> <p>Nex step is to modify the <code>loader.js</code> module, so it dynamically loads the generated <strong>js view path</strong>:</p> <pre><code class="javascript">// web/static/js/views/loader.js
+
+import MainView from &#39;./main&#39;;
+
+export default function loadView(viewPath) {
+  let view;
+
+  try {
+    const ViewClass = require(&#39;./&#39; + viewPath);
+    view = new ViewClass();
+  } catch (e) {
+    view = new MainView();
+  }
+
+  return view;
+}
+</code></pre> <p>Notice how we don&#39;t need to import every specific view module no more. Using webpack&#39;s <code>require</code> against the <code>viewPath</code> parameter will return the module if it exists, otherwhise it will throw an error which will be caught to return a new default <code>MainView</code>. We also need to slightly change the specific view modules we have so we use <strong>webpack</strong>&#39;s <code>module.exports</code> api:</p> <pre><code class="javascript">import MainView from &#39;../main&#39;;
+
+module.exports = class View extends MainView {
+  mount() {
+    super.mount();
+    console.log(&#39;PageNewView mounted&#39;);
+  }
+
+  unmount() {
+    super.unmount();
+    console.log(&#39;PageNewView unmounted&#39;);
+  }
+};
+</code></pre> <p>And last but not least, the main <code>app.js</code> file also needs to be updated:</p> <pre><code class="javascript">// web/static/js/app.js
+
+import loadView from &#39;./views/loader&#39;;
+
+function handleDOMContentLoaded() {
+  const viewName = document.getElementsByTagName(&#39;body&#39;)[0].dataset.jsViewPath;
+
+  const view = loadView(viewName);
+  view.mount();
+
+  window.currentView = view;
+}
+
+function handleDocumentUnload() {
+  window.currentView.unmount();
+}
+
+window.addEventListener(&#39;DOMContentLoaded&#39;, handleDOMContentLoaded, false);
+window.addEventListener(&#39;unload&#39;, handleDocumentUnload, false);
+</code></pre> <p>And once we visit again <a href="//localhost:4000/">http://localhost:4000/</a> in our browser we can check again in the console how everything is working just like before:</p> <p><img src="/images/blog/page-specific-javascript-phoenix/template-4-84339369.jpg"></p> <h3>Conclusion</h3> <p>Thanks to <strong>Phoenix</strong>&#39;s modern and flexible way of managing and building static assets we can have a well organized front-end code. Whether we choose <strong>Brunch</strong>, <strong>Webpack</strong> or any other available option we migh like, there&#39;s no excuse for returning back to the dark days ruled by the <strong>Asset Pipeline</strong> and the spaghetti code. <strong>Long live Phoenix</strong>!</p> <p>Check out the source code: <div class=btn-wrapper> <a href="https://github.com/diacode/phoenix-template/tree/webpack" target=_blank class=btn><i class="fa fa-github"></i> Source code</a> </div></p> <p>Happy coding!</p> <div id=disqus_thread></div> <script>
+  /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+  var disqus_shortname = 'codeloveandboards'; // required: replace example with your forum shortname
+  
+  /* * * DON'T EDIT BELOW THIS LINE * * */
+  (function() {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script> <noscript> Please enable JavaScript to view the <a href='//disqus.com/?ref_noscript'>comments powered by Disqus.</a> </noscript> <a class=dsq-brlink href='//disqus.com'> comments powered by <span class=logo-disqus>Disqus</span> </a> </article> </section> </div> </section> <footer id=main_footer> <ul class=article-nav> <li class=previous> <a href="/blog/2016/04/22/page-specific-javascript-in-phoenix-framework-pt-1/"><h4>previous post</h4> <h3> Page specific JavaScript in Phoenix framework (pt.1) </h3> <div class=meta-data> <hr> posted Apr 22, 2016 on elixir, phoenix, javascript, brunch </div> </a> </li> <li class=next> <a href="/blog/2016/04/29/building-phoenix-battleship-pt-1/"><h4>next post</h4> <h3> Building Phoenix Battleship (pt. 1) </h3> <div class=meta-data> <hr> posted Apr 29, 2016 on elixir, phoenix, otp </div> </a> </li> </ul> <section> <div class=container> <div class=center> <ul> <li> <a href='/blog'>Archives</a> </li> <li> <a href='//feeds.feedburner.com/CodeLoveAndBoards' target=_blank>RSS</a> </li> </ul> Copyright © 2017 - Ricardo García Vega - Code, Love & Boards! </div> </div> </section> </footer> <script src="../../../../../javascripts/blog-5ddb0520.js"></script> <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  
+  ga('create', 'UA-37802122-1', 'codeloveandboards.com');
+  ga('send', 'pageview');
+</script> <script>
+  _StatHat.push(["_trackCount", "g2pcD9xou7DlR0DtndiwvSBBYU5k", 1.0]);
+</script> </body> </html>

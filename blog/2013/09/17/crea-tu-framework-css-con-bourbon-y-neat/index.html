@@ -1,0 +1,97 @@
+<!DOCTYPE html> <!--[if lt IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8 lt-ie7" lang=en-us><![endif]--> <!--[if IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8" lang=en-us><![endif]--> <!--[if IE 8]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if IE 9]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if lt IE 10]><html class="no-js lt-ie10" lang=en-us><![endif]--> <!--[if !IE]>><![endif]--> <html class=no-js lang=en> <head> <title>Crea tu framework css con Bourbon y Neat - Code, Love & Boards</title> <meta charset=utf-8 content='text/html' http-equiv=content-type> <meta content='ie=edge,chrome=1' http-equiv=x-ua-compatible> <meta content='A blog about coding web apps, loving life and board sports by Ricardo García Vega' name=description> <meta content='Ricardo García Vega - http://twitter.com/bigardone' name=author> <meta content='rails, sass' name=keywords> <meta content='initial-scale=1.0,user-scalable=no,maximum-scale=1,width=device-width' name=viewport> <link href='//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css' rel=stylesheet> <link href="//fonts.googleapis.com/css?family=Montserrat:400,700|Lora:400,700" media=screen rel=stylesheet /> <link href="../../../../../stylesheets/blog-ed6b1e0f.css" media=all rel=stylesheet /> <link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/styles/tomorrow.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/highlight.min.js'></script> <link href='/images/apple-touch-icon-57x57-6e598dc4.png' rel=apple-touch-icon sizes=57x57> <link href='/images/apple-touch-icon-114x114-5be964ba.png' rel=apple-touch-icon sizes=114x114> <link href='/images/apple-touch-icon-72x72-70084a85.png' rel=apple-touch-icon sizes=72x72> <link href='/images/apple-touch-icon-144x144-1dbb56c1.png' rel=apple-touch-icon sizes=144x144> <link href='/images/apple-touch-icon-60x60-d05a5ea9.png' rel=apple-touch-icon sizes=60x60> <link href='/images/apple-touch-icon-120x120-5dafce59.png' rel=apple-touch-icon sizes=120x120> <link href='/images/apple-touch-icon-76x76-b2c0d784.png' rel=apple-touch-icon sizes=76x76> <link href='/images/apple-touch-icon-152x152-45595360.png' rel=apple-touch-icon sizes=152x152> <link href='/images/favicon-160x160-944ce76e.png' rel=icon sizes=160x160 type='image/png'> <link href='/images/favicon-96x96-b7e4e089.png' rel=icon sizes=96x96 type='image/png'> <link href='/images/favicon-32x32-b7f34a79.png' rel=icon sizes=32x32 type='image/png'> <link href='/images/favicon-16x16-2712c528.png' rel=icon sizes=16x16 type='image/png'> <meta content='#9f00a7' name=msapplication-TileColor> <meta content='/images/mstile-144x144-028d4c4c.png' name=msapplication-TileImage> <script>
+  var _StatHat = _StatHat || [];
+  _StatHat.push(['_setUser', 'NzIzMCDaNaL5bvEP1HQkMYwfYsQe']);
+  (function() {
+          var sh = document.createElement('script'); sh.type = 'text/javascript';
+          sh.async = true;
+          sh.src = '//www.stathat.com/javascripts/api.js';
+          var s = document.getElementsByTagName('script')[0];
+          s.parentNode.insertBefore(sh, s);
+  })();
+</script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Crea tu framework css con Bourbon y Neat</h1> <h3></h3> <div class=meta-data> <hr> posted Sep 17, 2013 on <a class=tag href="/blog/tags/rails.html">rails</a> <a class=tag href="/blog/tags/sass.html">sass</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <p><small style="font-style: italic;">Post originalmente escrito para el blog de <a href=" http://blog.diacode.com/crea-tu-framework-css-con-bourbon-y-neat" target=_blank>Diacode</a>, que dice así:</small></p> <p>Hace unos meses escribí un post <a href="/blog/2013-01-19-mejores-hojas-de-estilo-con-sass.markdown">acerca de Sass</a> y de cómo nos podía ayudar para agilizar y simplificar el desarrollo de nuestras hojas de estilos gracias al uso de <em>mixins</em>.</p> <p>Desde entonces no he parado de usar <strong>Sass</strong> para generar mis hojas de estilos, al principio usando algún framework css como <a href="//getbootstrap.com/" target=_blank title=Bootstrap>Bootstrap</a> en su versión <a href="https://github.com/thomas-mcdonald/bootstrap-sass">Sass</a>, luego a medida que me iba sintiendo más cómodo sobrescribiendo estilos de estos frameworks con los mios propios usando mis propios <em>mixins</em> y al final he terminado evitando usar estos frameworks y generando los mios propios desde cero, para poder reutilizarlos en distintos proyectos, pudiendo variar la apariencia de las aplicaciones cambiando simplemente unas cuantas <strong>variables</strong> que usan mis <em>mixins</em>.</p> <p>A la hora de desarrollar el interfaz de una aplicación, intento por todos los medios que mis vistas sean lo más independientes posibles de los estilos. Es decir, que los componentes de mi <em>html</em> <strong>no estén llenos de clases</strong> que sirvan exclusivamente para dotarles de estilos, sino al revés, que mis hojas de estilos sean las encargadas de esta labor usando los selectores apropiados, o lo que viene a llamarse <strong>diseño semántico</strong>, para los que Sass me viene como anillo al dedo.</p> <p>La base que todo conjunto de estilos que una aplicación o sitio web debería tener es un buen sistema de grid, y un conjunto de reglas que sean lo más compatibles posible con todos los navegadores, para evitar que los elementos se descoloquen o no se muestren como esperábamos, pero tampoco hace falta reinventar la rueda y hacer esto desde cero, ya que disponemos de un par de herramientas que nos pueden ayudar a proporcionarnos esta base y así centrarnos en el diseño en sí.</p> <p><a href="//bourbon.io/" title="Bourbon - A Sass Mixin Library" target=_blank><img src="https://github-camo.global.ssl.fastly.net/69ff6aca7073ff74a052d728e1b431c58bb9aa3f/687474703a2f2f626f7572626f6e2e696f2f696d616765732f7368617265642f626f7572626f6e2d6c6f676f2e706e67" style="background: #fff;" alt=Bourbon /></a></p> <p><strong>Bourbon</strong> es una librería Sass creada por <a href="//www.thoughtbot.com/">thoughtbot</a> que nos aporta un conjunto de <em>mixins</em> <strong>fáciles de usar</strong> y cuyo css generado es <strong>soportado por la mayoría de los navegadores modernos</strong>.</p> <p>Vamos a ver un ejemplo verlo mejor. Teniendo este estilo escrito en Sass para las secciones de nuestra aplicación:</p> <pre><code class="sass">// .sass
+section
+  +linear-gradient(to top, red, orange)
+  +position(absolute, 10px -13px 0 0)
+  +transform(rotate(45deg) skew(20deg, 30deg))
+  font-family: $helvetica
+
+</code></pre> <p>Nos generaría el siguiente <strong>css</strong> una vez compilado:</p> <pre><code class="css">section {
+  background-color: red;
+  background-image: -webkit-linear-gradient(bottom, red, orange);
+  background-image:         linear-gradient(to top, red, orange);
+  position:         absolute;
+  right:            -13px;
+  top:              10px;
+  -webkit-transform: rotate(45deg) skew(20deg, 30deg);
+     -moz-transform: rotate(45deg) skew(20deg, 30deg);
+      -ms-transform: rotate(45deg) skew(20deg, 30deg);
+       -o-transform: rotate(45deg) skew(20deg, 30deg);
+          transform: rotate(45deg) skew(20deg, 30deg);
+  font-family: &quot;Helvetica Neue&quot;, Helvetica, Arial, sans-serif;
+}
+</code></pre> <p>Como podéis ver, además de aplicar las reglas, se encarga también de añadir todos los <strong>prefijos</strong> necesarios para que los navegadores no tan modernos puedan soportarlos.</p> <p>Para poder ver todos los <em>mixins</em> y funciones que nos permite usar, solo tenéis que visitar su <a href="">documentación</a>, y veréis que cubre prácticamente todas las características de <em>CSS3</em>, permitiéndonos usarlas de manera sencilla con una simple llamada.</p> <p><a href="//neat.bourbon.io/" title="Bourbon - A lightweight semantic grid framework for Sass and Bourbon" target=_blank><img src="https://github-camo.global.ssl.fastly.net/b3d350ec1680fb4d2ddc197812a2a5f0dc7005c3/687474703a2f2f6e6561742e626f7572626f6e2e696f2f696d616765732f6c6f676f747970652e737667" style="background: #fff;" alt="Bourbon Neat"/></a></p> <p>Con <strong>Bourbon</strong> puedes crear hasta una sistema de <em>grid</em> flexible con la ayuda de su función <a href="//bourbon.io/docs/#flex-grid" target=_blank>flex-grid</a>, pero la gente de <a href="//www.thoughtbot.com/">thoughtbot</a> ha ido un paso más allá y ha creado también <strong>Neat</strong>, un framework que se dedica única y exclusivamente a esto, y lo hace realmente bien.</p> <p>De nuevo es completamente semántico, es decir, solo tienes que usar una serie de <em>mixins</em> en tus selectores css y así evitar llenar tu <em>html</em> de clases innecesarias.</p> <p>Veamos un ejemplo, supongamos que tenemos este <em>html</em> para generar una página con la típica barra lateral y a la derecha el contenido:</p> <pre><code class="html">&lt;section&gt;
+  &lt;aside&gt;
+    Barra lateral
+  &lt;/aside&gt;
+  &lt;article&gt;
+    Aquí el contenido principal de nuestra página
+  &lt;/article&gt;
+&lt;/section&gt;
+</code></pre> <p>Nuestro Sass sería así:</p> <pre><code class="sass">section
+  +outer-container
+  aside
+    +span-columns(3)
+  article
+    +span-columns(9)
+</code></pre> <p>Este sería el ejemplo más simple, ya que nos ofrece una gran flexibilidad a la hora de crear el grid. Para configurar el número de columnas, ancho y separación entre estas basta con modificar estas variables antes de importar <strong>Neat</strong> en nuestro fichero Sass:</p> <pre><code class="sass">// _nuestro_grid.sass
+
+$column: 90px
+$gutter: 30px
+$grid-columns: 12
+$max-width: em(1088)
+</code></pre> <pre><code class="sass">// application.css.sass
+
+@import bourbon
+@import nuestro_grid
+@import neat
+
+// Aquí irían nuestros estilos
+...
+</code></pre> <p>Lo que más me gusta de <strong>Neat</strong> es que te calcula el ancho de las columnas sobre la marcha, anque le especifiques 12 columnas de manera global, siempre puedes cambiar esto al incluir el <em>mixin</em> <code>span-columns</code>, de la siguiente manera:</p> <pre><code class="sass">section
+  div
+    +span-columns(3 of 9)
+</code></pre> <p>Incluso te lo calcula si le quieres añadir <em>padding</em>, para que no se descuadre todo: <code>sass section div +span-columns(3 of 9) +pad(2em) </code></p> <p>Es <strong>completamente responsivo</strong>, ya que te permite cambiar la configuración del <em>grid</em> en cualquier <em>breakpoint</em> que le especifiques:</p> <pre><code class="sass">// _nuestro_grid.sass
+@import neat/neat-helpers
+
+$column: 90px
+$gutter: 30px
+$grid-columns: 12
+$max-width: em(1088)
+
+$tablet: new-breakpoint(max-width 768px 8)
+$mobile: new-breakpoint(max-width 480px 4)
+</code></pre> <pre><code class="sass">section
+  div
+    +media($mobile)
+      +span-columns(4)
+</code></pre> <p>Además de todo esto, si visitáis su <a href="//neat.bourbon.io/docs/" target=_blank title="Neat docs">documentación</a> podréis ver y comprender mejor todas los <em>mixins</em> y funciones que nos aporta para exprimirlo al máximo.</p> <h3>En resumen</h3> <p>Si estáis un poco cansados de usar siempre lo mismo para generar los estilos de vuestros proyectos y os estáis planteando el crear vuestros propios estilos teniendo una buena base que os permita generar CSS3 de manera sencilla, soportado por la gran mayoría de los navegadores actuales y a la vez tener un sistema de <em>grid</em> que sea semántico, robusto, responsivo y fácil de usar os recomiendo que le deis una oportunidad tanto a <strong>Bourbon</strong> como a <strong>Neat</strong>. Una vez que empecéis a usar estas dos pequeñas joyas no vais a querer dejar de hacerlo :)</p> <p>Love &amp; Boards!</p> <div id=disqus_thread></div> <script>
+  /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+  var disqus_shortname = 'codeloveandboards'; // required: replace example with your forum shortname
+  
+  /* * * DON'T EDIT BELOW THIS LINE * * */
+  (function() {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script> <noscript> Please enable JavaScript to view the <a href='//disqus.com/?ref_noscript'>comments powered by Disqus.</a> </noscript> <a class=dsq-brlink href='//disqus.com'> comments powered by <span class=logo-disqus>Disqus</span> </a> </article> </section> </div> </section> <footer id=main_footer> <ul class=article-nav> <li class=previous> <a href="/blog/2013/09/11/migrando-datos-existentes-a-tu-nueva-aplicacion-rails/"><h4>previous post</h4> <h3> Migrando datos existentes a tu nueva aplicación Rails </h3> <div class=meta-data> <hr> posted Sep 11, 2013 on rails </div> </a> </li> <li class=next> <a href="/blog/2013/09/25/desplegando-rails-i-eligiendo-hosting-paas-vs-iaas/"><h4>next post</h4> <h3> Desplegando Rails I: Eligiendo hosting (PaaS vs IaaS) </h3> <div class=meta-data> <hr> posted Sep 25, 2013 on rails, deploying </div> </a> </li> </ul> <section> <div class=container> <div class=center> <ul> <li> <a href='/blog'>Archives</a> </li> <li> <a href='//feeds.feedburner.com/CodeLoveAndBoards' target=_blank>RSS</a> </li> </ul> Copyright © 2017 - Ricardo García Vega - Code, Love & Boards! </div> </div> </section> </footer> <script src="../../../../../javascripts/blog-5ddb0520.js"></script> <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  
+  ga('create', 'UA-37802122-1', 'codeloveandboards.com');
+  ga('send', 'pageview');
+</script> <script>
+  _StatHat.push(["_trackCount", "g2pcD9xou7DlR0DtndiwvSBBYU5k", 1.0]);
+</script> </body> </html>

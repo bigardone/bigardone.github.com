@@ -1,0 +1,109 @@
+<!DOCTYPE html> <!--[if lt IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8 lt-ie7" lang=en-us><![endif]--> <!--[if IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8" lang=en-us><![endif]--> <!--[if IE 8]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if IE 9]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if lt IE 10]><html class="no-js lt-ie10" lang=en-us><![endif]--> <!--[if !IE]>><![endif]--> <html class=no-js lang=en> <head> <title>Mejores hojas de estilo con Sass - Code, Love & Boards</title> <meta charset=utf-8 content='text/html' http-equiv=content-type> <meta content='ie=edge,chrome=1' http-equiv=x-ua-compatible> <meta content='A blog about coding web apps, loving life and board sports by Ricardo García Vega' name=description> <meta content='Ricardo García Vega - http://twitter.com/bigardone' name=author> <meta content='code, sass, css' name=keywords> <meta content='initial-scale=1.0,user-scalable=no,maximum-scale=1,width=device-width' name=viewport> <link href='//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css' rel=stylesheet> <link href="//fonts.googleapis.com/css?family=Montserrat:400,700|Lora:400,700" media=screen rel=stylesheet /> <link href="../../../../../stylesheets/blog-ed6b1e0f.css" media=all rel=stylesheet /> <link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/styles/tomorrow.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/highlight.min.js'></script> <link href='/images/apple-touch-icon-57x57-6e598dc4.png' rel=apple-touch-icon sizes=57x57> <link href='/images/apple-touch-icon-114x114-5be964ba.png' rel=apple-touch-icon sizes=114x114> <link href='/images/apple-touch-icon-72x72-70084a85.png' rel=apple-touch-icon sizes=72x72> <link href='/images/apple-touch-icon-144x144-1dbb56c1.png' rel=apple-touch-icon sizes=144x144> <link href='/images/apple-touch-icon-60x60-d05a5ea9.png' rel=apple-touch-icon sizes=60x60> <link href='/images/apple-touch-icon-120x120-5dafce59.png' rel=apple-touch-icon sizes=120x120> <link href='/images/apple-touch-icon-76x76-b2c0d784.png' rel=apple-touch-icon sizes=76x76> <link href='/images/apple-touch-icon-152x152-45595360.png' rel=apple-touch-icon sizes=152x152> <link href='/images/favicon-160x160-944ce76e.png' rel=icon sizes=160x160 type='image/png'> <link href='/images/favicon-96x96-b7e4e089.png' rel=icon sizes=96x96 type='image/png'> <link href='/images/favicon-32x32-b7f34a79.png' rel=icon sizes=32x32 type='image/png'> <link href='/images/favicon-16x16-2712c528.png' rel=icon sizes=16x16 type='image/png'> <meta content='#9f00a7' name=msapplication-TileColor> <meta content='/images/mstile-144x144-028d4c4c.png' name=msapplication-TileImage> <script>
+  var _StatHat = _StatHat || [];
+  _StatHat.push(['_setUser', 'NzIzMCDaNaL5bvEP1HQkMYwfYsQe']);
+  (function() {
+          var sh = document.createElement('script'); sh.type = 'text/javascript';
+          sh.async = true;
+          sh.src = '//www.stathat.com/javascripts/api.js';
+          var s = document.getElementsByTagName('script')[0];
+          s.parentNode.insertBefore(sh, s);
+  })();
+</script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Mejores hojas de estilo con Sass</h1> <h3></h3> <div class=meta-data> <hr> posted Dec 17, 2012 on <a class=tag href="/blog/tags/code.html">code</a> <a class=tag href="/blog/tags/sass.html">sass</a> <a class=tag href="/blog/tags/css.html">css</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <p>Cuando desarrollo el interfaz de alguna aplicación, siempre hay una cosa que me vuelve loco que son las hojas de estilo. Siempre empiezo organizándolas por apartados, intentando poner cada cosa en su su sitio, para que luego sea sencillo encontrar cada cosa y no volverme loco. Pero esta organización solía durarme pocas semanas, hasta que entraba en vorágine de cambios de diseño, y terminaba destrozando ese orden con el que había empezado... hasta que descubrí <a title="Sass - Syntactically Awesome Stylesheets" href="//sass-lang.com" target=_blank>Sass</a>!!!</p> <h3>¿Qué es Sass?</h3> <p>Sass son las siglas de Syntactically Awesome Stylesheets, o lo que viene a ser Hojas de Estilo Sintácticamente Impresionantes, un lenguaje que genera CSS y que os aseguro que hace honor a su nombre ya que imaginaos poder escribir vuestras hojas de estilo usando variables, funciones, extendiendo clases, usando bucles y muchas más cosas que harán que  escribir CSS sea divertido fácil de mantener y todo ello con una sintaxis muy simple e intuitiva.</p> <h3>Sintaxis</h3> <p>Bueno, en realidad hay dos sintaxis, que puedes elegir según la extensión del fichero que uses, una es .SCSS y la otra .SASS, la cual es la que yo prefiero, ya que es más simplificada, y te permite olvidarte de usar puntos y coma, llaves y demás elementos que en css son necesarios teniendo solo en cuenta que tienes que ser estricto con la indentación que uses (en mi caso 2 espacios), ya que luego te generará el css usando anidando los elementos usando esa indentación:</p> <pre><code class="sass">// Esto en .sass
+$primaryColor: #000
+$secondaryColor: lighten($primaryColor, 20%)
+=underlined
+  border-bottom: 1px solid $secondaryColor
+ul
+  li
+    a
+      color: $primaryColor
+      text-decorarion: none
+      &amp;amp;:hover
+        color: $secondaryColor
+        +underlined
+</code></pre> <pre><code class="css">
+/* Es esto en .css */
+ul li a {
+  color: black;
+  text-decorarion: none;
+}
+ul li a:hover {
+  color: #333333;
+  border-bottom: 1px solid #333333;
+}
+</code></pre> <p>Como podéis ver, adios a las llaves, puntos y comas, podemos declarar variables, mixins, anidar selectores y muchas más cosas. A continuación os detallo las cosas que más me gustan y uso:</p> <h4>Variables</h4> <p>Imagino que ya podréis imaginar el potencial que esto nos da en nuestras hojas de estilo, para poder modificar colores, tamaños, márgenes y demás cambiándolo en un solo sitio, ya que además se pueden usar operaciones aritméticas con ellas.</p> <pre><code class="sass">// .sass
+$globalPadding: 10px
+.inner
+  padding: $globalPadding ($globalPadding * 2)
+
+/* .css */
+.inner {
+  padding: 10px 20px;
+}
+</code></pre> <h4>Mixins</h4> <p>Los mixins nos permiten declarar un grupo de reglas css que luego podremos reutilizar donde queramos:</p> <pre><code class="sass">// .sass
+=border-radius($radius)
+  -webkit-border-radius: $radius
+  -moz-border-radius: $radius
+  border-radius: $radius
+.widget
+  +border-radius(5px)
+.button
+  +border-radius(10px)
+</code></pre> <pre><code class="css">/* .css */
+.widget {
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+}
+.button {
+  -webkit-border-radius: 10px;
+  -moz-border-radius: 10px;
+  border-radius: 10px;
+}
+</code></pre> <h4>Funciones con colores</h4> <p>Esto es lo que más me gusta ya que siempre ando tocando colores, buscando paletas y colores similares para mis aplicaciones. Normalmente siempre he usado servicios como <a title=0to255 href="//0to255.com" target=_blank>0to255</a>, pero con las funciones de colores, Sass se encarga de calcularte los colores a partir del que tu quieras.</p> <pre><code class="sass">// .sass
+$orange: #d74c17
+.element
+  background-color: lighten($orange, 10%)
+  border: 1px solid darken($orange, 20%)
+  color: complement($orange)
+</code></pre> <pre><code class="sass">/* .css */
+.element {
+  background-color: #ea6937;
+  border: 1px solid #7b2b0d;
+  color: #17a2d7;
+}
+</code></pre> <h4>Bucles</h4> <p>Otra característica muy útil e importante cuando tienes que repetir la misma reglas en varios sitios pero con pequeñas variaciones:</p> <pre><code class="sass">// .sass
+@each $logo in twitter, facebook, linkedin
+  .#{$logo}-logo
+    background-image: url(&#39;/images/logos/#{$logo}.jpg&#39;)
+// .css
+.twitter-logo {
+  background-image: url(&quot;/images/logos/twitter.jpg&quot;);
+}
+.facebook-logo {
+  background-image: url(&quot;/images/logos/facebook.jpg&quot;);
+}
+.linkedin-logo {
+  background-image: url(&quot;/images/logos/linkedin.jpg&quot;);
+}
+</code></pre> <h4>¡Y muchas cosas más!</h4> <p>Esto es solo un pequeño resumen de las muchísimas cosas que se pueden hacer con Sass, y que te ayudan escribir css de manera más sencilla, rápida y mantenible. A continuación os dejo unos enlaces donde podréis aprender mas sobre este lenguaje que hará que os volváis a divertir escribiendo css ;) <ul> <li><span style="line-height:13px;"><a title="Documentación Sass" href="//sass-lang.com/docs/yardoc/file.SASS_REFERENCE.html" target=_blank>Documentación oficial</a>.</span></li> <li><a title="The Sass Way" href="//thesassway.com" target=_blank>The Sass Way</a>: Un sitio donde encontrar trucos y ejemplos de como hacer las cosas en sass.</li> <li><a title="Css converter" href="//cssconvert.mgwebsolutions.net" target=_blank>CSS converter</a>: Un sitio donde transformar facilmente tu css a Sass y viceversa.</li> </ul></p> <div id=disqus_thread></div> <script>
+  /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+  var disqus_shortname = 'codeloveandboards'; // required: replace example with your forum shortname
+  
+  /* * * DON'T EDIT BELOW THIS LINE * * */
+  (function() {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script> <noscript> Please enable JavaScript to view the <a href='//disqus.com/?ref_noscript'>comments powered by Disqus.</a> </noscript> <a class=dsq-brlink href='//disqus.com'> comments powered by <span class=logo-disqus>Disqus</span> </a> </article> </section> </div> </section> <footer id=main_footer> <ul class=article-nav> <li class=previous> <a href="/blog/2012/12/03/rails-composer/"><h4>previous post</h4> <h3> Rails Composer, el generador de Rails con esteroides </h3> <div class=meta-data> <hr> posted Dec 3, 2012 on </div> </a> </li> <li class=next> <a href="/blog/2013/01/04/mejor-javascript-con-coffeescript/"><h4>next post</h4> <h3> Mejor JavaScript con CoffeeScript </h3> <div class=meta-data> <hr> posted Jan 4, 2013 on code, coffeescript, javascript </div> </a> </li> </ul> <section> <div class=container> <div class=center> <ul> <li> <a href='/blog'>Archives</a> </li> <li> <a href='//feeds.feedburner.com/CodeLoveAndBoards' target=_blank>RSS</a> </li> </ul> Copyright © 2017 - Ricardo García Vega - Code, Love & Boards! </div> </div> </section> </footer> <script src="../../../../../javascripts/blog-5ddb0520.js"></script> <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  
+  ga('create', 'UA-37802122-1', 'codeloveandboards.com');
+  ga('send', 'pageview');
+</script> <script>
+  _StatHat.push(["_trackCount", "g2pcD9xou7DlR0DtndiwvSBBYU5k", 1.0]);
+</script> </body> </html>

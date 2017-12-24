@@ -1,0 +1,163 @@
+<!DOCTYPE html> <!--[if lt IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8 lt-ie7" lang=en-us><![endif]--> <!--[if IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8" lang=en-us><![endif]--> <!--[if IE 8]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if IE 9]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if lt IE 10]><html class="no-js lt-ie10" lang=en-us><![endif]--> <!--[if !IE]>><![endif]--> <html class=no-js lang=en> <head> <title>Building Phoenix Battleship (pt. 2) - Code, Love & Boards</title> <meta charset=utf-8 content='text/html' http-equiv=content-type> <meta content='ie=edge,chrome=1' http-equiv=x-ua-compatible> <meta content='The lobby channel and game supervision' name=description> <meta content='Ricardo García Vega - http://twitter.com/bigardone' name=author> <meta content='elixir, phoenix, otp' name=keywords> <meta content='initial-scale=1.0,user-scalable=no,maximum-scale=1,width=device-width' name=viewport> <link href='//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css' rel=stylesheet> <link href="//fonts.googleapis.com/css?family=Montserrat:400,700|Lora:400,700" media=screen rel=stylesheet /> <link href="../../../../../stylesheets/blog-ed6b1e0f.css" media=all rel=stylesheet /> <link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/styles/tomorrow.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/highlight.min.js'></script> <link href='/images/apple-touch-icon-57x57-6e598dc4.png' rel=apple-touch-icon sizes=57x57> <link href='/images/apple-touch-icon-114x114-5be964ba.png' rel=apple-touch-icon sizes=114x114> <link href='/images/apple-touch-icon-72x72-70084a85.png' rel=apple-touch-icon sizes=72x72> <link href='/images/apple-touch-icon-144x144-1dbb56c1.png' rel=apple-touch-icon sizes=144x144> <link href='/images/apple-touch-icon-60x60-d05a5ea9.png' rel=apple-touch-icon sizes=60x60> <link href='/images/apple-touch-icon-120x120-5dafce59.png' rel=apple-touch-icon sizes=120x120> <link href='/images/apple-touch-icon-76x76-b2c0d784.png' rel=apple-touch-icon sizes=76x76> <link href='/images/apple-touch-icon-152x152-45595360.png' rel=apple-touch-icon sizes=152x152> <link href='/images/favicon-160x160-944ce76e.png' rel=icon sizes=160x160 type='image/png'> <link href='/images/favicon-96x96-b7e4e089.png' rel=icon sizes=96x96 type='image/png'> <link href='/images/favicon-32x32-b7f34a79.png' rel=icon sizes=32x32 type='image/png'> <link href='/images/favicon-16x16-2712c528.png' rel=icon sizes=16x16 type='image/png'> <meta content='#9f00a7' name=msapplication-TileColor> <meta content='/images/mstile-144x144-028d4c4c.png' name=msapplication-TileImage> <script>
+  var _StatHat = _StatHat || [];
+  _StatHat.push(['_setUser', 'NzIzMCDaNaL5bvEP1HQkMYwfYsQe']);
+  (function() {
+          var sh = document.createElement('script'); sh.type = 'text/javascript';
+          sh.async = true;
+          sh.src = '//www.stathat.com/javascripts/api.js';
+          var s = document.getElementsByTagName('script')[0];
+          s.parentNode.insertBefore(sh, s);
+  })();
+</script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Building Phoenix Battleship (pt. 2)</h1> <h3></h3> <div class=meta-data> <hr> posted May 3, 2016 on <a class=tag href="/blog/tags/elixir.html">elixir</a> <a class=tag href="/blog/tags/phoenix.html">phoenix</a> <a class=tag href="/blog/tags/otp.html">otp</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <div class=index> <p>This post belongs to the <strong>Building Phoenix Battleship</strong> series.</p> <ol> <li><a href="/blog/2016/04/29/building-phoenix-battleship-pt-1">Designing the game mechanics</a></li> <li><a href="/blog/2016/05/03/building-phoenix-battleship-pt-2/">The lobby channel and game supervision</a></li> <li><a href="/blog/2016/05/21/building-phoenix-battleship-pt-3/">The game setup</a></li> <li><a href="/blog/2016/07/28/building-phoenix-battleship-pt-4/">Placing ships on the board's grid</a></li> <li><a href="/blog/2016/08/08/building-phoenix-battleship-pt-5/">Let the battle begin!</a></li> <li>Coming soon...</li> </ol> </div> <h2>The lobby channel and game supervision</h2> <p>On the previous part of this series, we did a quick tour through the main components which form part of our new game. Recalling the diagram, two of these elements are the <strong>LobbyChannel</strong>, which is the interface between the player&#39;s browser and the existing games, and the <strong>Battleship.Game.Supervisor</strong>, responsible for creating new games and listing existing games.</p> <p><img class=center src="/images/blog/building_phoenix_battleship/diagram-2-f3b58748.jpg"/></p> <h3>The LobbyChannel</h3> <p>Before continuing any further, there&#39;s an element not displayed in the diagram which is relevant and worth to mention. This element is the main controller of the application, the <code>Battleship.PageController</code>. Its importance comes from the fact that in its index action is where the <strong>random player id</strong> is generated.</p> <pre><code class="elixir"># web/controllers/page_controller.ex
+
+defmodule Battleship.PageController do
+  use Battleship.Web, :controller
+
+  def index(conn, _params) do
+    render conn, &quot;index.html&quot;, id: Battleship.generate_player_id
+  end
+end
+</code></pre> <p>We are going to use this <code>id</code> to connect the player to the socket, and to identify him in the games he plays. Here is how its implementation looks like:</p> <pre><code class="elixir"># lib/battleship.ex
+
+defmodule Battleship do
+  use Application
+
+  @id_length Application.get_env(:battleship, :id_length)
+  # ...
+  # ...
+
+  def generate_player_id do
+    @id_length
+    |&gt; :crypto.strong_rand_bytes
+    |&gt; Base.url_encode64()
+    |&gt; binary_part(0, @id_length)
+  end
+
+  # ...
+end
+</code></pre> <p>Having explained this, let&#39;s get down to business. Every time a new player visits the game, whether he goes into the lobby or directly to a single battle, he is going to join the <strong>LobbyChannel</strong> automatically. Before continuing we need to make some changes to the project. <strong>Phoenix</strong> by default creates a default <strong>UserSocket</strong> module, which I have renamed it to <strong>PlayerSocket</strong>, so let&#39;s modify the <code>endpoint.ex</code> file to reflect this:</p> <pre><code class="elixir"># lib/battleship/endpoint.ex
+
+defmodule Battleship.Endpoint do
+  use Phoenix.Endpoint, otp_app: :battleship
+
+  socket &quot;/socket&quot;, Battleship.PlayerSocket
+
+  # ...
+end
+</code></pre> <p>Now let&#39;s update the <code>player_socket.ex</code> file in order to add the new <strong>LobbyChannel</strong> module:</p> <pre><code class="elixir"># web/channels/player_socket.ex
+
+defmodule Battleship.PlayerSocket do
+  use Phoenix.Socket
+
+  alias Battleship.Player
+
+  ## Channels
+  channel &quot;lobby&quot;, Battleship.LobbyChannel
+
+  ## Transports
+  transport :websocket, Phoenix.Transports.WebSocket
+
+  def connect(%{&quot;id&quot; =&gt; player_id}, socket) do
+    {:ok, assign(socket, :player_id, player_id)}
+  end
+
+  def connect(_, _socket), do: :error
+
+  def id(socket), do: &quot;players_socket:#{socket.assigns.player_id}&quot;
+end
+</code></pre> <p>The <strong>LobbyChannel</strong> responsibilities include creating new games, returning the list of the current games that are taking place at that particular moment and broadcasting what&#39;s going on in any of these games. Let&#39;s take a closer look at its functionality:</p> <pre><code class="elixir"># web/channels/lobby_channel.ex
+
+defmodule Battleship.LobbyChannel do
+  use Battleship.Web, :channel
+  alias Battleship.Game.Supervisor, as: GameSupervisor
+
+  def join(&quot;lobby&quot;, _msg, socket) do
+    {:ok, socket}
+  end
+
+  def handle_in(&quot;current_games&quot;, _params, socket) do
+    {:reply, {:ok, %{games: GameSupervisor.current_games}}, socket}
+  end
+
+  def handle_in(&quot;new_game&quot;, _params, socket) do
+    game_id = Battleship.generate_game_id
+    GameSupervisor.create_game(game_id)
+
+    {:reply, {:ok, %{game_id: game_id}}, socket}
+  end
+
+  def broadcast_current_games do
+    Battleship.Endpoint.broadcast(&quot;lobby&quot;, &quot;update_games&quot;, %{games: GameSupervisor.current_games})
+  end
+end
+</code></pre> <ul> <li>The channel receives the <code>current_games</code> event every time a new player visits the main page of the game. Using the <code>Battleship.Game.Supervisor</code> if fetches the games that are taking place and returns them through the socket, so the list of games in the <strong>Redux</strong> store is populated and displayed to the player.</li> <li>When a player clicks on the <em>Start new battle</em> button, the <code>new_game</code> event is pushed to the channel. After generating a new random <code>game_id</code> it uses the <code>Battleship.Game.Supervisor</code> again to start a new <code>Battleship.Game</code> process, returning the previously generated <code>game_id</code>. This id is used in the front-end to redirect the player to the game view.</li> <li>On the other hand, <code>broadcast_current_games</code> is a function that does the same as the handle <code>current_games</code> callback excepting for that it broadcast the list of games through all the channel, to every connected player. We are going to talk more about it when we get to the part of the series related to events.</li> </ul> <p>As with the player id generation, the <code>game_id</code> generation also worths mentioning. My original implementation was the same as with the player id, but thanks to <a title=h4cc href="https://github.com/h4cc">Julius Beckmann</a> (aka h4cc), we now have a really nice mechanism for generating cool pirate game ids. You can check all the details in his <a title="Added Battleship.Pirate.generate_id" href="https://github.com/bigardone/phoenix-battleship/pull/7/files">pull request</a>.</p> <h3>The Game.Supervisor</h3> <p>After describing the <strong>LobbyChannel</strong> responsibilities, we have seen that it is tightly coupled to the <strong>Battleship.Game.Supervisor</strong> module. When a battle starts, we want to keep a record of the data related to it. For instance, we want to track which player started the battle (the attacker), who joined as the defender player, the chat messages between both players, the game turns, whether the game is over or not and who is the winner. We are going to store this data in separate game processes, one for each game taking place, supervised by the <strong>Battleship.Game.Supervisor</strong>. This supervisor is not only going to spawn new <strong>Battleship.Game</strong> processes, but it is also responsible for retrieving the information of any current battle inside its supervision tree. Let&#39;s take a closer look at its code:</p> <pre><code class="elixir"># lib/battleship/game/supervisor.ex
+
+defmodule Battleship.Game.Supervisor do
+  use Supervisor
+  alias Battleship.{Game}
+
+  def start_link, do: Supervisor.start_link(__MODULE__, :ok, name: __MODULE__)
+
+  def init(:ok) do
+    children = [
+      worker(Game, [], restart: :temporary)
+    ]
+
+    supervise(children, strategy: :simple_one_for_one)
+  end
+
+  def create_game(id), do: Supervisor.start_child(__MODULE__, [id])
+
+  def current_games do
+    __MODULE__
+    |&gt; Supervisor.which_children
+    |&gt; Enum.map(&amp;game_data/1)
+  end
+
+  defp game_data({_id, pid, _type, _modules}) do
+    pid
+    |&gt; GenServer.call(:get_data)
+    |&gt; Map.take([:id, :attacker, :defender, :turns, :over, :winner])
+  end
+end
+</code></pre> <p>There are some details worth to mention about its implementation:</p> <ul> <li>It supervises <code>Battleship.Game</code> processes, with a <code>:simple_one_for_one</code> strategy, which means that it can only have one child type, therefore it can only supervise this kind of processes, which can be added dynamically.</li> <li>The <code>:temporary</code> value for the child <code>restart</code> policy means that any terminated game process is not going to be restarted again. This behavior plays an important role regarding the game mechanics, and we will talk more about it in the following part of the series.</li> <li>The <code>create_game/1</code> function receives a game id (previously generated in the <code>LobbyChannel</code>) and starts a new <code>Battleship.Game</code> generic server process.</li> <li>The <code>current_games/0</code> function uses the <a title=Supervisor href="//elixir-lang.org/docs/stable/elixir/Supervisor.html#which_children/1">with_children/1</a> from the <code>Supervisor</code> behavior module, which returns a list of information about its children processes. Among this information, we can find the game process <code>pid</code>, which uses it in the private <code>game_data</code> function to retrieve its internal state and return only the data we want to show to the players in the lobby.</li> </ul> <p>We also need to add it to the application&#39;s supervision tree, so it crates a new <strong>Battleship.Game.Supervisor</strong> process once the application starts:</p> <pre><code class="elixir"># lib/battleship.ex
+
+defmodule Battleship do
+  use Application
+
+  # ...
+
+  def start(_type, _args) do
+    import Supervisor.Spec, warn: false
+
+    # ...
+
+    children = [
+      # ...
+      supervisor(Battleship.Game.Supervisor, []),
+    ]
+  end
+
+  # ...
+end
+</code></pre> <p>Let&#39;s leave it here. In the next part of the series, we are going to talk about the <strong>GameChannel</strong> and the <strong>Game</strong> module, and how their processes are dependent on each other thanks to Elixir&#39;s processes monitoring. Meanwhile, feel free to take a look to the final (but still in progress, though) source code or challenge a friend to a <a title="Phoenix Battleship" href="https://phoenix-battleship.herokuapp.com/">battleship game</a>.</p> <div class=btn-wrapper> <a href="https://phoenix-battleship.herokuapp.com/" target=_blank class=btn><i class="fa fa-cloud"></i> Live demo</a> <a href="https://github.com/bigardone/phoenix-battleship" target=_blank class=btn><i class="fa fa-github"></i> Source code</a> </div> <p>Happy coding!</p> <div id=disqus_thread></div> <script>
+  /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+  var disqus_shortname = 'codeloveandboards'; // required: replace example with your forum shortname
+  
+  /* * * DON'T EDIT BELOW THIS LINE * * */
+  (function() {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script> <noscript> Please enable JavaScript to view the <a href='//disqus.com/?ref_noscript'>comments powered by Disqus.</a> </noscript> <a class=dsq-brlink href='//disqus.com'> comments powered by <span class=logo-disqus>Disqus</span> </a> </article> </section> </div> </section> <footer id=main_footer> <ul class=article-nav> <li class=previous> <a href="/blog/2016/04/29/building-phoenix-battleship-pt-1/"><h4>previous post</h4> <h3> Building Phoenix Battleship (pt. 1) </h3> <div class=meta-data> <hr> posted Apr 29, 2016 on elixir, phoenix, otp </div> </a> </li> <li class=next> <a href="/blog/2016/05/21/building-phoenix-battleship-pt-3/"><h4>next post</h4> <h3> Building Phoenix Battleship (pt. 3) </h3> <div class=meta-data> <hr> posted May 21, 2016 on elixir, phoenix, otp </div> </a> </li> </ul> <section> <div class=container> <div class=center> <ul> <li> <a href='/blog'>Archives</a> </li> <li> <a href='//feeds.feedburner.com/CodeLoveAndBoards' target=_blank>RSS</a> </li> </ul> Copyright © 2017 - Ricardo García Vega - Code, Love & Boards! </div> </div> </section> </footer> <script src="../../../../../javascripts/blog-5ddb0520.js"></script> <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  
+  ga('create', 'UA-37802122-1', 'codeloveandboards.com');
+  ga('send', 'pageview');
+</script> <script>
+  _StatHat.push(["_trackCount", "g2pcD9xou7DlR0DtndiwvSBBYU5k", 1.0]);
+</script> </body> </html>

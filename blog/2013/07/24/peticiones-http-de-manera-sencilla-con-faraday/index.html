@@ -1,0 +1,100 @@
+<!DOCTYPE html> <!--[if lt IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8 lt-ie7" lang=en-us><![endif]--> <!--[if IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8" lang=en-us><![endif]--> <!--[if IE 8]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if IE 9]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if lt IE 10]><html class="no-js lt-ie10" lang=en-us><![endif]--> <!--[if !IE]>><![endif]--> <html class=no-js lang=en> <head> <title>Peticiones HTTP de manera sencilla con Faraday - Code, Love & Boards</title> <meta charset=utf-8 content='text/html' http-equiv=content-type> <meta content='ie=edge,chrome=1' http-equiv=x-ua-compatible> <meta content='A blog about coding web apps, loving life and board sports by Ricardo García Vega' name=description> <meta content='Ricardo García Vega - http://twitter.com/bigardone' name=author> <meta content='code, rails' name=keywords> <meta content='initial-scale=1.0,user-scalable=no,maximum-scale=1,width=device-width' name=viewport> <link href='//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css' rel=stylesheet> <link href="//fonts.googleapis.com/css?family=Montserrat:400,700|Lora:400,700" media=screen rel=stylesheet /> <link href="../../../../../stylesheets/blog-ed6b1e0f.css" media=all rel=stylesheet /> <link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/styles/tomorrow.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/highlight.min.js'></script> <link href='/images/apple-touch-icon-57x57-6e598dc4.png' rel=apple-touch-icon sizes=57x57> <link href='/images/apple-touch-icon-114x114-5be964ba.png' rel=apple-touch-icon sizes=114x114> <link href='/images/apple-touch-icon-72x72-70084a85.png' rel=apple-touch-icon sizes=72x72> <link href='/images/apple-touch-icon-144x144-1dbb56c1.png' rel=apple-touch-icon sizes=144x144> <link href='/images/apple-touch-icon-60x60-d05a5ea9.png' rel=apple-touch-icon sizes=60x60> <link href='/images/apple-touch-icon-120x120-5dafce59.png' rel=apple-touch-icon sizes=120x120> <link href='/images/apple-touch-icon-76x76-b2c0d784.png' rel=apple-touch-icon sizes=76x76> <link href='/images/apple-touch-icon-152x152-45595360.png' rel=apple-touch-icon sizes=152x152> <link href='/images/favicon-160x160-944ce76e.png' rel=icon sizes=160x160 type='image/png'> <link href='/images/favicon-96x96-b7e4e089.png' rel=icon sizes=96x96 type='image/png'> <link href='/images/favicon-32x32-b7f34a79.png' rel=icon sizes=32x32 type='image/png'> <link href='/images/favicon-16x16-2712c528.png' rel=icon sizes=16x16 type='image/png'> <meta content='#9f00a7' name=msapplication-TileColor> <meta content='/images/mstile-144x144-028d4c4c.png' name=msapplication-TileImage> <script>
+  var _StatHat = _StatHat || [];
+  _StatHat.push(['_setUser', 'NzIzMCDaNaL5bvEP1HQkMYwfYsQe']);
+  (function() {
+          var sh = document.createElement('script'); sh.type = 'text/javascript';
+          sh.async = true;
+          sh.src = '//www.stathat.com/javascripts/api.js';
+          var s = document.getElementsByTagName('script')[0];
+          s.parentNode.insertBefore(sh, s);
+  })();
+</script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Peticiones HTTP de manera sencilla con Faraday</h1> <h3></h3> <div class=meta-data> <hr> posted Jul 24, 2013 on <a class=tag href="/blog/tags/code.html">code</a> <a class=tag href="/blog/tags/rails.html">rails</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <p><small style="font-style: italic;">Post originalmente escrito para el blog de <a href=" http://blog.diacode.com/peticiones-http-de-manera-sencilla-con-faraday" target=_blank>Diacode</a>, que dice así:</small></p> <p>Una de las cosas que más me gusta de trabajar en <strong>Diacode</strong> es la diversidad y originalidad de los proyectos que estamos desarrollando. Esta semana he estado ayudando a añadir nuevas funcionalidades a uno de estos proyectos, que es una aplicación muy chula para que uno de nuestros clientes pueda gestionar todas las fotografías de sus actos públicos, eventos, convenciones y demás. No solo le permite añadir las fotografías y organizarlas en galerías, sino que además le permite introducir o modificar la información de los metadatos <a href="//es.wikipedia.org/wiki/Exchangeable_image_file_format" target=blank title="Exchangeable image file format">Exif</a>, etiquetar a la gente que aparece en ellas, etc.</p> <p>Una de estas nuevas funcionalidades que nos ha pedido el cliente es la de poder publicar una o varias fotografías en alguna galería de imágenes de su sitio web, eligiéndola el usuario previamente. Para ello el cliente nos ha pasado la especificación de un <strong>API</strong> muy sencillo que ha creado específicamente para esto, que básicamente consta de dos acciones:</p> <ul> <li>Listar las galerías existentes en su sitio, con la posibilidad de poder filtrar por el título.</li> <li>Enviar la url de la imagen que queremos publicar en la galería seleccionada.</li> </ul> <p>Sabiendo ya la especificación del API me puse manos a la obra, para crear un cliente sencillo con el que consumir el mismo.</p> <h3>Faraday, nuestro nuevo amigo</h3> <p>Tras investigar un poco, encontré <a href="https://github.com/lostisland/faraday" target=_blank title="Simple, but flexible HTTP client library, with support for multiple backends.">esta fantástica gema</a>, que como describe su autor, es un <strong>cliente HTTP</strong> sencillo pero flexible con soporte para múltiples backends. Vamos, que es una librería que nos facilita muchísimo la manera de enviar peticiones y recibir las respuestas a estas, haciendo toda la parte complicada de la comunicación completamente transparente para nosotros.</p> <p>Para instalarla solo tenemos que añadirla a nuestro <code>Gemfile</code> y ejecutar el consiguiente <code>bundle install</code>:</p> <pre><code>gem &quot;faraday&quot;             # Gema de Faraday
+gem &quot;faraday_middleware&quot;  # Gema de middlewares para Faraday
+</code></pre> <p>A continuación creé una nueva clase para mi cliente que es la que se va encargar de comunicarse con el API, y asi poder usarla desde los controllers que lo necesiten. Pero en vez de simplemente poneros el código de esa clase, mejor voy a ir directamente al grano y explicaros como he usado <strong>Faraday</strong></p> <h4>1. Creando la conexión</h4> <p>Lo primero que tenemos que hacer es especificar los parámetros de conexión para que la cree por nosotros:</p> <pre><code class="ruby">
+conn = Faraday.new(url: &#39;https://url.del.api&#39;) do |faraday|
+  faraday.response :logger                  # Loggea las respuestas por STDOUT
+  faraday.request :json                     # Peticiones en JSON
+  faraday.use Faraday::Adapter::NetHttp     # Que use el adaptador por defecto (NetHTTP)
+  faraday.use FaradayMiddleware::ParseJson  # Middleware para parsear las respuestas a JSON
+end
+
+
+</code></pre> <h4>2. Creando la petición para listar las galerías</h4> <p>Una vez tenemos nuestra conexión configurada, vamos a crear la primera petición:</p> <pre><code class="ruby">
+response = conn.post do |req|                         # Especificamos que es por método POST
+  req.url &#39;/api/get-galleries&#39;                        # Url de esta petición
+  req.headers[&#39;Content-Type&#39;] = &#39;application/json&#39;    # Cabecera para especificar que es JSON
+
+  # Creamos el cuerpo del mensaje, según la especificación del API
+  request_body = {
+    &#39;api-key&#39; =&gt; &#39;ClaveDelApi&#39;,
+    data: {
+      keyword: &#39;Gallery&#39;,
+      page: 1,
+      limit: 20
+    }
+  }
+  req.body = request_body                             # Le asignamos el cuerpo del mensaje a la petición
+end
+
+</code></pre> <p>Si todo va bien, lo que tendremos en <code>response</code> es la respuesta, con su <strong>código de estado</strong>, sus <strong>cabeceras</strong> y lo que nos más nos interesa, su <strong>cuerpo</strong> (<code>response.body</code>), con la respuesta del API, parseada a JSON automáticamente para nosotros:</p> <pre><code>{
+    &quot;errors&quot;: [],
+    &quot;success&quot;: 1,
+    &quot;data&quot;: [{
+        &quot;id&quot;: 1,
+        &quot;title&quot;: &quot;Gallery 1&quot;
+    }, {
+        &quot;id&quot;: 2,
+        &quot;title&quot;: &quot;Gallery 2&quot;
+    }, {
+        &quot;id&quot;: 3,
+        &quot;title&quot;: &quot;Gallery 3&quot;
+    }]
+}
+</code></pre> <h4>3. Creando la petición publicar una foto en una galería</h4> <p>Una vez el usuario ha seleccionado la foto que quiere publicar, y le hemos mostrado la lista de galerías disponibles gracias a la petición anterior y ha seleccionado una, vamos a mandar la petición para que sea publicada:</p> <pre><code class="ruby">photo = Photo.find params[:photo_id]
+gallery_id = params[:gallery_id]
+
+response = conn.post do |req|                         # Especificamos que es por método POST
+  req.url &#39;/api/post-photo&#39;                           # Url de esta petición
+  req.headers[&#39;Content-Type&#39;] = &#39;application/json&#39;    # Cabecera para especificar que es JSON
+
+  # Creamos el cuerpo del mensaje, según la especificación del API
+  request_body = {
+    &#39;api-key&#39; =&gt; &#39;ClaveDelApi&#39;,
+    data: {
+      title: photo.title,
+      photo: photo.image.url(:web),
+      gallery: gallery_id
+    }
+  }
+  req.body = request_body                             # Le asignamos el cuerpo del mensaje a la petición
+end
+
+</code></pre> <p>Igual que antes, en nuestro <code>response.body</code> podemos ver que la imagen ha sido publicada correctamente:</p> <pre><code>{
+    &quot;errors&quot;: [],
+    &quot;success&quot;: 1,
+    &quot;data&quot;: {
+        &quot;mime&quot;: &quot;image\/jpeg&quot;,
+        &quot;photo&quot;: &quot;asd7as6da7s86d87as6d786asd.jpg&quot;
+    }
+}
+</code></pre> <h3>Gran flexibilidad</h3> <p>Ya habéis visto lo sencillo que ha sido comunicarnos con el API de nuestro cliente, pero lo mejor de todo es que <strong>Faraday</strong> nos permite una gran flexibilidad gracias al uso de middleware. En resumen esto no son unas que unas clases que se encargan de procesar las peticiones y las respuestas, aportándonos nueva funcionalidad completamente transparante para nosotros como <strong>codificar las peticiones</strong>, usar protocolos de autorización como <strong>OAuth</strong>, usar <strong>adaptadores HTTP</strong> diferentes, <strong>parsear las respuestas</strong> automáticamente, control de <strong>errores</strong>, manejar <strong>redireccionamientos</strong> y mucho más que podéis encontrar en el el sitio de la gema <a href="https://github.com/lostisland/faraday_middleware" target=_blank title="Various Faraday middlewares for Faraday-based API wrappers">faraday_middleware</a>, o incluso podéis crear los vuestros propios.</p> <p>Si no conocíais <strong>Faraday</strong> echadle un ojo y probadlo, os gustará seguro, porque os va a simplificar mucho la labor de tener que lidiar con APIS externas.</p> <div id=disqus_thread></div> <script>
+  /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+  var disqus_shortname = 'codeloveandboards'; // required: replace example with your forum shortname
+  
+  /* * * DON'T EDIT BELOW THIS LINE * * */
+  (function() {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script> <noscript> Please enable JavaScript to view the <a href='//disqus.com/?ref_noscript'>comments powered by Disqus.</a> </noscript> <a class=dsq-brlink href='//disqus.com'> comments powered by <span class=logo-disqus>Disqus</span> </a> </article> </section> </div> </section> <footer id=main_footer> <ul class=article-nav> <li class=previous> <a href="/blog/2013/07/02/la-guia-de-estilo-de-ruby/"><h4>previous post</h4> <h3> La Guía de Estilo de Ruby </h3> <div class=meta-data> <hr> posted Jul 2, 2013 on ruby </div> </a> </li> <li class=next> <a href="/blog/2013/08/12/asignacion-masiva-de-parametros-en-rails-4/"><h4>next post</h4> <h3> Asignación masiva de parámetros en Rails 4 </h3> <div class=meta-data> <hr> posted Aug 12, 2013 on code, rails </div> </a> </li> </ul> <section> <div class=container> <div class=center> <ul> <li> <a href='/blog'>Archives</a> </li> <li> <a href='//feeds.feedburner.com/CodeLoveAndBoards' target=_blank>RSS</a> </li> </ul> Copyright © 2017 - Ricardo García Vega - Code, Love & Boards! </div> </div> </section> </footer> <script src="../../../../../javascripts/blog-5ddb0520.js"></script> <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  
+  ga('create', 'UA-37802122-1', 'codeloveandboards.com');
+  ga('send', 'pageview');
+</script> <script>
+  _StatHat.push(["_trackCount", "g2pcD9xou7DlR0DtndiwvSBBYU5k", 1.0]);
+</script> </body> </html>

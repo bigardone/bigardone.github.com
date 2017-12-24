@@ -1,0 +1,88 @@
+<!DOCTYPE html> <!--[if lt IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8 lt-ie7" lang=en-us><![endif]--> <!--[if IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8" lang=en-us><![endif]--> <!--[if IE 8]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if IE 9]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if lt IE 10]><html class="no-js lt-ie10" lang=en-us><![endif]--> <!--[if !IE]>><![endif]--> <html class=no-js lang=en> <head> <title>Un primer vistazo a Rails 4.1 - Code, Love & Boards</title> <meta charset=utf-8 content='text/html' http-equiv=content-type> <meta content='ie=edge,chrome=1' http-equiv=x-ua-compatible> <meta content='A blog about coding web apps, loving life and board sports by Ricardo García Vega' name=description> <meta content='Ricardo García Vega - http://twitter.com/bigardone' name=author> <meta content='ruby, rails' name=keywords> <meta content='initial-scale=1.0,user-scalable=no,maximum-scale=1,width=device-width' name=viewport> <link href='//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css' rel=stylesheet> <link href="//fonts.googleapis.com/css?family=Montserrat:400,700|Lora:400,700" media=screen rel=stylesheet /> <link href="../../../../../stylesheets/blog-ed6b1e0f.css" media=all rel=stylesheet /> <link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/styles/tomorrow.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/highlight.min.js'></script> <link href='/images/apple-touch-icon-57x57-6e598dc4.png' rel=apple-touch-icon sizes=57x57> <link href='/images/apple-touch-icon-114x114-5be964ba.png' rel=apple-touch-icon sizes=114x114> <link href='/images/apple-touch-icon-72x72-70084a85.png' rel=apple-touch-icon sizes=72x72> <link href='/images/apple-touch-icon-144x144-1dbb56c1.png' rel=apple-touch-icon sizes=144x144> <link href='/images/apple-touch-icon-60x60-d05a5ea9.png' rel=apple-touch-icon sizes=60x60> <link href='/images/apple-touch-icon-120x120-5dafce59.png' rel=apple-touch-icon sizes=120x120> <link href='/images/apple-touch-icon-76x76-b2c0d784.png' rel=apple-touch-icon sizes=76x76> <link href='/images/apple-touch-icon-152x152-45595360.png' rel=apple-touch-icon sizes=152x152> <link href='/images/favicon-160x160-944ce76e.png' rel=icon sizes=160x160 type='image/png'> <link href='/images/favicon-96x96-b7e4e089.png' rel=icon sizes=96x96 type='image/png'> <link href='/images/favicon-32x32-b7f34a79.png' rel=icon sizes=32x32 type='image/png'> <link href='/images/favicon-16x16-2712c528.png' rel=icon sizes=16x16 type='image/png'> <meta content='#9f00a7' name=msapplication-TileColor> <meta content='/images/mstile-144x144-028d4c4c.png' name=msapplication-TileImage> <script>
+  var _StatHat = _StatHat || [];
+  _StatHat.push(['_setUser', 'NzIzMCDaNaL5bvEP1HQkMYwfYsQe']);
+  (function() {
+          var sh = document.createElement('script'); sh.type = 'text/javascript';
+          sh.async = true;
+          sh.src = '//www.stathat.com/javascripts/api.js';
+          var s = document.getElementsByTagName('script')[0];
+          s.parentNode.insertBefore(sh, s);
+  })();
+</script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Un primer vistazo a Rails 4.1</h1> <h3></h3> <div class=meta-data> <hr> posted Dec 19, 2013 on <a class=tag href="/blog/tags/ruby.html">ruby</a> <a class=tag href="/blog/tags/rails.html">rails</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <p>Este año parace que Santa Claus se ha adelantado y nos ha traido esta semana la versión <em>beta</em> de <strong>Rails 4.1</strong>. Esta nueva versión me ha llamado especialmente la atención ya que han incorporado dentro del <em>core</em> del propio <strong>Rails</strong> varias funcionalidades y elementos que normalmente suelo usar a diario trabajando, y de los cuales además ya he escrito anteriormente en este blog.</p> <h3>Enumeradores para Active Record</h3> <p><a href="//codeloveandboards.com/blog/2013/05/19/simulando-enumeradores-en-nuestros-modelos" target=_blank>Simular enumeradores</a> en los modelos es algo que hago desde que empecé a desarrollar en <strong>Rails</strong> para poder luego asignárselos a campos de estado o de tipo. </p> <pre><code class="ruby">class SurfBoard &lt; ActiveRecord::Base
+  TIPOS = [
+    TIPO_SHORTBOARD = &#39;shortboard&#39;,
+    TIPO_FUNBOARD = &#39;funboard&#39;,
+    TIPO_LONGBOARD = &#39;longboard&#39;
+  ]
+
+  validates :tipo, inclusion: {in: TIPOS}
+
+  TIPOS.each do |tipo|
+    define_method &quot;#{tipo}?&quot; do
+      self.tipo == tipo
+    end
+  end
+end
+</code></pre> <p>Ahora ya no es necesario hacerlo de esta manera, ya que una de las nuevas mejoras que trae esta nueva versión de <strong>Rails</strong> es la inclusión de su propia versión de esta funcionalidad:</p> <pre><code class="ruby">class SurfBoard &lt; ActiveRecord::Base
+  enum tipo: [ :shortboard, :funboard, :longboard ]
+end
+</code></pre> <p>Simplemente añadiendo el nuevo <em>enum</em> podríamos hacer lo siguiente:</p> <pre><code class="ruby">board.tipo = :shortboard    # Asignamos el tipo a shortboard
+board.tipo                  # Nos devolvería el tipo asignado
+board.funboard!         # Haría un update! del modelo asignándole ese tipo
+board.longboard?            # Comprobaría si el tipo es :longboard
+SurfBoard.shortboard        # Scope que devolvería todos los registros con el tipo :shortboard
+</code></pre> <p>Muy útil verdad? Pero no es oro todo lo que reluce, ya que existen algunas cosas a tener en cuenta al usarlos debido a que es una versión <em>beta</em> y que seguro mejoran en la versión final:</p> <ul> <li>Están implementados con <em>integer</em>, por lo que al crearlos no demos cambiar su orden, y a que podríamos corromper los datos ya creados.</li> <li>No podemos usar los mismos símbolos para diferentes <em>enums</em> dentro del mismo modelo.</li> <li>Si queremos sobrescribir los <em>scopes</em> debemos pasarle a las condiciones de este el valor numérico en vez del símbolo.</li> <li>Todavía no soporta los métodos de <em>dirty tracking</em> para poder preguntar cual era el valor anterior del campo antes de ser modificado.</li> </ul> <p>Para más información podéis visitar su <a href="//edgeapi.rubyonrails.org/classes/ActiveRecord/Enum.html">documentación</a>.</p> <h3>Vistas previas para Action Mailer</h3> <p>Hacer el diseño de las vistas de los <em>mailers</em> algo más sencillo es algo sobre lo que también he escrito en <a href="//codeloveandboards.com/blog/2013/01/30/probando-tus-emails-desde-tu-entorno-de-desarrollo-en-ruby-on-rails/" target=_blank>otro post</a> y que siempre hago gracias a la gema <a href="https://github.com/37signals/mail_view" target=_blank title=mail_view>mail<em>view</a>. Si no la conocíais de antes y sufríais diseñando vuestros emails teniendo que desarrollar la plantilla, luego enviando un email para ver el resultado y realizar cambios en la plantilla y repetir el proceso una y otra vez, vuestro calvario ha terminado, ya que han añadido **mail</em>view** por defecto para que podamos tener vistas previas de todos nuestros <em>mailers</em> desde nuestro navegador.</p> <p>Estas vistas previas disponibles las podremos ver en:</p> <pre><code>http://localhost:3000/rails/mailers
+</code></pre> <p>Y por defecto se crearán bajo la siguiente ruta:</p> <pre><code>test/mailers/previews
+</code></pre> <p>Esta ruta la podremos configurar usando el parámetro de configuración <code>config.action_mailer.preview_path</code>.</p> <h3>Spring</h3> <p>Esas largas esperas para lanzar todos nuestros <em>tests</em> o para lanzar tareas <em>rake</em> y <em>migraciones</em> han llegado a su fin. Ahora el sistema de pre carga de aplicaciones <a href="https://github.com/jonleighton/spring" target=_blank>Spring</a> viene también incluido por defecto. Esto significa que nuestra aplicación siempre estará corriendo en segundo plano, evitando así tener que cargarse cada vez que queríamos ejecutar tareas que forman parte de nuestro trabajo diario, y ahorrándonos mucho tiempo que antes perdíamos teniendo que cargar la aplicación con cada comando.</p> <p>Para poder aprovechar esta mejora, tendremos a nuestra disposición los comandos <code>bin/rake</code> y <code>bin/rails</code> creados automáticamente para nosotros usando los <em>bintstubs</em> de <strong>Spring</strong>.</p> <h3>Action Pack Variants</h3> <p>Ahora el poder servir contenido específico para cada tipo de dispositivo que los usuarios usen para acceder a nuestra aplicación es un poco mas fácil gracias a los <em>Action Pack Variants</em>. </p> <p>Para ver lo sencillo que es, veamos el siguiente ejemplo:</p> <pre><code class="ruby">class ApplicationController &lt; ActionController::Base
+  before_action :detect_device
+
+  private
+
+    def detect_device
+      case request.user_agent
+      when /iPad/i
+        request.variant = :tablet
+      when /iPhone/i
+        request.variant = :phone
+      end
+    end
+end
+
+class SurfBoardsController &lt; ApplicationController
+  def show
+    @surf_board = SurfBoard params[:id]
+
+    respond_to do |format|
+      format.json
+      format.html               # /app/views/surf_boards/show.html.erb
+      format.html.tablet        # /app/views/surf_boards/show.html+tablet.erb
+      format.html.phone{ redirect_to progress_path } 
+    end
+  end
+end
+</code></pre> <p>Como podemos ver, lo primero que hacemos en el controller es asignar el <em>variant</em> que queremos simplemente comparando el valor de la cabecera HTTP <em>User-Agent</em> con los posibles valores que necesitemos. Gracias a esto, podremos servir diferentes vistas y realizar cierta funcionalidad dependiendo del <em>variant</em> anteriormente asignado. Pero esto no se limita solamente a dispositivos y a la cabecera <em>User-Agent</em>, ya que podríamos hacer exactamente lo mismo con los variants para, por ejemplo, contenido dependiente de subdominios específicos, variables de sesión, etc…</p> <h3>Verificadores de mensajes</h3> <p>Con este mecanismo podremos verificar mensajes firmados previamente por nuestra aplicación usando el <code>secret_key_base</code> de nuestra aplicación el nombre del verificador del mensaje que vamos a utilizar:</p> <pre><code class="ruby">signed_token = Rails.application.message_verifier(:remember_me).generate(token)
+Rails.application.message_verifier(:remember_me).verify(signed_token) # =&gt; token
+
+Rails.application.message_verifier(:remember_me).verify(tampered_token)
+# lanza ActiveSupport::MessageVerifier::InvalidSignature
+</code></pre> <p>En este ejemplo generaremos un token firmado usando en verificador <code>:remember_me</code> con el que luego podremos comprobar si ese <em>token</em> es correcto al volver a recibirlo de nuevo, lanzando un error si el <em>token</em> no fuese verificado correctamente.</p> <h3>Y mucho más</h3> <p>Esto es solo un pequeño avance de todo lo nuevo que vamos poder disfrutar en la próxima versión de <strong>Rails 4.1</strong>, pero hay muchas más <em>features</em> y mejoras a <a href="//edgeguides.rubyonrails.org/4_1_release_notes.html" target=_blank>tener en cuenta</a> y que nos hará aún más divertido desarrollar con nuestro framework favorito :)</p> <p>Happy coding!</p> <div id=disqus_thread></div> <script>
+  /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+  var disqus_shortname = 'codeloveandboards'; // required: replace example with your forum shortname
+  
+  /* * * DON'T EDIT BELOW THIS LINE * * */
+  (function() {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script> <noscript> Please enable JavaScript to view the <a href='//disqus.com/?ref_noscript'>comments powered by Disqus.</a> </noscript> <a class=dsq-brlink href='//disqus.com'> comments powered by <span class=logo-disqus>Disqus</span> </a> </article> </section> </div> </section> <footer id=main_footer> <ul class=article-nav> <li class=previous> <a href="/blog/2013/11/15/desarrollo-web-moderno-con-middleman-ii/"><h4>previous post</h4> <h3> Desarrollo web moderno con Middleman, parte II </h3> <div class=meta-data> <hr> posted Nov 15, 2013 on code, ruby, web </div> </a> </li> <li class=next> <a href="/blog/2014/01/12/introducing-the-multinput-jquery-plugin/"><h4>next post</h4> <h3> Introducing the MultInput jQuery plugin </h3> <div class=meta-data> <hr> posted Jan 12, 2014 on jquery, coffeescript, sass </div> </a> </li> </ul> <section> <div class=container> <div class=center> <ul> <li> <a href='/blog'>Archives</a> </li> <li> <a href='//feeds.feedburner.com/CodeLoveAndBoards' target=_blank>RSS</a> </li> </ul> Copyright © 2017 - Ricardo García Vega - Code, Love & Boards! </div> </div> </section> </footer> <script src="../../../../../javascripts/blog-5ddb0520.js"></script> <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  
+  ga('create', 'UA-37802122-1', 'codeloveandboards.com');
+  ga('send', 'pageview');
+</script> <script>
+  _StatHat.push(["_trackCount", "g2pcD9xou7DlR0DtndiwvSBBYU5k", 1.0]);
+</script> </body> </html>

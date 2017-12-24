@@ -1,0 +1,198 @@
+<!DOCTYPE html> <!--[if lt IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8 lt-ie7" lang=en-us><![endif]--> <!--[if IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8" lang=en-us><![endif]--> <!--[if IE 8]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if IE 9]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if lt IE 10]><html class="no-js lt-ie10" lang=en-us><![endif]--> <!--[if !IE]>><![endif]--> <html class=no-js lang=en> <head> <title>Rails and PostgreSQL hstore simple use case - Code, Love & Boards</title> <meta charset=utf-8 content='text/html' http-equiv=content-type> <meta content='ie=edge,chrome=1' http-equiv=x-ua-compatible> <meta content='A blog about coding web apps, loving life and board sports by Ricardo García Vega' name=description> <meta content='Ricardo García Vega - http://twitter.com/bigardone' name=author> <meta content='rails, postgresql' name=keywords> <meta content='initial-scale=1.0,user-scalable=no,maximum-scale=1,width=device-width' name=viewport> <link href='//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css' rel=stylesheet> <link href="//fonts.googleapis.com/css?family=Montserrat:400,700|Lora:400,700" media=screen rel=stylesheet /> <link href="../../../../../stylesheets/blog-ed6b1e0f.css" media=all rel=stylesheet /> <link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/styles/tomorrow.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/highlight.min.js'></script> <link href='/images/apple-touch-icon-57x57-6e598dc4.png' rel=apple-touch-icon sizes=57x57> <link href='/images/apple-touch-icon-114x114-5be964ba.png' rel=apple-touch-icon sizes=114x114> <link href='/images/apple-touch-icon-72x72-70084a85.png' rel=apple-touch-icon sizes=72x72> <link href='/images/apple-touch-icon-144x144-1dbb56c1.png' rel=apple-touch-icon sizes=144x144> <link href='/images/apple-touch-icon-60x60-d05a5ea9.png' rel=apple-touch-icon sizes=60x60> <link href='/images/apple-touch-icon-120x120-5dafce59.png' rel=apple-touch-icon sizes=120x120> <link href='/images/apple-touch-icon-76x76-b2c0d784.png' rel=apple-touch-icon sizes=76x76> <link href='/images/apple-touch-icon-152x152-45595360.png' rel=apple-touch-icon sizes=152x152> <link href='/images/favicon-160x160-944ce76e.png' rel=icon sizes=160x160 type='image/png'> <link href='/images/favicon-96x96-b7e4e089.png' rel=icon sizes=96x96 type='image/png'> <link href='/images/favicon-32x32-b7f34a79.png' rel=icon sizes=32x32 type='image/png'> <link href='/images/favicon-16x16-2712c528.png' rel=icon sizes=16x16 type='image/png'> <meta content='#9f00a7' name=msapplication-TileColor> <meta content='/images/mstile-144x144-028d4c4c.png' name=msapplication-TileImage> <script>
+  var _StatHat = _StatHat || [];
+  _StatHat.push(['_setUser', 'NzIzMCDaNaL5bvEP1HQkMYwfYsQe']);
+  (function() {
+          var sh = document.createElement('script'); sh.type = 'text/javascript';
+          sh.async = true;
+          sh.src = '//www.stathat.com/javascripts/api.js';
+          var s = document.getElementsByTagName('script')[0];
+          s.parentNode.insertBefore(sh, s);
+  })();
+</script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Rails and PostgreSQL hstore simple use case</h1> <h3></h3> <div class=meta-data> <hr> posted Jul 16, 2014 on <a class=tag href="/blog/tags/rails.html">rails</a> <a class=tag href="/blog/tags/postgresql.html">postgresql</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <p>As you saw in the latest post about <a href="/blog/2014/06/20/easy-multi-table-full-text-search-whith-rails">Rails and full-text search</a>, <strong>PostgreSQL</strong> has some nice and powerful features for managing data which can make your life easier. Another of this awesome features is the <strong>hstore</strong> column type, which gives you the ability to store hashes in columns. This means that you can store unstructured data in a column of our database using a key/value storage system, as it was a <strong>NoSQL</strong> database, and also query this data by their keys.</p> <h2>A real yet simple use case.</h2> <p>Another feature I wanted to add to the new pet project I&#39;m working on, was giving to users the ability to save custom searches assigning them a name, so if there&#39;s a frequently search they perform every once in a while, they can save it and afterwards select it from a drop-down menu, instead of having to fill every field on the search form. This can be implemented in many ways, but as I&#39;m using <strong>Rails 4</strong> and <strong>PostgreSQL</strong> I wanted to give a try to the <strong>hstore extension</strong>.</p> <h3>Preparing everything.</h3> <p>The first step is to activate it. The simplest way to do so is by creating a new migration:</p> <pre><code class="ruby">class CreateHstore &lt; ActiveRecord::Migration
+  def up
+    enable_extension &quot;hstore&quot;
+  end
+
+  def down
+    disable_extension &quot;hstore&quot;
+  end
+end
+</code></pre> <p>After runing the migration, let&#39;s create a new model with it&#39;s corresponding migration, and let&#39;s assign the <strong>hstore</strong> type to the desired column:</p> <pre><code class="ruby">class CreateNamedSearches &lt; ActiveRecord::Migration
+  def change
+    create_table :named_searches do |t|
+      t.integer :user_id
+      t.string :name
+      t.hstore :query_params # Notice the hstore type here
+    end
+
+    add_index :named_searches, :user_id
+  end
+end
+</code></pre> <pre><code class="ruby">class NamedSearch &lt; ActiveRecord::Base
+  # Relations
+  belongs_to :user
+
+  # Validations
+  validates :name, :query_params, presence: true
+end
+</code></pre> <p>As you can see, this <strong>NamedSearch</strong> model is very simple. It only has a <em>name</em> attribute to help the user identifying it, and a <em>query_params</em> one, where the hash with all the parameters from the search form will be stored.</p> <h3>The search form.</h3> <p>I&#39;ve created a <em>Form Object</em> to encapsulate the search of people and the creation of named searches:</p> <pre><code class="ruby">class PeopleFilter
+  include ActiveModel::Model
+  include ActiveModel::AttributeMethods
+  include ActiveModel::Validations
+  include ActiveModel::Conversion
+
+  # Attributes you are going to use to search and save
+  # the NamedSearch model.
+  attr_accessor :name,
+                :gender,
+                :education_level,
+                :skills,
+                :interests,
+                :save_search,
+                :search_name,
+
+  def initialize(attributes)
+    attributes.each do |name, value|
+      send(&quot;#{name}=&quot;, value)
+    end
+  end
+
+  def persisted?
+    false
+  end
+
+  # Method to perform the search for the Person model.
+  def filter(ability)
+    people = Person.accessible_by(ability)
+    people = people.where(&quot;first_name || &#39; &#39; || last_name ILIKE ?&quot;, &quot;%#{name}%&quot;) unless name.blank?
+    people = people.where(gender: gender) unless gender.blank?
+    people = people.where(education_level: education_level) unless education_level.blank?
+    people = people.tagged_with(skills, on: :skills) unless skills.blank?
+    people = people.tagged_with(interests, on: :interests) unless interests.blank?
+
+    people
+  end
+
+  # Method to confirm if the filter can be saved into a NamedSearch
+  def confirm_save?
+    save_search.to_bool &amp;&amp; ! search_name.blank?
+  end
+
+  # Method to create a new NamedSearch and persist it.
+  def save(user)
+    user.named_searches.create({name: search_name, query_params: to_hash})
+  end
+
+  private 
+
+  # Mehtod to create a hash with the desired attributes you want to 
+  # store in de NamedSearch&#39;s query_params field.
+  def to_hash
+    {
+      name:                 name,
+      gender:               gender,
+      education_level:      education_level,
+      skills:               skills,
+      interests:            interests
+    }
+  end
+end
+</code></pre> <p>To present this search form to the user I&#39;ve created the following partial view to include it in our main index:</p> <pre><code class="haml">#filter_form_wrapper
+  %header
+    %h3 Filter people
+  .form-wrapper
+    = simple_form_for @filter, url: people_path, method: :get do |f|
+      = f.input :name
+      = f.input :gender
+      = f.input :education_level
+      = f.input :skills, as: :string
+      = f.input :interests, as: :string
+
+      %hr/
+      =f.input :save_search, as: :boolean
+      =f.input :search_name
+
+      .form-actions
+        = f.submit &#39;Apply filter&#39;
+        or
+        %a.cancel{href: &#39;#&#39;}  Cancel
+</code></pre> <p>There are two inputs, <em>save_search</em> and <em>search_name</em>, that are going to be used to check if the user wants to save this search, and to assign the search a name.</p> <h3>Tying it all together.</h3> <p>Now that you have your model, form object and partial view, let&#39;s take a look to the controller, where all of these three parts come into play together:</p> <pre><code class="ruby">class PeopleController &lt; ApplicationController
+  before_action :set_filter
+  before_action :set_named_searches
+
+  def index
+    # If the user marked the &#39;Save this search&#39; and added a name...
+    if @filter.confirm_save?
+      # Let`s save this into a NamedSearch
+      @filter.save(current_user)
+      flash[:notice] = &quot;Search was successfully saved.&quot;
+    end
+
+    @people = @filter.filter(current_ability).sorted
+  end
+
+  ...
+  ...
+
+  private
+
+  def set_filter
+    # If a NamedSearch id is sent
+    @filter = if params.include?(:named_search_id)
+      # find that NamedSearch
+      named_search = current_user.named_searches.find params[:named_search_id]
+      # and initialize the filter with the it&#39;s query_params hash values
+      PeopleFilter.new named_search.query_params
+    else
+      # Otherwise initialize a new one
+      PeopleFilter.new filter_params
+    end
+  end
+
+  def set_named_searches
+    @named_searches = current_user.named_searches
+  end
+
+  def filter_params
+    return unless params.include? :people_filter
+
+    params.require(:people_filter).permit(
+      :name,
+      :gender,
+      :education_level,
+      :skills,
+      :interests,
+      :competencies,
+      :save_search,
+      :search_name,
+      :named_search_id,
+    )
+  end
+end
+</code></pre> <p>So basically what it does is:</p> <ol> <li>In the <code>set_filter</code> method it checks if there&#39;s a <em>named<em>search</em>id</em>. This means that instead of searching, the user has selected an already existing <strong>NamedSearch</strong>, so it has to find it in order to apply the stored <em>query_params</em> to the <strong>PeopleFilter</strong> when it initializes it. If there is no <em>named<em>search</em>id</em> parameter, then it just initialize an empty one.</li> <li>If the user wants to save the filter, it justs has to check the <em>save_search</em> check-box and fill the <em>search_name</em>, so it can save it before filtering in the <code>index</code> action.</li> <li>It calls the <code>filter</code> method from the form object to retrieve the records.</li> </ol> <p>After saving a <strong>NamedSearch</strong> this is how it looks like it the Rails console:</p> <pre><code>NamedSearch.first
+NamedSearch Load (1.1ms)  SELECT  &quot;named_searches&quot;.* FROM &quot;named_searches&quot;   ORDER BY &quot;named_searches&quot;.&quot;id&quot; DESC LIMIT 1
+=&gt; #&lt;NamedSearch id: 1, user_id: 1, name: &quot;Freelance rubyists&quot;, query_params: {&quot;name&quot;=&gt;&quot;&quot;, &quot;gender&quot;=&gt;&quot;&quot;, &quot;skills&quot;=&gt;&quot;ruby, rails&quot;, &quot;interests&quot;=&gt;&quot;remote work&quot;,  &quot;education_level&quot;=&gt;&quot;2&quot;}&quot;&gt;
+</code></pre> <p>As you can see, the <em>query_params</em> attribute is storing the parameters hash the user sent to the controller, so just getting that field and initializing the <strong>PeopleFilter</strong> object with it will work as if the user had requested the same search again. As I mentioned before, you can also query by that field too:</p> <pre><code>NamedSearch.where(&quot;query_params -&gt; &#39;interests&#39; = &#39;remote work&#39;&quot;).count
+(1.0ms)  SELECT COUNT(*) FROM &quot;named_searches&quot;  WHERE (query_params -&gt; &#39;interests&#39; = &#39;remote work&#39;)
+=&gt; 1
+</code></pre> <h2>Conclusion</h2> <p>For those cases when you are working with <strong>PostegreSQL</strong> and you may feel like you need some <strong>NoSQL</strong> capabilities to store unstructured data, give <strong>hstore</strong> a try. I&#39;m sure you&#39;ll like how easy is implementing it and how well it works.</p> <p>Happy coding!</p> <div id=disqus_thread></div> <script>
+  /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+  var disqus_shortname = 'codeloveandboards'; // required: replace example with your forum shortname
+  
+  /* * * DON'T EDIT BELOW THIS LINE * * */
+  (function() {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script> <noscript> Please enable JavaScript to view the <a href='//disqus.com/?ref_noscript'>comments powered by Disqus.</a> </noscript> <a class=dsq-brlink href='//disqus.com'> comments powered by <span class=logo-disqus>Disqus</span> </a> </article> </section> </div> </section> <footer id=main_footer> <ul class=article-nav> <li class=previous> <a href="/blog/2014/06/20/easy-multi-table-full-text-search-whith-rails/"><h4>previous post</h4> <h3> Easy multi-table full-text search with Rails </h3> <div class=meta-data> <hr> posted Jun 20, 2014 on rails, activerecord, postgresql </div> </a> </li> <li class=next> <a href="/blog/2014/08/24/rails-and-react-i-a-happy-medium/"><h4>next post</h4> <h3> Rails and React I: A happy medium </h3> <div class=meta-data> <hr> posted Aug 24, 2014 on rails, reactjs </div> </a> </li> </ul> <section> <div class=container> <div class=center> <ul> <li> <a href='/blog'>Archives</a> </li> <li> <a href='//feeds.feedburner.com/CodeLoveAndBoards' target=_blank>RSS</a> </li> </ul> Copyright © 2017 - Ricardo García Vega - Code, Love & Boards! </div> </div> </section> </footer> <script src="../../../../../javascripts/blog-5ddb0520.js"></script> <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  
+  ga('create', 'UA-37802122-1', 'codeloveandboards.com');
+  ga('send', 'pageview');
+</script> <script>
+  _StatHat.push(["_trackCount", "g2pcD9xou7DlR0DtndiwvSBBYU5k", 1.0]);
+</script> </body> </html>

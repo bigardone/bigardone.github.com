@@ -1,0 +1,554 @@
+<!DOCTYPE html> <!--[if lt IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8 lt-ie7" lang=en-us><![endif]--> <!--[if IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8" lang=en-us><![endif]--> <!--[if IE 8]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if IE 9]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if lt IE 10]><html class="no-js lt-ie10" lang=en-us><![endif]--> <!--[if !IE]>><![endif]--> <html class=no-js lang=en> <head> <title>Phoenix and Elm, a real use case (pt. 5) - Code, Love & Boards</title> <meta charset=utf-8 content='text/html' http-equiv=content-type> <meta content='ie=edge,chrome=1' http-equiv=x-ua-compatible> <meta content='Implementing Elm routing' name=description> <meta content='Ricardo García Vega - http://twitter.com/bigardone' name=author> <meta content='elixir, phoenix, elm' name=keywords> <meta content='initial-scale=1.0,user-scalable=no,maximum-scale=1,width=device-width' name=viewport> <link href='//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css' rel=stylesheet> <link href="//fonts.googleapis.com/css?family=Montserrat:400,700|Lora:400,700" media=screen rel=stylesheet /> <link href="../../../../../stylesheets/blog-ed6b1e0f.css" media=all rel=stylesheet /> <link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/styles/tomorrow.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/highlight.min.js'></script> <link href='/images/apple-touch-icon-57x57-6e598dc4.png' rel=apple-touch-icon sizes=57x57> <link href='/images/apple-touch-icon-114x114-5be964ba.png' rel=apple-touch-icon sizes=114x114> <link href='/images/apple-touch-icon-72x72-70084a85.png' rel=apple-touch-icon sizes=72x72> <link href='/images/apple-touch-icon-144x144-1dbb56c1.png' rel=apple-touch-icon sizes=144x144> <link href='/images/apple-touch-icon-60x60-d05a5ea9.png' rel=apple-touch-icon sizes=60x60> <link href='/images/apple-touch-icon-120x120-5dafce59.png' rel=apple-touch-icon sizes=120x120> <link href='/images/apple-touch-icon-76x76-b2c0d784.png' rel=apple-touch-icon sizes=76x76> <link href='/images/apple-touch-icon-152x152-45595360.png' rel=apple-touch-icon sizes=152x152> <link href='/images/favicon-160x160-944ce76e.png' rel=icon sizes=160x160 type='image/png'> <link href='/images/favicon-96x96-b7e4e089.png' rel=icon sizes=96x96 type='image/png'> <link href='/images/favicon-32x32-b7f34a79.png' rel=icon sizes=32x32 type='image/png'> <link href='/images/favicon-16x16-2712c528.png' rel=icon sizes=16x16 type='image/png'> <meta content='#9f00a7' name=msapplication-TileColor> <meta content='/images/mstile-144x144-028d4c4c.png' name=msapplication-TileImage> <script>
+  var _StatHat = _StatHat || [];
+  _StatHat.push(['_setUser', 'NzIzMCDaNaL5bvEP1HQkMYwfYsQe']);
+  (function() {
+          var sh = document.createElement('script'); sh.type = 'text/javascript';
+          sh.async = true;
+          sh.src = '//www.stathat.com/javascripts/api.js';
+          var s = document.getElementsByTagName('script')[0];
+          s.parentNode.insertBefore(sh, s);
+  })();
+</script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Phoenix and Elm, a real use case (pt. 5)</h1> <h3></h3> <div class=meta-data> <hr> posted Mar 7, 2017 on <a class=tag href="/blog/tags/elixir.html">elixir</a> <a class=tag href="/blog/tags/phoenix.html">phoenix</a> <a class=tag href="/blog/tags/elm.html">elm</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <div class=index> <p>This post belongs to the <strong>Phoenix and Elm, a real use case</strong> series.</p> <ol> <li><a href="/blog/2017/02/02/phoenix-and-elm-a-real-use-case-pt-1/">Introduction to creating a SPA with Phoenix and Elm</a></li> <li><a href="/blog/2017/02/08/phoenix-and-elm-a-real-use-case-pt-2/">Rendering the initial contact list</a></li> <li><a href="/blog/2017/02/14/phoenix-and-elm-a-real-use-case-pt-3/">Adding full text search and pagination navigation to the contact list</a></li> <li><a href="/blog/2017/02/23/phoenix-and-elm-a-real-use-case-pt-4/">Better state with union types, search resetting and keyed nodes.</a></li> <li><a href="/blog/2017/03/07/phoenix-and-elm-a-real-use-case-pt-5/">Implementing Elm routing</a></li> <li><a href="/blog/2017/03/19/phoenix-and-elm-a-real-use-case-pt-6/">Poenix and Elm communication through WebSockets</a></li> </ol> <a href="https://phoenix-and-elm.herokuapp.com/" target=_blank><i class="fa fa-cloud"></i> Live demo</a> | <a href="https://github.com/bigardone/phoenix-and-elm" target=_blank><i class="fa fa-github"></i> Source code</a> </div> <h2>Implementing Elm routing</h2> <p>In the <a href="/blog/2017/02/23/phoenix-and-elm-a-real-use-case-pt-4/">previous part</a>, we did some enhancements to our contact list application. These changes include union types in the model to represent more precisely what is the current state of the application, resetting the search result and using keyed Html nodes for a more efficient rendering. Today we are going to go a step further and implement the contact detail page, which a user can visit by clicking on any of the contact cards. Let&#39;s do this!</p> <h3>Phoenix changes</h3> <p>In regards to the backend, we need our <strong>API</strong> to have a new route like <code>/api/contacts/:id</code> which returns the <strong>JSON</strong> representation of the contact corresponding to that id. Let&#39;s start by adding the new show action to the <code>router.ex</code> file:</p> <pre><code class="ruby"># web/router.ex
+
+defmodule PhoenixAndElm.Router do
+  use PhoenixAndElm.Web, :router
+
+  # ...
+
+  scope &quot;/api&quot;, PhoenixAndElm do
+    pipe_through :api
+
+    resources &quot;/contacts&quot;, ContactController, only: [:index, :show]
+  end
+
+  # ...
+
+  scope &quot;/&quot;, PhoenixAndElm do
+    pipe_through :browser # Use the default browser stack
+
+    get &quot;/*path&quot;, PageController, :index
+  end
+end
+</code></pre> <p>Take note that we are handling any route that doesn&#39;t belong to the <strong>API</strong> pipe with the <code>PageController</code>. The reason for this is that we want to handle all the <strong>URLs</strong> from the frontend. Once this is ready, let&#39;s update the <code>ContactController</code> module to add the action:</p> <pre><code class="ruby"># web/controllers/contact_controller.ex
+
+defmodule PhoenixAndElm.ContactController do
+  use PhoenixAndElm.Web, :controller
+
+  # ...
+
+  def show(conn, %{&quot;id&quot; =&gt; id}) do
+    contact = Repo.get(Contact, id)
+
+    render conn, contact: contact
+  end
+end
+</code></pre> <p>We also need to update the <code>ContactView</code> module to handle the corresponding response:</p> <pre><code class="ruby"># web/views/contact_view.ex
+
+defmodule PhoenixAndElm.ContactView do
+  use PhoenixAndElm.Web, :view
+
+  # ...
+
+  def render(&quot;show.json&quot;, %{contact: contact}), do: contact
+end
+</code></pre> <p>With these changes our backend is ready, so if we visit <a href="//localhost:4000/api/contacts/id">http://localhost:4000/api/contacts/id</a> where id corresponds to an existing contact id, we should see the following <strong>JSON</strong> response in the browser:</p> <pre><code class="json">{
+  picture: &quot;http://api.randomuser.me/portraits/women/1.jpg&quot;,
+  phone_number: &quot;761/266-1174&quot;,
+  location: &quot;Denmark&quot;,
+  last_name: &quot;Heaney&quot;,
+  id: 180,
+  headline: &quot;Est repellat omnis.&quot;,
+  gender: 1,
+  first_name: &quot;Axel&quot;,
+  email: &quot;axel@green.org&quot;,
+  birth_date: &quot;1975-11-03&quot;
+}
+</code></pre> <h3>The Routing module</h3> <p>To implement routing in <strong>Elm</strong>, we are going to need two additional packages for handling browser location changes and routes matching. These packages are <a href="//package.elm-lang.org/packages/elm-lang/navigation/2.1.0">Elm Navigation</a> and <a href="//package.elm-lang.org/packages/evancz/url-parser/2.0.1">UrlParser</a>, so let&#39;s install them:</p> <pre><code class="bash">elm package install elm-lang/navigation -y
+elm package install evancz/url-parser -y
+</code></pre> <p>Next, we are going to define the <code>Routing</code> <strong>Elm</strong> module, with all the functionality in regards to parsing the browser location and matching the routes of our application:</p> <pre><code class="elm">-- web/elm/Routing.elm
+
+module Routing exposing (..)
+
+import Navigation
+import UrlParser exposing (..)
+
+
+type Route
+    = HomeIndexRoute
+    | NotFoundRoute
+
+
+matchers : Parser (Route -&gt; a) a
+matchers =
+    oneOf
+        [ map HomeIndexRoute &lt;| s &quot;&quot;
+        ]
+
+
+parse : Navigation.Location -&gt; Route
+parse location =
+    case UrlParser.parsePath matchers location of
+        Just route -&gt;
+            route
+
+        Nothing -&gt;
+            NotFoundRoute
+</code></pre> <p>We start by creating a new union type named <code>Route</code>, which contains all of the possible routes of our application:</p> <ul> <li><code>HomeIndexRoute</code>, for the contact list.</li> <li><code>NotFoundRoute</code>, for any other route.</li> </ul> <p>Next we define the matchers function which matches the current browser&#39;s location with our previously described routes, and for the time being, we only need to map <code>/</code> to <code>HomeIndexRoute</code>.</p> <p>Finally, the <code>parse</code> function takes the location and returns the corresponding route using the <code>matchers</code> function, returning <code>NotFoundRoute</code> when the location does not correspond to any of the matched routes.</p> <h3>Handling Url changes</h3> <p>To handle these changes, we have to make some refactoring in our existing modules. The first of these changes is in the Main module, where instead o using <code>Html.program</code> we have to wrap our initial application in a <code>Navigation.program</code>:</p> <pre><code class="elm">-- web/elm/Main.elm
+
+module Main exposing (..)
+
+import Messages exposing (Msg(..))
+import Model exposing (..)
+import Navigation
+import Routing exposing (parse)
+import Update exposing (..)
+import View exposing (view)
+
+
+init : Navigation.Location -&gt; ( Model, Cmd Msg )
+init location =
+    let
+        currentRoute =
+            parse location
+
+        model =
+            initialModel currentRoute
+    in
+        urlUpdate model
+
+
+main : Program Never Model Msg
+main =
+    Navigation.program UrlChange
+        { init = init
+        , view = view
+        , update = update
+        , subscriptions = always &lt;| Sub.none
+        }
+</code></pre> <p><code>Navigation.program</code> takes a new <code>UrlChange</code> parameter which is a new message triggered every time the <strong>URL</strong> changes, and the init function takes the current location, parses it to a known route and sets it in the model using the <code>initialModel</code> function, returning the <code>urlUpdate</code> function response. These are many changes so let&#39;s start by updating the <code>Model</code> to add the current route:</p> <pre><code class="elm">-- web/elm/Model.elm
+
+module Model exposing (..)
+
+import Routing exposing (Route)
+
+-- ...
+
+type alias Model =
+    { contactList : RemoteData String ContactList
+    , search : String
+    , route : Route
+    }
+
+-- ...
+
+initialModel : Route -&gt; Model
+initialModel route =
+    { contactList = NotRequested
+    , search = &quot;&quot;
+    , route = route
+    }
+</code></pre> <p>Now let&#39;s move on to the <code>Messages</code> module to add the <code>UrlChange</code> message type:</p> <pre><code class="elm">-- web/elm/Messages.elm
+
+module Messages exposing (..)
+
+-- ...
+import Navigation
+
+
+type Msg
+    = FetchResult (Result Http.Error ContactList)
+    -- ...
+    | UrlChange Navigation.Location
+</code></pre> <p>Finally, we need to implement the <code>UrlChange</code> case in the <code>Update</code> module:</p> <pre><code class="elm">-- web/elm/Update.elm
+
+module Update exposing (..)
+
+-- ...
+import Routing exposing (Route(..), parse)
+
+
+update : Msg -&gt; Model -&gt; ( Model, Cmd Msg )
+update msg model =
+    case msg of
+        -- ...
+
+        UrlChange location -&gt;
+            let
+                currentRoute =
+                    parse location
+            in
+                urlUpdate { model | route = currentRoute }
+
+
+urlUpdate : Model -&gt; ( Model, Cmd Msg )
+urlUpdate model =
+    case model.route of
+        HomeIndexRoute -&gt;
+            model ! [ fetch 1 &quot;&quot; ]
+
+        _ -&gt;
+            model ! []
+</code></pre> <p>In addition to setting the current route every time the location changes, we have added the <code>urlUpdate</code> function as well. This function is critical, as it returns any route-specific command we need to run. This means that everytime a user visits the <code>HomeIndexRoute</code> path, the application will automatically fetch the first page of contacts (like we were doing before in the init function of the <code>Main</code> module). The following chart illustrates, more or less, how the <code>Navigation.Program</code> flow looks like:</p> <p><img src="/images/blog/phoenix_and_elm/navigation-flow-1a7a6fd9.jpg" alt="Navigation flow" style="background: #fff;"/></p> <ol> <li>The <strong>browser</strong> sends a <strong>location change</strong> event to the main <code>Navigation.Program</code>.</li> <li>The <code>Navigation.Program</code> triggers the <code>UrlChange</code> message, handled by the <code>update</code> function of the <code>Update</code> module.</li> <li>This calls the <code>parse</code> function of the <code>Routing</code> module, which returns the matched <code>Route</code>.</li> <li>The <code>update</code> function returns the new update model and the specific commands for that route (if any).</li> <li>The <code>Navigation.Program</code> uses the <code>view</code> function along with the received <code>model</code> to render the <strong>Html</strong>.</li> </ol> <h3>Route specific views</h3> <p>Our routes are going to render different Html, so we still need to update the <code>View</code> module to implement this:</p> <pre><code class="elm">-- web/elm/View.elm
+
+module View exposing (..)
+
+import ContactList.View exposing (indexView)
+-- ...
+
+view : Model -&gt; Html Msg
+view model =
+    section
+        []
+        [ headerView
+        , div []
+            [ page model ]
+        ]
+
+-- ...
+
+page : Model -&gt; Html Msg
+page model =
+    case model.route of
+        HomeIndexRoute -&gt;
+            indexView model
+
+        NotFoundRoute -&gt;
+            notFoundView
+
+notFoundView : Html Msg
+notFoundView =
+    text &quot;Route not found&quot;
+
+</code></pre> <p>The <code>page</code> function patterns match against the current route of the model, calling the specific view function for that route. That <code>notFoundView</code> is very simple, so let&#39;s create a nicer one and make it look like the other warning messages we already have in the contact list search. We are probably going to need this function in other places, therefore instead of using it directly from the <code>ContactList.View</code>, let&#39;s move it to a different module called <code>Common.View</code>:</p> <pre><code class="elm">-- web/elm/Common/View.elm
+
+module Common.View exposing (warningMessage)
+
+import Html exposing (..)
+import Html.Attributes exposing (class)
+import Messages exposing (Msg(..))
+
+
+warningMessage : String -&gt; String -&gt; Html Msg -&gt; Html Msg
+warningMessage iconClasses message content =
+    div
+        [ class &quot;warning&quot; ]
+        [ span
+            [ class &quot;fa-stack&quot; ]
+            [ i [ class iconClasses ] [] ]
+        , h4
+            []
+            [ text message ]
+        , content
+        ]
+</code></pre> <p>Don&#39;t forget to remove it from the <code>ContactList.View</code> and add the necessary import in it:</p> <pre><code class="elm">-- web/elm/ContactList/View.elm
+
+module ContactList.View exposing (indexView)
+
+import Common.View exposing (warningMessage)
+
+-- ...
+</code></pre> <p>Now we can refactor the previously created <code>notFoundView</code> function in order to make it look how we want:</p> <pre><code class="elm">-- web/elm/View.elm
+
+module View exposing (..)
+
+import Common.View exposing (warningMessage)
+
+-- ...
+
+notFoundView : Html Msg
+notFoundView =
+    warningMessage
+        &quot;fa fa-meh-o fa-stack-2x&quot;
+        &quot;Page not found&quot;
+        backToHomeLink
+
+</code></pre> <p>Cool! We do not only want to show the message but also give the user the chance to go back to the index route and display the contact list, that is why we have also added that convenient <code>backToHomeLink</code> function call as the last parameter of <code>warningMessage</code>. Let&#39;s add its implementation in the <code>Common.View</code> module:</p> <pre><code class="elm">-- web/elm/Common/View.elm
+
+module Common.View exposing (warningMessage, backToHomeLink)
+
+-- ...
+
+
+backToHomeLink : Html Msg
+backToHomeLink =
+    a
+        [ onClick &lt;| NavigateTo HomeIndexRoute ]
+        [ text &quot;← Back to contact list&quot; ]
+</code></pre> <p>As you can see, it is just a basic link that triggers the <code>NavigateTo</code> message passing it the route to navigate to, in this case, the <code>HomeIndexRoute</code>. Let&#39;s add its definition to the <code>Messages</code> module:</p> <pre><code class="elm">-- web/elm/Messages.elm
+
+module Messages exposing (..)
+
+import Routing exposing (Route)
+-- ...
+
+type Msg
+    = FetchResult (Result Http.Error ContactList)
+    -- ...
+    | NavigateTo Route
+</code></pre> <p>Furthermore, we have to add it&#39;s implementation in the <code>Update</code> module:</p> <pre><code class="elm">-- web/elm/Upate.elm
+
+module Update exposing (..)
+
+import Navigation
+
+-- ...
+
+update : Msg -&gt; Model -&gt; ( Model, Cmd Msg )
+update msg model =
+    case msg of
+        -- ...
+
+        NavigateTo route -&gt;
+            model ! [ Navigation.newUrl &lt;| toPath route ]
+
+-- ...
+
+</code></pre> <p>In this case, it is returning the model and a command created by the <code>newUrl</code> function from the <code>Navigation</code> module, which receives an <strong>URL</strong> string and adds it to the browser history, creating a location change and triggering all the flow we have seen earlier again. However, how can we get a string <strong>URL</strong> having only a <code>Route</code>? That is where toPath function comes into play. Let&#39;s create it in the <code>Routing</code> module:</p> <pre><code class="elm">-- web/elm/Routing.elm
+
+module Routing exposing (..)
+
+-- ...
+
+toPath : Route -&gt; String
+toPath route =
+    case route of
+        HomeIndexRoute -&gt;
+            &quot;/&quot;
+
+        NotFoundRoute -&gt;
+            &quot;/not-found&quot;
+</code></pre> <p>Using pattern matching against the received route, it returns an <strong>URL</strong>.As easy as pie! If we are not missing anything and after the compiler ends compiling, this is what happens if we visit an incorrect route like <a href="//localhost:4000/foo">http://localhost:4000/foo</a>:</p> <p><img src="/images/blog/phoenix_and_elm/404-a0b7c5b1.jpg" alt=404 style="background: #fff;"/></p> <h3>Show contact route</h3> <p>Now that we have covered the <code>HomeIndexRoute</code> and <code>NotFoundRoute</code> routes, let&#39;s update the <code>Routing</code> module to add the changes we need to add a new route, which shows a contact&#39;s detail page:</p> <pre><code class="elm">-- web/elm/Routing.elm
+
+module Routing exposing (..)
+
+-- ...
+
+type Route
+    = HomeIndexRoute
+    -- ...
+    | ShowContactRoute Int
+
+toPath : Route -&gt; String
+toPath route =
+    case route of
+        -- ...
+
+        ShowContactRoute id -&gt;
+            &quot;/contacts/&quot; ++ toString id
+
+        -- ...
+
+matchers : Parser (Route -&gt; a) a
+matchers =
+    oneOf
+        [ -- ...
+        , map ShowContactRoute &lt;| s &quot;contacts&quot; &lt;/&gt; int
+        ]
+
+-- ...
+</code></pre> <p>So when the user visits a path like <code>/contacts/id</code>, we need to retrieve that contact&#39;s data from the <strong>API</strong> endpoint we created at the beginning of this post, and store it somewhere in our program model. Let&#39;s update the <code>Model</code> module:</p> <pre><code class="elm">-- web/elm/Model.elm
+
+module Model exposing (..)
+
+-- ...
+
+type alias Model =
+    { -- ...
+    , contact : RemoteData String Contact
+    }
+
+-- ...
+
+initialModel : Route -&gt; Model
+initialModel route =
+    {
+    , contact = NotRequested
+    }
+</code></pre> <p>Following the same pattern we set up in the previous part for handling remote data, we have added a new contact to the <code>Model</code> record, initialized with <code>NotRequested</code>. Now that we know how the flow works, next step is creating the command which is returned along with the model once the new route is visited. This command sends the Http request asking for the given user&#39;s data:</p> <pre><code class="elm">-- web/elm/Commands.elm
+
+module Commands exposing (..)
+
+import Decoders exposing (contactListDecoder, contactDecoder)
+
+-- ...
+
+fetchContact : Int -&gt; Cmd Msg
+  fetchContact id =
+      let
+          apiUrl =
+              &quot;/api/contacts/&quot; ++ toString id
+
+          request =
+              Http.get apiUrl contactDecoder
+      in
+          Http.send FetchContactResult request
+</code></pre> <p>The response gets parsed with the <code>contactDecoder</code>, and the result handled with the <code>FetchContactResult</code> message, which we need to add to the <code>Messages</code> module:</p> <pre><code class="elm">-- web/elm/Messages.elm
+
+module Messages exposing (..)
+
+import Model exposing (ContactList, Contact)
+-- ...
+
+
+type Msg
+    -- ...
+    | FetchContactResult (Result Http.Error Contact)
+</code></pre> <p>Next, we need to edit the <code>Update</code> module to implement these results:</p> <pre><code class="elm">-- web/elm/Update.elm
+
+module Update exposing (..)
+
+import Commands exposing (fetch, fetchContact)
+-- ...
+
+update : Msg -&gt; Model -&gt; ( Model, Cmd Msg )
+update msg model =
+    case msg of
+        -- ...
+
+        FetchContactResult (Ok response) -&gt;
+            { model | contact = Success response } ! []
+
+        FetchContactResult (Err error) -&gt;
+            { model | contact = Failure &quot;Contact not found&quot; } ! []
+</code></pre> <p>If the result of the <strong>Http</strong> request and decoding is <code>Ok</code> then it sets the current contact in the model. On the other hand, if it fails, it establishes a friendly message to show to the user. However, there&#39;s something we are missing here. How is the <code>fetchContact</code> going to be triggered? Well, we have to do it whenever a user visits the show contact route, and this gets done in two different ways:</p> <ol> <li>By clicking on a contact&#39;s card in the contact list.</li> <li>Visiting the Url directly from the browser.</li> </ol> <p>In any of these cases we have to fetch the contact when the <strong>Url</strong> corresponds to the <code>ShowContactRoute</code>, so let&#39;s update once more the <code>Update</code> module to implement this:</p> <pre><code class="elm">-- web/elm/Update.elm
+
+module Update exposing (..)
+
+import Commands exposing (fetch, fetchContact)
+
+-- ...
+
+urlUpdate : Model -&gt; ( Model, Cmd Msg )
+  urlUpdate model =
+      case model.route of
+          HomeIndexRoute -&gt;
+              model ! [ fetch 1 &quot;&quot; ]
+
+          ShowContactRoute id -&gt;
+              { model | contact = Requesting } ! [ fetchContact id ]
+
+          _ -&gt;
+              model ! []
+</code></pre> <p>Let&#39;s move on to the <code>Contact.View</code> and add the <code>onClick</code> handler to the card:</p> <pre><code class="elm">-- web/elm/Contact/View.elm
+
+module Contact.View exposing (..)
+
+-- ...
+
+contactView : Contact -&gt; ( String, Html Msg )
+contactView model =
+    let
+        -- ...
+    in
+        ( toString model.id
+        , div
+            [ classes
+            , onClick &lt;| NavigateTo &lt;| ShowContactRoute model.id
+            ]
+
+            -- ...
+</code></pre> <p>Remember that int the main <code>View</code> module we are using route-specific view functions, so let&#39;s add the handler for the <code>ShowContactRoute</code> route:</p> <pre><code class="elm">-- web/elm/View.elm
+
+module View exposing (..)
+
+import Contact.View exposing (showContactView)
+
+-- ...
+
+page : Model -&gt; Html Msg
+page model =
+    case model.route of
+        -- ...
+
+        ShowContactRoute id -&gt;
+            showContactView model
+
+        -- ...
+
+</code></pre> <p>As you can see, we are using a <code>showContactView</code> function from the <code>Contact.View</code> module that we need to implement:</p> <pre><code class="elm">-- web/elm/Contact/View.elm
+
+module Contact.View exposing (..)
+
+-- ...
+
+showContactView : Model -&gt; Html Msg
+  showContactView model =
+      case model.contact of
+          Success contact -&gt;
+              let
+                  classes =
+                      classList
+                          [ ( &quot;person-detail&quot;, True )
+                          , ( &quot;male&quot;, contact.gender == 0 )
+                          , ( &quot;female&quot;, contact.gender == 1 )
+                          ]
+
+                  ( _, content ) =
+                      contactView contact
+              in
+                  div
+                      [ id &quot;contacts_show&quot; ]
+                      [ header []
+                          [ h3
+                              []
+                              [ text &quot;Person detail&quot; ]
+                          ]
+                      , backToHomeLink
+                      , div
+                          [ classes ]
+                          [ content ]
+                      ]
+
+          Requesting -&gt;
+              warningMessage
+                  &quot;fa fa-spin fa-cog fa-2x fa-fw&quot;
+                  &quot;Fetching contact&quot;
+                  (text &quot;&quot;)
+
+          Failure error -&gt;
+              warningMessage
+                  &quot;fa fa-meh-o fa-stack-2x&quot;
+                  error
+                  backToHomeLink
+
+          NotRequested -&gt;
+              text &quot;&quot;
+</code></pre> <p>Following the same RemoteData pattern that in the <code>ContactList.View</code> main function, we handle all the possible different values of the model&#39;s contact. The <code>Success</code> branch wraps the existing <code>contactView</code> function in an <strong>Html</strong> div with its header and back-to-home link, to navigate back to the <code>HomeIndexRoute</code> route. After the compilation ends, we can refresh our browser, click on any of the contact cards and see how the list disappears to show only our selected contact:</p> <p><img src="/images/blog/phoenix_and_elm/show-contact-367c31fe.gif" alt="Show contact" style="background: #fff;"/></p> <p>I&#39;s working like a charm. But if you paginate or make a search, click on a contact and then return back to the contact list, you will notice that the current search and pagination is lost. This is becacuse we are always fetching the first page in the <code>urlUpdate</code> function, so let&#39;s do a little refactor to solve this:</p> <pre><code class="elm">-- web/elm/Update.elm
+
+module Update exposing (..)
+
+-- ...
+
+urlUpdate : Model -&gt; ( Model, Cmd Msg )
+  urlUpdate model =
+      case model.route of
+          HomeIndexRoute -&gt;
+              case model.contactList of
+                  NotRequested -&gt;
+                      model ! [ fetch 1 &quot;&quot; ]
+
+                  _ -&gt;
+                      model ! []
+
+          -- ...
+</code></pre> <p>With this little change, we are only resetting the pagination and search only when the contact list has not been requested previously. Let&#39;s get back to the browser and see what happens now:</p> <p><img src="/images/blog/phoenix_and_elm/show-contact-2-8135efba.gif" alt="Show contact" style="background: #fff;"/></p> <p>We have our <strong>Elm</strong> routes completely working, yay! This is all for now, but in the next part of the series, we are going to add support for one of the features that makes Phoenix so awesome, <strong>WebSockets</strong>, removing the <strong>API</strong> controller and replacing it with a <strong>Phoenix</strong> channel, seeing how to connect to it from <strong>Elm</strong> and send messages through it. In the meantime, here&#39;s <a href="https://github.com/bigardone/phoenix-and-elm/tree/tutorial/part-5">the source code</a> of what we have done so far.</p> <p>Happy coding!</p> <div class=btn-wrapper> <a href="https://phoenix-and-elm.herokuapp.com/" target=_blank class=btn><i class="fa fa-cloud"></i> Live demo</a> <a href="https://github.com/bigardone/phoenix-and-elm" target=_blank class=btn><i class="fa fa-github"></i> Source code</a> </div> <div id=disqus_thread></div> <script>
+  /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+  var disqus_shortname = 'codeloveandboards'; // required: replace example with your forum shortname
+  
+  /* * * DON'T EDIT BELOW THIS LINE * * */
+  (function() {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script> <noscript> Please enable JavaScript to view the <a href='//disqus.com/?ref_noscript'>comments powered by Disqus.</a> </noscript> <a class=dsq-brlink href='//disqus.com'> comments powered by <span class=logo-disqus>Disqus</span> </a> </article> </section> </div> </section> <footer id=main_footer> <ul class=article-nav> <li class=previous> <a href="/blog/2017/02/23/phoenix-and-elm-a-real-use-case-pt-4/"><h4>previous post</h4> <h3> Phoenix and Elm, a real use case (pt. 4) </h3> <div class=meta-data> <hr> posted Feb 23, 2017 on elixir, phoenix, elm </div> </a> </li> <li class=next> <a href="/blog/2017/03/19/phoenix-and-elm-a-real-use-case-pt-6/"><h4>next post</h4> <h3> Phoenix and Elm, a real use case (pt. 6) </h3> <div class=meta-data> <hr> posted Mar 19, 2017 on elixir, phoenix, elm </div> </a> </li> </ul> <section> <div class=container> <div class=center> <ul> <li> <a href='/blog'>Archives</a> </li> <li> <a href='//feeds.feedburner.com/CodeLoveAndBoards' target=_blank>RSS</a> </li> </ul> Copyright © 2017 - Ricardo García Vega - Code, Love & Boards! </div> </div> </section> </footer> <script src="../../../../../javascripts/blog-5ddb0520.js"></script> <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  
+  ga('create', 'UA-37802122-1', 'codeloveandboards.com');
+  ga('send', 'pageview');
+</script> <script>
+  _StatHat.push(["_trackCount", "g2pcD9xou7DlR0DtndiwvSBBYU5k", 1.0]);
+</script> </body> </html>

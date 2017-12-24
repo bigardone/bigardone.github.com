@@ -1,0 +1,185 @@
+<!DOCTYPE html> <!--[if lt IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8 lt-ie7" lang=en-us><![endif]--> <!--[if IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8" lang=en-us><![endif]--> <!--[if IE 8]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if IE 9]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if lt IE 10]><html class="no-js lt-ie10" lang=en-us><![endif]--> <!--[if !IE]>><![endif]--> <html class=no-js lang=en> <head> <title>Rails and Flux with Marty.js IV: Implementing Flux - Code, Love & Boards</title> <meta charset=utf-8 content='text/html' http-equiv=content-type> <meta content='ie=edge,chrome=1' http-equiv=x-ua-compatible> <meta content='A blog about coding web apps, loving life and board sports by Ricardo García Vega' name=description> <meta content='Ricardo García Vega - http://twitter.com/bigardone' name=author> <meta content='rails, reactjs, flux, webpack' name=keywords> <meta content='initial-scale=1.0,user-scalable=no,maximum-scale=1,width=device-width' name=viewport> <link href='//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css' rel=stylesheet> <link href="//fonts.googleapis.com/css?family=Montserrat:400,700|Lora:400,700" media=screen rel=stylesheet /> <link href="../../../../../stylesheets/blog-ed6b1e0f.css" media=all rel=stylesheet /> <link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/styles/tomorrow.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/highlight.min.js'></script> <link href='/images/apple-touch-icon-57x57-6e598dc4.png' rel=apple-touch-icon sizes=57x57> <link href='/images/apple-touch-icon-114x114-5be964ba.png' rel=apple-touch-icon sizes=114x114> <link href='/images/apple-touch-icon-72x72-70084a85.png' rel=apple-touch-icon sizes=72x72> <link href='/images/apple-touch-icon-144x144-1dbb56c1.png' rel=apple-touch-icon sizes=144x144> <link href='/images/apple-touch-icon-60x60-d05a5ea9.png' rel=apple-touch-icon sizes=60x60> <link href='/images/apple-touch-icon-120x120-5dafce59.png' rel=apple-touch-icon sizes=120x120> <link href='/images/apple-touch-icon-76x76-b2c0d784.png' rel=apple-touch-icon sizes=76x76> <link href='/images/apple-touch-icon-152x152-45595360.png' rel=apple-touch-icon sizes=152x152> <link href='/images/favicon-160x160-944ce76e.png' rel=icon sizes=160x160 type='image/png'> <link href='/images/favicon-96x96-b7e4e089.png' rel=icon sizes=96x96 type='image/png'> <link href='/images/favicon-32x32-b7f34a79.png' rel=icon sizes=32x32 type='image/png'> <link href='/images/favicon-16x16-2712c528.png' rel=icon sizes=16x16 type='image/png'> <meta content='#9f00a7' name=msapplication-TileColor> <meta content='/images/mstile-144x144-028d4c4c.png' name=msapplication-TileImage> <script>
+  var _StatHat = _StatHat || [];
+  _StatHat.push(['_setUser', 'NzIzMCDaNaL5bvEP1HQkMYwfYsQe']);
+  (function() {
+          var sh = document.createElement('script'); sh.type = 'text/javascript';
+          sh.async = true;
+          sh.src = '//www.stathat.com/javascripts/api.js';
+          var s = document.getElementsByTagName('script')[0];
+          s.parentNode.insertBefore(sh, s);
+  })();
+</script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Rails and Flux with Marty.js IV: Implementing Flux</h1> <h3></h3> <div class=meta-data> <hr> posted Jun 19, 2015 on <a class=tag href="/blog/tags/rails.html">rails</a> <a class=tag href="/blog/tags/reactjs.html">reactjs</a> <a class=tag href="/blog/tags/flux.html">flux</a> <a class=tag href="/blog/tags/webpack.html">webpack</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <p>In the <a href="/blog/2015/06/14/rails-and-flux-with-marty-js-iii-the-main-application/">last post</a> of this series we took a look to the <strong>MainApplication</strong> and how it <a href="https://github.com/bigardone/rails_and_flux/blob/master/app/frontend/application.cjsx#L7" target=_blank>registers</a> the necessary elements that we are going to need. We also viewed how to create an <strong>ApplicationContainer</strong> which receives the main application as a prop and wraps the main React component which will have access to all the elements registered previously. Now we are ready to start implementing Flux, so let&#39;s do it!</p> <h3>The PeopleSection</h3> <p>If you first take a look to the <a href="https://github.com/bigardone/rails_and_flux/blob/master/app/frontend/flux/components/people/people_section.cjsx" target=_blank>source code</a> you can see that there are two main elements, the <strong>React</strong> component it self and a <strong>Marty&#39;s Container</strong> which wraps it. By doing this we are making the <strong>PeopleSection</strong> stateless, leaving the state requests to the <strong>Container</strong> which will pass it to the <strong>PeopleSection</strong> as <em>props</em>.</p> <h4>The React component</h4> <p>This is the main React component and parent of the rest of the components involved in the application.</p> <pre><code class="coffee"># /app/frontend/flux/components/people/people_section.cjsx
+
+# Requiring components involved
+PeopleSearch = require &#39;./people_search&#39;
+PersonCard = require &#39;./person_card&#39;
+PaginatorSection = require &#39;../paginator/paginator_section&#39;
+ResetButton = require &#39;../buttons/reset_button&#39;
+
+PeopleSection = React.createClass
+  displayName: &#39;PeopleSection&#39;
+
+  # When a page number is clicked let&#39;s find the next results page
+  _handlePageNumberClicked: (pageNumber)-&gt;
+    @app.people.queries.findPeople pageNumber, @props.searchText
+
+  _renderPeople: -&gt;
+    # Render message when no results found
+    if @props.people.length is 0 then return @_renderNoResultsFound()
+
+    # Create a person card for each person found
+    @props.people.map (person) -&gt;
+      &lt;PersonCard key={person.id} {...person}/&gt;
+
+  _renderNoResultsFound: -&gt;
+    &lt;div className=&quot;warning&quot;&gt;
+      &lt;span className=&quot;fa-stack&quot;&gt;
+        &lt;i className=&quot;fa fa-meh-o fa-stack-2x&quot;&gt;&lt;/i&gt;
+      &lt;/span&gt;
+      &lt;h4&gt;No people found...&lt;/h4&gt;
+      &lt;ResetButton text=&quot;Reset filter&quot; styleClass=&quot;btn&quot; /&gt;
+    &lt;/div&gt;
+
+  render: -&gt;
+    &lt;div&gt;
+      &lt;PeopleSearch totalCount={@props.meta.total_count} value={@props.searchText}/&gt;
+      &lt;PaginatorSection totalPages={@props.meta.total_pages} currentPage={@props.meta.current_page} pageNumberClicked={@_handlePageNumberClicked}/&gt;
+      &lt;div className=&quot;cards-wrapper&quot;&gt;
+        {@_renderPeople()}
+      &lt;/div&gt;
+      &lt;PaginatorSection totalPages={@props.meta.total_pages} currentPage={@props.meta.current_page} pageNumberClicked={@_handlePageNumberClicked}/&gt;
+    &lt;/div&gt;
+
+...
+</code></pre> <p>This results to be a very simple component except for the fact that for being the main parent component <strong>it has no state at all</strong>. So how does it gets the data to display? Here&#39;s where the <strong>Container</strong> comes into play.</p> <h4>The Container</h4> <p>In the <strong>Flux</strong> architecture the state lives in <strong>stores</strong>. Marty&#39;s containers listen to stores and get the necessary state from them passing it to their wrapped components as props.</p> <pre><code class="coffee">... 
+
+module.exports = Marty.createContainer PeopleSection,
+  # Listen to the store registered previously in the application
+  listenTo: &#39;people.store&#39;
+
+  # Props that are going to be passed to the component
+  fetch:
+    people: -&gt;
+      @app.people.store.fetchPeople()
+    meta: -&gt;
+      @app.people.store.getState().meta
+    searchText: -&gt;
+      @app.people.store.getState().searchText
+
+  # What to render when fetches are still pending
+  pending: -&gt;
+    &lt;div className=&quot;warning&quot;&gt;
+      &lt;span className=&quot;fa-stack&quot;&gt;
+        &lt;i className=&quot;fa fa-search fa-stack-2x&quot;&gt;&lt;/i&gt;
+      &lt;/span&gt;
+      &lt;h4&gt;Searching...&lt;/h4&gt;
+    &lt;/div&gt;
+
+  # What to render if there&#39;s any error during fetches
+  failed: (errors) -&gt;
+    &lt;div className=&quot;warning&quot;&gt;
+      &lt;span className=&quot;fa-stack&quot;&gt;
+        &lt;i className=&quot;fa fa-exclamation-triangle fa-stack-2x&quot;&gt;&lt;/i&gt;
+      &lt;/span&gt;
+      &lt;h4&gt;{errors}&lt;/h4&gt;
+    &lt;/div&gt;
+</code></pre> <p>The most important parts of the container are the <strong>listenTo</strong> property which specifies the store (or list of stores) from where the container is going to get the state, and the <strong>fetch</strong> object which are functions commonly used to fetch the state from the store and pass it to the component as props by their key. This means that when the component calls <code>@props.meta.total_count</code> the <strong>meta</strong> prop has been passed to it by the container by previously getting it from the store wit it&#39;s <code>meta</code> fetch method.</p> <h3>The PeopleStore</h3> <p>Here&#39;s where the state lives and changes:</p> <pre><code class="coffee"># /app/frontend/flux/stores/people_store.coffee
+
+PeopleConstants = require &#39;../constants/people_constants&#39;
+
+module.exports = Marty.createStore
+  id: &#39;PeopleStore&#39;
+
+  getInitialState: -&gt;
+    searchText: &#39;&#39;
+    meta:
+      total_pages: 0
+      current_page: 0
+
+  # Handle dispatcher&#39;s actions
+  handlers:
+    receivePeople: PeopleConstants.RECEIVE_PEOPLE
+    updateSearchText: PeopleConstants.SET_SEARCH_TEXT
+    resetSearch: PeopleConstants.RESET_SEARCH
+
+  # Initial people fetch
+  fetchPeople: () -&gt;
+    @fetch
+      id: &#39;all-people&#39;
+      locally: () =&gt;
+        @state.people
+      remotely: () =&gt;
+        @app.people.queries.findPeople()
+
+  receivePeople: (response) -&gt;
+    @setState
+      people: response.people
+      meta: response.meta
+
+  updateSearchText: (text) -&gt;
+    @setState
+      searchText: text
+
+  resetSearch: -&gt;
+    @setState
+      searchText: &#39;&#39;
+</code></pre> <p>To handle state changes it listens to the <strong>Flux dispatcher</strong>. When it receives an action corresponding to any of the values specified in the handlers property it calls the corresponding method to update the state making the <strong>PeopleSection&#39;s container</strong> re-render itself.</p> <h4>Fetching state</h4> <p>When the component renders for the first time we need to get all the people from the <strong>Rails back-end</strong>. The store provides a <strong>fetch</strong> method that we&#39;re using inside <code>fetchPeople</code> and which behaves as follows:</p> <ol> <li>First it looks in the current state if <strong>people</strong> is set to return it using <code>locally</code>.</li> <li>If <code>locally</code> returns <code>undefined</code> then it calls <code>remotely</code> where it will request the data from the Rails back-end and set it in the state.</li> <li>As now <strong>people</strong> is set in the state, additional calls to <code>fetchPeople</code> will return them using <code>localy</code> again instead of from the Rails back-end.</li> </ol> <h4>PeopleConstants</h4> <p>As you can see the store&#39;s handlers use <strong>PeopleConstants</strong> values to identify which actions from the dispatcher wants to handle. If we take a look to it&#39;s source code we can find all the available action types:</p> <pre><code class="coffee"># /app/frontend/flux/constants/people_constants.coffee
+
+module.exports = Marty.createConstants [
+  &quot;FIND_PEOPLE&quot;
+  &quot;RECEIVE_PEOPLE&quot;
+  &quot;SET_SEARCH_TEXT&quot;
+  &quot;RESET_SEARCH&quot;
+]
+</code></pre> <h3>The PeopleQueries</h3> <p>Marty&#39;s queries are in charge of getting the sate from outside the application.</p> <pre><code class="coffee"># /app/frontend/flux/queries/people_queries.coffee
+
+PeopleConstants = require &#39;../constants/people_constants&#39;
+
+module.exports = Marty.createQueries
+  id: &#39;PeopleQueries&#39;
+
+  findPeople: (pageNumber, searchText)-&gt;
+    # Call the state source and handle response
+    @app.people.sources.findPeople(pageNumber, searchText)
+    .then (res) =&gt;
+      # Create action and pass result
+      @dispatch PeopleConstants.RECEIVE_PEOPLE, res
+    .catch (err) -&gt;
+      console.log err
+</code></pre> <p>The <code>findPeople</code> method calls the sate source which will request the data from the <strong>Rails back-end</strong>. When the data is received it creates an action identified by <code>PeopleConstants.RECEIVE_PEOPLE</code> and passes the result with all the people found. This is how we set the people array in the state of the <strong>PeopleStore</strong> using it&#39;s <code>receivePeople</code> handler previously seen.</p> <h3>The PeopleAPI</h3> <p>The last thing left is how to we get the data we need from the <strong>Rails back-end</strong>. To do so we are going to use a Marty&#39;s http <strong>StateSource</strong>.</p> <pre><code class="coffee"># /app/frontend/flux/sources/people_api.coffee
+
+module.exports = Marty.createStateSource
+  id: &#39;PeopleAPI&#39;
+  # Type of StateSource
+  type: &#39;http&#39;
+
+  findPeople: (pageNumber, searchText) -&gt;
+    url = Routes.api_v1_people_path
+      page: pageNumber
+      search: searchText
+
+    @get(url).then (res) -&gt;
+      if res.ok then return res.json()
+
+      throw new Error(&#39;Error while finding people&#39;, res)
+</code></pre> <p>This helps us to encapsulate all the complexity of connecting to the back-end by just calling it&#39;s <code>get</code> method and returning the resulting <strong>json</strong> if everything went as expected.</p> <h3>Conclusion</h3> <p>Taking a look again to the Flux flow diagram we can see that thanks to <strong>Marty.js</strong> we have easily covered all the elements in it:</p> <p><img src="https://github.com/facebook/flux/raw/master/docs/img/flux-diagram-white-background.png" alt=Flux></p> <p>The <em>Web API Utils</em> is the <strong>PeopleAPI</strong> state source used to access the <em>back-end</em>, <em>Action Creators</em> is the <strong>PeopleQueries</strong> which creates <em>Actions</em> identified by the <strong>PeopleConstants</strong>, the <em>Store</em> is the <strong>PeopleStore</strong> that handles the <em>Callbacks</em> which change the <em>State</em> causing the <em>React Views</em> which is the <strong>Container</strong> wrapping the <strong>People Section</strong> to re-render.</p> <p>We are just missing <em>User Interactions</em> but we&#39;re going to leave this part for the next and final post of this series. In the meanwhile don&#39;t forget to take a look to <a href="//martyjs.org/guides/getting-started/" target=_blank>Marty&#39;s documentation</a> and to the example application:</p> <p><img src="/images/blog/rails_and_flux/final_result-a83ca3c3.jpg" alt="Rails and Flux" style="background: #fff;"/> <div class=btn-wrapper> <a href="//rails-and-flux.herokuapp.com/" target=_blank class=btn><i class="fa fa-cloud"></i> Live demo</a> <a href="https://github.com/bigardone/rails_and_flux" target=_blank class=btn><i class="fa fa-github"></i> Source code</a> </div></p> <p>Happy coding!</p> <div id=disqus_thread></div> <script>
+  /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+  var disqus_shortname = 'codeloveandboards'; // required: replace example with your forum shortname
+  
+  /* * * DON'T EDIT BELOW THIS LINE * * */
+  (function() {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script> <noscript> Please enable JavaScript to view the <a href='//disqus.com/?ref_noscript'>comments powered by Disqus.</a> </noscript> <a class=dsq-brlink href='//disqus.com'> comments powered by <span class=logo-disqus>Disqus</span> </a> </article> </section> </div> </section> <footer id=main_footer> <ul class=article-nav> <li class=previous> <a href="/blog/2015/06/14/rails-and-flux-with-marty-js-iii-the-main-application/"><h4>previous post</h4> <h3> Rails and Flux with Marty.js III: The main application </h3> <div class=meta-data> <hr> posted Jun 14, 2015 on rails, reactjs, flux, webpack </div> </a> </li> <li class=next> <a href="/blog/2015/10/16/react-state-management-fun-with-redux/"><h4>next post</h4> <h3> React state management fun with Redux </h3> <div class=meta-data> <hr> posted Oct 16, 2015 on react, redux </div> </a> </li> </ul> <section> <div class=container> <div class=center> <ul> <li> <a href='/blog'>Archives</a> </li> <li> <a href='//feeds.feedburner.com/CodeLoveAndBoards' target=_blank>RSS</a> </li> </ul> Copyright © 2017 - Ricardo García Vega - Code, Love & Boards! </div> </div> </section> </footer> <script src="../../../../../javascripts/blog-5ddb0520.js"></script> <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  
+  ga('create', 'UA-37802122-1', 'codeloveandboards.com');
+  ga('send', 'pageview');
+</script> <script>
+  _StatHat.push(["_trackCount", "g2pcD9xou7DlR0DtndiwvSBBYU5k", 1.0]);
+</script> </body> </html>

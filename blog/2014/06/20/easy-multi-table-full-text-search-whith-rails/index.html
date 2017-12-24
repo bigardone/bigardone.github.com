@@ -1,0 +1,112 @@
+<!DOCTYPE html> <!--[if lt IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8 lt-ie7" lang=en-us><![endif]--> <!--[if IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8" lang=en-us><![endif]--> <!--[if IE 8]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if IE 9]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if lt IE 10]><html class="no-js lt-ie10" lang=en-us><![endif]--> <!--[if !IE]>><![endif]--> <html class=no-js lang=en> <head> <title>Easy multi-table full-text search with Rails - Code, Love & Boards</title> <meta charset=utf-8 content='text/html' http-equiv=content-type> <meta content='ie=edge,chrome=1' http-equiv=x-ua-compatible> <meta content='A blog about coding web apps, loving life and board sports by Ricardo García Vega' name=description> <meta content='Ricardo García Vega - http://twitter.com/bigardone' name=author> <meta content='rails, activerecord, postgresql' name=keywords> <meta content='initial-scale=1.0,user-scalable=no,maximum-scale=1,width=device-width' name=viewport> <link href='//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css' rel=stylesheet> <link href="//fonts.googleapis.com/css?family=Montserrat:400,700|Lora:400,700" media=screen rel=stylesheet /> <link href="../../../../../stylesheets/blog-ed6b1e0f.css" media=all rel=stylesheet /> <link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/styles/tomorrow.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/highlight.min.js'></script> <link href='/images/apple-touch-icon-57x57-6e598dc4.png' rel=apple-touch-icon sizes=57x57> <link href='/images/apple-touch-icon-114x114-5be964ba.png' rel=apple-touch-icon sizes=114x114> <link href='/images/apple-touch-icon-72x72-70084a85.png' rel=apple-touch-icon sizes=72x72> <link href='/images/apple-touch-icon-144x144-1dbb56c1.png' rel=apple-touch-icon sizes=144x144> <link href='/images/apple-touch-icon-60x60-d05a5ea9.png' rel=apple-touch-icon sizes=60x60> <link href='/images/apple-touch-icon-120x120-5dafce59.png' rel=apple-touch-icon sizes=120x120> <link href='/images/apple-touch-icon-76x76-b2c0d784.png' rel=apple-touch-icon sizes=76x76> <link href='/images/apple-touch-icon-152x152-45595360.png' rel=apple-touch-icon sizes=152x152> <link href='/images/favicon-160x160-944ce76e.png' rel=icon sizes=160x160 type='image/png'> <link href='/images/favicon-96x96-b7e4e089.png' rel=icon sizes=96x96 type='image/png'> <link href='/images/favicon-32x32-b7f34a79.png' rel=icon sizes=32x32 type='image/png'> <link href='/images/favicon-16x16-2712c528.png' rel=icon sizes=16x16 type='image/png'> <meta content='#9f00a7' name=msapplication-TileColor> <meta content='/images/mstile-144x144-028d4c4c.png' name=msapplication-TileImage> <script>
+  var _StatHat = _StatHat || [];
+  _StatHat.push(['_setUser', 'NzIzMCDaNaL5bvEP1HQkMYwfYsQe']);
+  (function() {
+          var sh = document.createElement('script'); sh.type = 'text/javascript';
+          sh.async = true;
+          sh.src = '//www.stathat.com/javascripts/api.js';
+          var s = document.getElementsByTagName('script')[0];
+          s.parentNode.insertBefore(sh, s);
+  })();
+</script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Easy multi-table full-text search with Rails</h1> <h3></h3> <div class=meta-data> <hr> posted Jun 20, 2014 on <a class=tag href="/blog/tags/rails.html">rails</a> <a class=tag href="/blog/tags/activerecord.html">activerecord</a> <a class=tag href="/blog/tags/postgresql.html">postgresql</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <p>In my new personal project I&#39;ve been working for the past months I wanted the user to have the ability to search for certain records of a given model across multiple of it&#39;s fields and relations using a simple form with just one text field. This is known as <a href="https://en.wikipedia.org/wiki/Full_text_search" target=_blank>full-text search</a> and there are many standalone services you can use to handle it such as <a href="//www.elasticsearch.org/" target=_blank>Elasticsearch</a>, <a href="//sphinxsearch.com/" target=_blank>Sphinx</a> or <a href="https://lucene.apache.org/solr/" target=_blank>Solr</a>, but I didn&#39;t wanted to add and additional complexity layer to the project so I decided to choose <strong>PostgreSQL</strong> as my database of choice and take advantage of it&#39;s power.</p> <h3>The goal</h3> <p>So imagine we have a model named <strong>Person</strong> which looks like this:</p> <pre><code class="ruby"># == Schema Information
+#
+# Table name: people
+#
+#  id                      :integer          not null, primary key
+#  first_name              :string(255)
+#  last_name               :string(255)
+#  location                :string(255)
+#  headline                :string(255)
+#  summary                 :text
+
+class Person &lt; ActiveRecord::Base
+  validates :first_name, presence: true
+end
+</code></pre> <p>We also want to add this <strong>Person</strong> a couple of tag lists for <em>interests</em> and <em>skills</em>. To achieve this I decided to use the <a href="https://github.com/mbleigh/acts-as-taggable-on" target=_blank>ActsAsTaggableOn</a> gem which I have already used before and I like it because of it&#39;s simplicity of use. So we add it to our <code>gemfile</code>:</p> <pre><code> gem &#39;acts-as-taggable-on&#39;
+</code></pre> <p>After running <code>bundle install</code> we have to create the needed migrations to create the needed tables for the gem to work properly:</p> <pre><code>rake acts_as_taggable_on_engine:install:migrations
+rake db:migrate
+</code></pre> <p>Now we can add the desired tag contexts to our <strong>Person</strong> model:</p> <pre><code class="ruby"># == Schema Information
+#
+# Table name: people
+#
+#  id                      :integer          not null, primary key
+#  first_name              :string(255)
+#  last_name               :string(255)
+#  location                :string(255)
+#  headline                :string(255)
+#  summary                 :text
+
+class Person &lt; ActiveRecord::Base
+  acts_as_taggable_on :skills, :interests
+
+  validates :first_name, presence: true
+end
+</code></pre> <p>By adding this <code>acts_as_taggable_on</code> we are providing the model with some very useful functionality to manage it&#39;s tags lists (for skills and interests), so if we want to search for people with a certain skill we can do the following:</p> <pre><code class="ruby">Person.tagged_with([&quot;surf&quot;, &quot;longboard&quot;]), on: :interests
+</code></pre> <p>And it will return all the people with those interests in common. Take a look at the <a href="//rubydoc.info/gems/acts-as-taggable-on/" target=_blank>gem&#39;s documentation</a> to learn more about the wide range of methods and helpers it offers us.</p> <p>At first this could be enough to find people by their skills or interests, but what if someone didn&#39;t add a skill or interests in those fields but he did it in his headline or summary? Or what if the user wants to search also for other people living in a certain place with similar skills or interests by using a simple form with a single text input? Well, here is where <strong>full-text search</strong> comes into play.</p> <h3>The solution</h3> <p>There are many ways activating and taking advantage of PostgreSQL&#39;s full-text search but I think that using the <a href="https://github.com/Casecommons/pg_search" target=_blank>pg_search gem</a> it is indeed one the easiest ones. First, add it to you <code>gemfile</code> and run the corresponding bundle:</p> <pre><code>gem &#39;pg_search&#39;
+</code></pre> <p>The gem offers us two different techniques for searching, <a href="https://github.com/Casecommons/pg_search#multi-search" target=_blank>multi-search</a> and <a href="https://github.com/Casecommons/pg_search#multi-search" target=_blank>search-scopes</a>. As I just wanted to search in a specific model I chose to implement the <strong>search scopes</strong> approach.</p> <pre><code class="ruby">
+# == Schema Information
+#
+# Table name: people
+#
+#  id                      :integer          not null, primary key
+#  first_name              :string(255)
+#  last_name               :string(255)
+#  location                :string(255)
+#  headline                :string(255)
+#  summary                 :text
+
+class Person &lt; ActiveRecord::Base
+  acts_as_taggable_on :skills, :interests
+
+  pg_search_scope :quick_search, against: [:headline, :location, :summary]
+
+  validates :first_name, presence: true
+end
+</code></pre> <p>So we are adding a new scope named <em>quick_search</em> which will perform a full-text search within the <em>headline</em>, <em>location</em> and <em>summary</em> fields:</p> <pre><code class="ruby">
+search_text = &#39;spain rails surf&#39;
+@people = Person.quick_search(search_text)
+</code></pre> <p>But how can we make the scope to search also inside a person&#39;s skills and interests to see if any of them matches? As easy as pie:</p> <pre><code class="ruby">
+# == Schema Information
+#
+# Table name: people
+#
+#  id                      :integer          not null, primary key
+#  first_name              :string(255)
+#  last_name               :string(255)
+#  location                :string(255)
+#  headline                :string(255)
+#  summary                 :text
+
+class Person &lt; ActiveRecord::Base
+  acts_as_taggable_on :skills, :interests
+
+  pg_search_scope :quick_search, 
+                  against: [:headline, :location, :summary],
+                  associated_against: {
+                    skills: [:name],
+                    interests: [:name]
+                  }
+
+  validates :first_name, presence: true
+end
+</code></pre> <p>Just adding the <em>associated_against</em> parameter and specifying which relations you want to include and in which of their columns to search.</p> <h3>Final words</h3> <p>Though <strong>pg_search</strong> full-text search is very powerful, this is for sure the most simple example of what can be done. So go ahead and check the <strong>pg_search</strong> documentation and give your next project the power of PostgreSQL&#39;s full-text search.</p> <p>Happy coding!</p> <div id=disqus_thread></div> <script>
+  /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+  var disqus_shortname = 'codeloveandboards'; // required: replace example with your forum shortname
+  
+  /* * * DON'T EDIT BELOW THIS LINE * * */
+  (function() {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script> <noscript> Please enable JavaScript to view the <a href='//disqus.com/?ref_noscript'>comments powered by Disqus.</a> </noscript> <a class=dsq-brlink href='//disqus.com'> comments powered by <span class=logo-disqus>Disqus</span> </a> </article> </section> </div> </section> <footer id=main_footer> <ul class=article-nav> <li class=previous> <a href="/blog/2014/03/18/explicit-vs-implicit-conversion-methods/"><h4>previous post</h4> <h3> Explicit vs. implicit conversion methods </h3> <div class=meta-data> <hr> posted Mar 18, 2014 on ruby, code </div> </a> </li> <li class=next> <a href="/blog/2014/07/16/rails-and-postgresql-hstore-simple-use-case/"><h4>next post</h4> <h3> Rails and PostgreSQL hstore simple use case </h3> <div class=meta-data> <hr> posted Jul 16, 2014 on rails, postgresql </div> </a> </li> </ul> <section> <div class=container> <div class=center> <ul> <li> <a href='/blog'>Archives</a> </li> <li> <a href='//feeds.feedburner.com/CodeLoveAndBoards' target=_blank>RSS</a> </li> </ul> Copyright © 2017 - Ricardo García Vega - Code, Love & Boards! </div> </div> </section> </footer> <script src="../../../../../javascripts/blog-5ddb0520.js"></script> <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  
+  ga('create', 'UA-37802122-1', 'codeloveandboards.com');
+  ga('send', 'pageview');
+</script> <script>
+  _StatHat.push(["_trackCount", "g2pcD9xou7DlR0DtndiwvSBBYU5k", 1.0]);
+</script> </body> </html>

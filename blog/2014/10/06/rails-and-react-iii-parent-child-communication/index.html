@@ -1,0 +1,172 @@
+<!DOCTYPE html> <!--[if lt IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8 lt-ie7" lang=en-us><![endif]--> <!--[if IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8" lang=en-us><![endif]--> <!--[if IE 8]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if IE 9]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if lt IE 10]><html class="no-js lt-ie10" lang=en-us><![endif]--> <!--[if !IE]>><![endif]--> <html class=no-js lang=en> <head> <title>Rails and React III: Parent-child communication - Code, Love & Boards</title> <meta charset=utf-8 content='text/html' http-equiv=content-type> <meta content='ie=edge,chrome=1' http-equiv=x-ua-compatible> <meta content='A blog about coding web apps, loving life and board sports by Ricardo García Vega' name=description> <meta content='Ricardo García Vega - http://twitter.com/bigardone' name=author> <meta content='rails, reactjs' name=keywords> <meta content='initial-scale=1.0,user-scalable=no,maximum-scale=1,width=device-width' name=viewport> <link href='//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css' rel=stylesheet> <link href="//fonts.googleapis.com/css?family=Montserrat:400,700|Lora:400,700" media=screen rel=stylesheet /> <link href="../../../../../stylesheets/blog-ed6b1e0f.css" media=all rel=stylesheet /> <link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/styles/tomorrow.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/highlight.min.js'></script> <link href='/images/apple-touch-icon-57x57-6e598dc4.png' rel=apple-touch-icon sizes=57x57> <link href='/images/apple-touch-icon-114x114-5be964ba.png' rel=apple-touch-icon sizes=114x114> <link href='/images/apple-touch-icon-72x72-70084a85.png' rel=apple-touch-icon sizes=72x72> <link href='/images/apple-touch-icon-144x144-1dbb56c1.png' rel=apple-touch-icon sizes=144x144> <link href='/images/apple-touch-icon-60x60-d05a5ea9.png' rel=apple-touch-icon sizes=60x60> <link href='/images/apple-touch-icon-120x120-5dafce59.png' rel=apple-touch-icon sizes=120x120> <link href='/images/apple-touch-icon-76x76-b2c0d784.png' rel=apple-touch-icon sizes=76x76> <link href='/images/apple-touch-icon-152x152-45595360.png' rel=apple-touch-icon sizes=152x152> <link href='/images/favicon-160x160-944ce76e.png' rel=icon sizes=160x160 type='image/png'> <link href='/images/favicon-96x96-b7e4e089.png' rel=icon sizes=96x96 type='image/png'> <link href='/images/favicon-32x32-b7f34a79.png' rel=icon sizes=32x32 type='image/png'> <link href='/images/favicon-16x16-2712c528.png' rel=icon sizes=16x16 type='image/png'> <meta content='#9f00a7' name=msapplication-TileColor> <meta content='/images/mstile-144x144-028d4c4c.png' name=msapplication-TileImage> <script>
+  var _StatHat = _StatHat || [];
+  _StatHat.push(['_setUser', 'NzIzMCDaNaL5bvEP1HQkMYwfYsQe']);
+  (function() {
+          var sh = document.createElement('script'); sh.type = 'text/javascript';
+          sh.async = true;
+          sh.src = '//www.stathat.com/javascripts/api.js';
+          var s = document.getElementsByTagName('script')[0];
+          s.parentNode.insertBefore(sh, s);
+  })();
+</script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Rails and React III: Parent-child communication</h1> <h3></h3> <div class=meta-data> <hr> posted Oct 6, 2014 on <a class=tag href="/blog/tags/rails.html">rails</a> <a class=tag href="/blog/tags/reactjs.html">reactjs</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <p><a href="/blog/2014/09/10/rails-and-react-ii-a-real-use-case">In the last post</a> we saw how to install <strong>React</strong> in a <strong>Ruby on Rails</strong> application and how to code our first components. The result is a simple application where we display a list of contacts and we can filter them thanks to a search form. Every contact&#39;s card and the search form are <strong>React components</strong>, all of them children of the same parent, the <em>PeopleSection</em>, which is responsible for:</p> <ul> <li>Requesting and providing the necessary data to the list of contacts.</li> <li>Handling the search form&#39;s submit event so it can request the data depending on the user&#39;s input.</li> </ul> <p>This two are the main points to keep in mind while coding <strong>React</strong> components. Data flows from the parent to it&#39;s children and events are handled from children, all the way up, to their parent. But there may be also situations where we are going to need communication between components that don&#39;t share this parent-child relationship and <strong>React</strong> gives us the freedom to set this up as we desire. So lets take a closer look to the first way of communication between components.</p> <h2>Parent-child communication</h2> <p><strong>React</strong>&#39;s documentation specifies that communication between parent-child components must be done using <strong>props</strong>. This means that a parent component passes to it&#39;s children the necessary properties for them to render and uses them also to handle events. So let&#39;s put this into practice and code some new components to enhance our application.</p> <h3>The paginator section</h3> <p>As there are going to be many contacts in our application we need to paginate them. On the back-end I have installed the <a href="https://github.com/amatsuda/kaminari" title="Kaminari gem" target=_blank>Kaminari gem</a> so in the <em>PeopleController</em> we just have to pass the page number received in the request and <strong>Kaminari</strong> will do the rest:</p> <pre><code class="ruby"># /app/controllers/people_controller.rb
+
+class PeopleController &lt; ApplicationController
+  before_filter :search_people
+
+  def index
+    render json: {
+      people: @people,
+      # Necessary meta data to make the PaginatorSection component work
+      meta: {
+        current_page: @people.current_page,
+        next_page: @people.next_page,
+        prev_page: @people.prev_page,
+        total_pages: @people.total_pages,
+        total_count: @people.total_count
+      }
+    }
+  end
+
+  private
+
+  def search_people
+    @people =  if params[:search].present?
+      Person.search(params[:search])
+    else
+      Person.all
+    end.sorted.page(params[:page]) # Kaminari&#39;s paging
+  end
+end
+
+</code></pre> <p>Now it&#39;s time to create the new pagination components. So let&#39;s start with the <em>PaginatorSection</em>:</p> <pre><code class="coffee"># /app/assets/javascripts/react/paginator/paginator_section.js.coffee
+
+# @cjsx React.DOM
+
+@PaginatorSection = React.createClass
+  displayName: &#39;PaginatorSection&#39;
+  # Link on click event handler
+  _handleOnClick: (pageNumber) -&gt;
+    # Uses it&#39;s own props as callback, so it&#39;s parent component can 
+    # handle it and receive the pageNumber value.
+    @props.onPaginate(pageNumber)
+  render: -&gt;
+    # If there is more than 1 page...
+    if @props.totalPages &gt; 1
+      # Render the links list
+      &lt;ul className=&quot;pagination&quot;&gt;
+        {
+          for i in [1..@props.totalPages]
+            &lt;li key={i}&gt;
+              {
+                # Different item for current page
+                if i == @props.currentPage
+                  &lt;span&gt;&amp;nbsp;&lt;/span&gt;
+                else
+                  # PaginatorLink component with a pageNumber prop that will 
+                  # used to set the value passed by it&#39;s other 
+                  # onPaginatorLinkClick prop callback.
+                  &lt;PaginatorLink pageNumber={i} onPaginatorLinkClick={@_handleOnClick} /&gt;
+              }
+            &lt;/li&gt;
+        }
+      &lt;/ul&gt;
+    # ... if one page only or none
+    else
+      # Remember that the render function has to return always a single node
+      &lt;div&gt;&amp;nbsp;&lt;/div&gt;
+</code></pre> <p>This component renders a list of links depending on it&#39;s <em>totalPages</em> and <em>currentPage</em> props. It will also handle it&#39;s <em>PaginatorLink</em> children clicks, and propagate upwards the <em>pageNumber</em> value to it&#39;s parent.</p> <h3>The paginator link</h3> <p>The <em>PaginatorLink</em> component is very simple:</p> <pre><code class="coffee"># /app/assets/javascripts/react/paginator/paginator_link.js.coffee
+
+# @cjsx React.DOM
+
+@PaginatorLink = React.createClass
+  displayName: &#39;PaginatorLink&#39;
+  # Click handler will use it&#39;s onPaginatorLinkClick prop to pass 
+  # the pageNumber value to it&#39;s parent.
+  _handleOnClick: (e) -&gt;
+    e.preventDefault()
+    @props.onPaginatorLinkClick(@props.pageNumber)
+  render: -&gt;
+    &lt;a href=&quot;#&quot; onClick={@_handleOnClick}&gt;&amp;nbsp;&lt;/a&gt;
+</code></pre> <p>With this two we have a simple way to add pagination capabilities to any other component we may want to add it. So let&#39;s add it to the main <em>PeopleSection</em> we coded in the last post. </p> <h3>The people section</h3> <pre><code class="coffee"># app/assets/javascripts/react/people/people_section.js.coffee
+
+# @cjsx React.DOM
+
+@PeopleSection = React.createClass
+
+  # ...
+
+  getInitialState: -&gt;
+    didFetchData: false
+    people: []
+    # Meta data used for the PaginationSection component
+    meta:
+      total_pages: 0
+      current_page: 1
+      total_count: 0
+    # Data we are going to send to the back-end to search and paginate results
+    fetchData:
+      search: &#39;&#39;
+      page: 1
+
+  # ...
+
+  _fetchPeople: ()-&gt;
+    $.ajax
+      url: Routes.people_path()
+      dataType: &#39;json&#39;
+      # Send the state defined previously
+      data: @state.fetchData
+    .done @_fetchDataDone
+    .fail @_fetchDataFail
+
+  _fetchDataDone: (data, textStatus, jqXHR) -&gt;
+    return false unless @isMounted()
+    @setState
+      didFetchData: true
+      # Sets the state to show the results and make the paginator work
+      people: data.people
+      meta: data.meta
+
+  # ...
+
+  # PaginatorSection handler
+  _handleOnPaginate: (pageNumber) -&gt;
+    # Changes  the sate pageNumber value and cal
+    @state.fetchData.page = pageNumber
+    # Retrieve new results page
+    @_fetchPeople()
+
+
+  render -&gt;
+    # ...
+    &lt;div&gt;
+      # ...
+      # Adding the PaginatorSection with all its props
+      &lt;PaginatorSection totalPages={@state.meta.total_pages} currentPage={@state.meta.current_page} onPaginate={@_handleOnPaginate}/&gt;
+      &lt;div className=&quot;cards-wrapper&quot;&gt;
+        #...
+      &lt;/div&gt;
+      # Lets add another PaginatorSection at the bottom
+      &lt;PaginatorSection totalPages={@state.meta.total_pages} currentPage={@state.meta.current_page} onPaginate={@_handleOnPaginate}/&gt;
+    &lt;/div&gt;
+</code></pre> <p>As you can notice, now we are using the state&#39;s <em>fetchData</em> property as the data sent to the back-end. This is because I wanted to keep the user&#39;s search value and page number while paginating.</p> <h3>React&#39;s flow</h3> <p>So in brief this is what is happening:</p> <ul> <li><em>PeopleSection</em> renders, mounts and fetches data.</li> <li>Receives data, changes it&#39;s state and passes this state as props to it&#39;s <em>PaginatorSection</em> child.</li> <li>Using this props it creates multiple <em>PaginatorLink</em> components.</li> <li>When one of this <em>PaginatorLink</em> gets clicked, it informs it&#39;s <em>PaginatorSection</em> parent using it&#39;s props.</li> <li><em>PaginatorSection</em> informs the <em>PeopleSection</em> about the requested <em>pageNumber</em>.</li> <li><em>PeopleSection</em> uses this <em>pageNumer</em> to fetch the data.</li> <li>All the process starts again.</li> </ul> <p>As I mentioned before we can also make independent components communicate with each other and we have all the freedom to achieve this as we like. This is what we are going to do <strong>in the next post</strong>, so in the meanwhile check out the final result and the source code:</p> <p><img src="/images/blog/rails_and_react_iii/final_result-8b1b3199.jpg" alt=Heroku style="background: #fff;"/> <div class=btn-wrapper> <a href="//rails-and-react-iii.herokuapp.com/" target=_blank class=btn><i class="fa fa-cloud"></i> Live demo</a> <a href="https://github.com/bigardone/rails_and_react/tree/feature/part_three" target=_blank class=btn><i class="fa fa-github"></i> Source code</a> </div></p> <p>Happy coding!</p> <div id=disqus_thread></div> <script>
+  /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+  var disqus_shortname = 'codeloveandboards'; // required: replace example with your forum shortname
+  
+  /* * * DON'T EDIT BELOW THIS LINE * * */
+  (function() {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script> <noscript> Please enable JavaScript to view the <a href='//disqus.com/?ref_noscript'>comments powered by Disqus.</a> </noscript> <a class=dsq-brlink href='//disqus.com'> comments powered by <span class=logo-disqus>Disqus</span> </a> </article> </section> </div> </section> <footer id=main_footer> <ul class=article-nav> <li class=previous> <a href="/blog/2014/09/10/rails-and-react-ii-a-real-use-case/"><h4>previous post</h4> <h3> Rails and React II: A real use case </h3> <div class=meta-data> <hr> posted Sep 10, 2014 on rails, reactjs </div> </a> </li> <li class=next> <a href="/blog/2014/11/28/rails-and-react-iv-independent-components-communication/"><h4>next post</h4> <h3> Rails and React IV: Independent components communication </h3> <div class=meta-data> <hr> posted Nov 28, 2014 on rails, reactjs </div> </a> </li> </ul> <section> <div class=container> <div class=center> <ul> <li> <a href='/blog'>Archives</a> </li> <li> <a href='//feeds.feedburner.com/CodeLoveAndBoards' target=_blank>RSS</a> </li> </ul> Copyright © 2017 - Ricardo García Vega - Code, Love & Boards! </div> </div> </section> </footer> <script src="../../../../../javascripts/blog-5ddb0520.js"></script> <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  
+  ga('create', 'UA-37802122-1', 'codeloveandboards.com');
+  ga('send', 'pageview');
+</script> <script>
+  _StatHat.push(["_trackCount", "g2pcD9xou7DlR0DtndiwvSBBYU5k", 1.0]);
+</script> </body> </html>

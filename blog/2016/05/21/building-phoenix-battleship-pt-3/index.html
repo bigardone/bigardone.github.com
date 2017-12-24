@@ -1,0 +1,294 @@
+<!DOCTYPE html> <!--[if lt IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8 lt-ie7" lang=en-us><![endif]--> <!--[if IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8" lang=en-us><![endif]--> <!--[if IE 8]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if IE 9]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if lt IE 10]><html class="no-js lt-ie10" lang=en-us><![endif]--> <!--[if !IE]>><![endif]--> <html class=no-js lang=en> <head> <title>Building Phoenix Battleship (pt. 3) - Code, Love & Boards</title> <meta charset=utf-8 content='text/html' http-equiv=content-type> <meta content='ie=edge,chrome=1' http-equiv=x-ua-compatible> <meta content='Joining a game and creating player boards' name=description> <meta content='Ricardo García Vega - http://twitter.com/bigardone' name=author> <meta content='elixir, phoenix, otp' name=keywords> <meta content='initial-scale=1.0,user-scalable=no,maximum-scale=1,width=device-width' name=viewport> <link href='//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css' rel=stylesheet> <link href="//fonts.googleapis.com/css?family=Montserrat:400,700|Lora:400,700" media=screen rel=stylesheet /> <link href="../../../../../stylesheets/blog-ed6b1e0f.css" media=all rel=stylesheet /> <link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/styles/tomorrow.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/highlight.min.js'></script> <link href='/images/apple-touch-icon-57x57-6e598dc4.png' rel=apple-touch-icon sizes=57x57> <link href='/images/apple-touch-icon-114x114-5be964ba.png' rel=apple-touch-icon sizes=114x114> <link href='/images/apple-touch-icon-72x72-70084a85.png' rel=apple-touch-icon sizes=72x72> <link href='/images/apple-touch-icon-144x144-1dbb56c1.png' rel=apple-touch-icon sizes=144x144> <link href='/images/apple-touch-icon-60x60-d05a5ea9.png' rel=apple-touch-icon sizes=60x60> <link href='/images/apple-touch-icon-120x120-5dafce59.png' rel=apple-touch-icon sizes=120x120> <link href='/images/apple-touch-icon-76x76-b2c0d784.png' rel=apple-touch-icon sizes=76x76> <link href='/images/apple-touch-icon-152x152-45595360.png' rel=apple-touch-icon sizes=152x152> <link href='/images/favicon-160x160-944ce76e.png' rel=icon sizes=160x160 type='image/png'> <link href='/images/favicon-96x96-b7e4e089.png' rel=icon sizes=96x96 type='image/png'> <link href='/images/favicon-32x32-b7f34a79.png' rel=icon sizes=32x32 type='image/png'> <link href='/images/favicon-16x16-2712c528.png' rel=icon sizes=16x16 type='image/png'> <meta content='#9f00a7' name=msapplication-TileColor> <meta content='/images/mstile-144x144-028d4c4c.png' name=msapplication-TileImage> <script>
+  var _StatHat = _StatHat || [];
+  _StatHat.push(['_setUser', 'NzIzMCDaNaL5bvEP1HQkMYwfYsQe']);
+  (function() {
+          var sh = document.createElement('script'); sh.type = 'text/javascript';
+          sh.async = true;
+          sh.src = '//www.stathat.com/javascripts/api.js';
+          var s = document.getElementsByTagName('script')[0];
+          s.parentNode.insertBefore(sh, s);
+  })();
+</script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Building Phoenix Battleship (pt. 3)</h1> <h3></h3> <div class=meta-data> <hr> posted May 21, 2016 on <a class=tag href="/blog/tags/elixir.html">elixir</a> <a class=tag href="/blog/tags/phoenix.html">phoenix</a> <a class=tag href="/blog/tags/otp.html">otp</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <div class=index> <p>This post belongs to the <strong>Building Phoenix Battleship</strong> series.</p> <ol> <li><a href="/blog/2016/04/29/building-phoenix-battleship-pt-1">Designing the game mechanics</a></li> <li><a href="/blog/2016/05/03/building-phoenix-battleship-pt-2/">The lobby channel and game supervision</a></li> <li><a href="/blog/2016/05/21/building-phoenix-battleship-pt-3/">The game setup</a></li> <li><a href="/blog/2016/07/28/building-phoenix-battleship-pt-4/">Placing ships on the board's grid</a></li> <li><a href="/blog/2016/08/08/building-phoenix-battleship-pt-5/">Let the battle begin!</a></li> <li>Coming soon...</li> </ol> </div> <h2>The game setup</h2> <p>In the <a title="Building Phoenix Battleship (pt. 2)" href="/blog/2016/05/03/building-phoenix-battleship-pt-2/">previous part</a> of the series, we described both the <strong>LobbyChannel</strong> and the <strong>Battleship.Game.Supervisor</strong> modules and their responsibilities within the application. These responsibilities include creating new <strong>Battleship.Game</strong> processes, supervising them and making their current state available for any visitor. After having this clear, now we can move on to the following elements of the diagram:</p> <p><img class=center src="/images/blog/building_phoenix_battleship/diagram-3-0021c216.jpg"/></p> <p>Recalling the last post, the player joins the <strong>LobbyChannel</strong> when visiting the game&#39;s lobby page. When he clicks the <em>Start new battle</em> button, a new message is pushed through the socket to the channel and a new <strong>Battleship.Game</strong> supervised process is created by the <strong>Battleship.Game.Supervisor</strong>, returning the game&#39;s id. Finally, the player gets redirected to the battle screen, where the setup phase starts.</p> <p><img class=center src="/images/blog/building_phoenix_battleship/game-setup-e37db800.jpg"/></p> <h3>Joining a game</h3> <p>To add this new channel to the project, we need to update the <code>player_socket.exs</code> file again in to add the channel&#39;s module and its topic:</p> <pre><code class="elixir"># web/channels/player_socket.ex
+
+defmodule Battleship.PlayerSocket do
+  @moduledoc &quot;&quot;&quot;
+  Player socket
+  &quot;&quot;&quot;
+  use Phoenix.Socket
+
+  alias Battleship.Player
+
+  ## Channels
+  channel &quot;lobby&quot;, Battleship.LobbyChannel
+  channel &quot;game:*&quot;, Battleship.GameChannel
+
+  # ...
+  # ...
+end
+</code></pre> <p>Now we have the <code>Battleship.GameChannel</code> listening to topics following the <code>game:*</code> pattern. Let&#39;s add the module and write the <code>join</code> function:</p> <pre><code class="elixir"># web/channels/game_channel.ex
+
+defmodule Battleship.GameChannel do
+  use Phoenix.Channel
+  alias Battleship.Game
+
+  def join(&quot;game:&quot; &lt;&gt; game_id, _message, socket) do
+    player_id = socket.assigns.player_id
+
+    case Game.join(game_id, player_id, socket.channel_pid) do
+      {:ok, _pid} -&gt;
+        {:ok, assign(socket, :game_id, game_id)}
+      {:error, reason} -&gt;
+        {:error, %{reason: reason}}
+    end
+  end
+
+  # ...
+end
+</code></pre> <p>When the player tries to join the channel, we use the <code>game_id</code> from the topic, his <code>player_id</code> and the channel&#39;s <code>pid</code> to try joining the previously created game. If joining the game returns a tuple containing <code>{:ok, _pid}</code> the join is successful, and the <code>game_id</code> gets assigned to the socket. Otherwise, an error is returned through the socket to the player&#39;s browser. Let&#39;s take a look to the <code>Battleship.Game</code> module and its core functionality:</p> <pre><code class="ruby"># lib/battleship/game.ex
+
+defmodule Battleship.Game do
+  use GenServer
+
+  defstruct [
+    id: nil,
+    attacker: nil,
+    defender: nil,
+    turns: [],
+    over: false,
+    winner: nil
+  ]
+
+  # CLIENT
+
+  def start_link(id) do
+    GenServer.start_link(__MODULE__, id, name: ref(id))
+  end
+
+  # ...
+
+  # SERVER
+
+  def init(id) do
+    {:ok, %__MODULE__{id: id}}
+  end
+
+  # ...
+
+  defp ref(id), do: {:global, {:game, id}}
+
+  defp try_call(id, message) do
+    case GenServer.whereis(ref(id)) do
+      nil -&gt;
+        {:error, &quot;Game does not exist&quot;}
+      pid -&gt;
+        GenServer.call(pid, message)
+    end
+  end
+end
+</code></pre> <p>When the <code>Battleship.Game.Supervisor</code> creates a new <code>Battleship.Game</code> process, the <code>init</code> function is called after <code>start_link</code>, setting the defined <code>struct</code> as the initial state of the process. This state contains the <strong>id</strong> of the game (previously generated from the <code>LobbyChannel</code>), the <strong>attacker&#39;s id</strong>, the <strong>defender&#39;s id</strong>, a list of the shooting <strong>turns</strong> results, a flag to set whether the game is <strong>over</strong> or not and the <strong>winner&#39;s id</strong>. Let&#39;s add the <code>join</code> function called in the <code>GameChannel</code>:</p> <pre><code class="elixir"># lib/battleship/game.ex
+
+defmodule Battleship.Game do
+  use GenServer
+  alias Battleship.Game.Board
+
+  #...
+
+  # CLIENT
+
+  def join(id, player_id, pid), do: try_call(id, {:join, player_id, pid})
+
+  # ...
+
+  # SERVER
+
+  def handle_call({:join, player_id, pid}, _from, game) do
+    cond do
+      game.attacker != nil and game.defender != nil -&gt;
+        {:reply, {:error, &quot;No more players allowed&quot;}, game}
+      Enum.member?([game.attacker, game.defender], player_id) -&gt;
+        {:reply, {:ok, self}, game}
+      true -&gt;
+        Process.flag(:trap_exit, true)
+        Process.monitor(pid)
+
+        {:ok, board_pid} = create_board(player_id)
+        Process.monitor(board_pid)
+
+        game = add_player(game, player_id)
+
+        {:reply, {:ok, self}, game}
+    end
+  end
+
+  defp create_board(player_id), do: Board.create(player_id)
+
+  defp add_player(%__MODULE__{attacker: nil} = game, player_id), do: %{game | attacker: player_id}
+  defp add_player(%__MODULE__{defender: nil} = game, player_id), do: %{game | defender: player_id}
+end
+</code></pre> <p>A lot going on in the join process, so let&#39;s go step by step. When the <code>join</code> client function is called from the <code>Battleship.GameChannel</code>, this tries to send a <code>:join</code> call message to the game process identified by <code>{:global, {:game, id}</code> passing the <code>player_id</code> and the channel <code>pid</code>. If the game process exists, it handles the <code>{:join, player_id, pid}</code> message which checks the following conditions:</p> <ol> <li>If both the <code>attacker</code> and the <code>defender</code> id&#39;s are set, it replies an error with the reason <em>&quot;No more players allowed&quot;</em>. This way we ensure that only two players can join a single game.</li> <li>If the <code>player_id</code> equals the <code>attacker</code> or the <code>defender</code>, it returns the current state, meaning that the player already joined previously.</li> <li>If none of the above, it first sets the process <code>trap_exit</code> to true and <strong>monitors</strong> the player&#39;s game channel <code>pid</code>. By doing this, the game process can capture <strong>exit</strong> and <strong>termination</strong> messages from other processes, in this case, the player&#39;s game channel process (we are going to talk about this in the next part). It continues creating a new <code>Battleship.Game.Board</code> process for the joined player and monitors it as well. Finally, it adds the <code>player_id</code> to its state struct (depending on which player is already set) and returns a <code>{:ok, self}</code> tuple.</li> </ol> <h3>Creating a player&#39;s board</h3> <p>As we have seen, when a player joins a game successfully, a new game board is built for this particular player. This is its very basic implementation:</p> <pre><code class="elixir"># lib/battleship/game/board.ex
+
+defmodule Battleship.Game.Board do
+  defstruct [
+    player_id: nil,
+    ships: [],
+    grid: %{},
+    ready: false,
+    hit_points: 0
+  ]
+end
+</code></pre> <p>Its struct consists of the owner&#39;s <code>player_id</code>, a list of the placed <code>ships</code>, the board <code>grid</code> where it is going store the ships positions and the opponent&#39;s shooting results, a flag to mark whether the board is <code>ready</code> to begin the battle or not and the remaining <code>hit_points</code>. We need to store two of these structs (one for each player) as part of the game&#39;s state, but where shall we store it? As we already have the game&#39;s generic server process state, it looks like the ideal place to store them, but instead of doing so we are going to store them in two separate processes using Elixir&#39;s <a title=Agent href="//elixir-lang.org/docs/stable/elixir/Agent.html">Agent</a> abstraction around state. In other words, we are going to create two simple server processes to store both boards state, using the <code>Agent</code> API to access and update them. Let&#39;s start by defining the <code>create/1</code> function called from the board:</p> <pre><code class="ruby"># lib/battleship/game/board.ex
+
+defmodule Battleship.Game.Board do
+  alias Battleship.{Ship}
+
+  @ships_sizes [5, 4, 3, 2, 2, 1, 1]
+
+  defstruct [
+    player_id: nil,
+    ships: [],
+    grid: %{},
+    ready: false,
+    hit_points: 0
+  ]
+
+  def create(player_id) do
+    grid = build_grid
+    ships = Enum.map(@ships_sizes, &amp;(%Ship{size: &amp;1}))
+
+    Agent.start(fn -&gt; %__MODULE__{player_id: player_id, grid: grid, ships: ships} end, name: ref(player_id))
+  end
+
+  def get_data(player_id) do
+    Agent.get(ref(player_id), &amp;(&amp;1))
+  end
+
+  defp ref(player_id), do: {:global, {:board, player_id}}
+end
+</code></pre> <p>The <code>create/1</code> function receives a player id. It builds the grid, creates the ships list and starts a new <code>Agent</code> process setting as its initial state a <code>Board</code> struct with the <code>player_id</code>, the generated <code>grid</code>, and the <code>ships</code> list. As we want to access to this process&#39;s state by its <code>player_id</code> like in the <code>get_data/1</code> function, for instance, we also set the name parameter globally with a <code>{:global, {:board, player_id}}</code> value. Have you noticed the similarities with <code>GenServer</code> so far? Let&#39;s implement the <code>build_grid</code> function:</p> <pre><code class="elixir"># lib/battleship/game/board.ex
+
+defmodule Battleship.Game.Board do
+  # ...
+  @size 10
+  @orientations [:horizontal, :vertical]
+  @grid_value_water &quot;·&quot;
+  @grid_value_ship &quot;/&quot;
+  @grid_value_water_hit &quot;O&quot;
+  @grid_value_ship_hit &quot;*&quot;
+
+  # ...
+
+  defp build_grid do
+    0..@size - 1
+    |&gt; Enum.reduce([], &amp;build_rows/2)
+    |&gt; List.flatten
+    |&gt; Enum.reduce(%{}, fn item, acc -&gt; Map.put(acc, item, @grid_value_water) end)
+  end
+
+  defp build_rows(y, rows) do
+    row = 0..@size - 1
+      |&gt; Enum.reduce(rows, fn x, col -&gt; [Enum.join([y, x], &quot;&quot;) | col] end)
+
+    [row | rows]
+  end
+end
+</code></pre> <p>My first approach was to build a multidimensional list to represent the grid, but due to Elixir&#39;s immutability, <em>updating</em> such list was very tricky, so I finally opted for using a <code>Map</code>. Using the <code>@size</code> value as the maximum value of rows and columns for the grid it generates a map that looks like this:</p> <pre><code class="elixir">%{
+  &quot;00&quot; =&gt; &quot;·&quot;, # A1
+  &quot;01&quot; =&gt; &quot;·&quot;, # B1
+  &quot;02&quot; =&gt; &quot;·&quot;, # C1
+  &quot;03&quot; =&gt; &quot;·&quot;, # D1
+  &quot;04&quot; =&gt; &quot;·&quot;, # E1
+  # ..
+  &quot;99&quot; =&gt; &quot;·&quot;  # J10
+}
+</code></pre> <p>The keys represent a cell of the grid, and the values the content of the grid, which can be:</p> <ul> <li><code>@grid_value_water</code> is the default value, which means water.</li> <li><code>@grid_value_ship</code> represents a portion of a ship.</li> <li><code>@grid_value_water_hit</code> represents that the opponent shot this cell hitting water.</li> <li><code>@grid_value_ship_hit</code> same as the previous one but hitting one of the board&#39;s ships.</li> </ul> <p>One of the direct benefits of using a map like this, instead of a multidimensional list, is that <em>updating</em> it is as simple as doing the following:</p> <pre><code class="elixir">grid = %{grid | &quot;01&quot; =&gt; @grid_value_water_hit}
+
+# or...
+
+grid = Map.put(grid, &quot;01&quot;, @grid_value_water_hit)
+
+# or even...
+
+grid = put_in(grid, [&quot;01&quot;], @grid_value_water_hit)
+</code></pre> <p>Easy as pie and pretty straightforward, isn&#39;t it?</p> <h3>Returning the game state</h3> <p>Now that the player has joined the new game, his board has been created, and the browser has received the success message, it has to notify the other player by pushing a <code>game:joined</code> message through the <code>GameChannel</code>. Let&#39;s implement this handle:</p> <pre><code class="elixir"># web/channels/game_channel.ex
+
+defmodule Battleship.GameChannel do
+  use Phoenix.Channel
+  # ...
+
+  def handle_in(&quot;game:joined&quot;, _message, socket) do
+    player_id = socket.assigns.player_id
+    board = Board.get_opponents_data(player_id)
+
+    broadcast! socket, &quot;game:player_joined&quot;, %{player_id: player_id, board: board}
+    {:noreply, socket}
+  end
+
+  # ...
+end
+</code></pre> <p>Taking the assigned <code>player_id</code> it calls <code>Board.get_opponents_data(player_id)</code> to get the opponents board and broadcast it through the socket. By doing this, it stores the opponent&#39;s board in the <strong>Redux</strong> store, in case the opponent joined before him. But why is it using <code>Board.get_opponents_data/1</code> instead of <code>Board.get_data/1</code>?</p> <pre><code class="ruby"># lib/battleship/game/board.ex
+
+defmodule Battleship.Game.Board do
+  # ...
+
+  def get_opponents_data(player_id) do
+    board = Agent.get(ref(player_id), &amp;(&amp;1))
+
+    new_grid = board
+    |&gt; Map.get(:grid)
+    |&gt; Enum.reduce(%{}, fn({coords, value}, acc) -&gt; Map.put(acc, coords, opponent_grid_value(value)) end)
+
+    %{board | ships: nil, grid: new_grid}
+  end
+
+  defp opponent_grid_value(@grid_value_ship), do: @grid_value_water
+  defp opponent_grid_value(value), do: value
+
+  # ...
+
+end
+</code></pre> <p>As it sends the opponent&#39;s board to both players, we need to create a <em>public</em> version of it. We do not want cheaters to check the JavaScript console and know where his opponent has placed the ships. What this function basically does is getting the opponent&#39;s board state, update all the cells that have a <code>grid_value_ship</code> value with a <code>grid_value_water</code> value and remove the ship list.</p> <p>Any time a player needs to get the game state it pushes a <code>game:get_data</code> to the <code>GameChannel</code> so let&#39;s implement it:</p> <pre><code class="elixir"># lib/battleship/game.ex
+
+defmodule Battleship.Game do
+  use GenServer
+
+  # ...
+
+  def handle_call(:get_data, _from, game), do: {:reply, game, game}
+  def handle_call({:get_data, player_id}, _from, game) do
+    game_data = Map.put(game, :my_board, Board.get_data(player_id))
+
+    opponent_id = get_opponents_id(game, player_id)
+
+    if opponent_id != nil do
+      game_data = Map.put(game_data, :opponents_board, Board.get_opponents_data(opponent_id))
+    end
+
+    {:reply, game_data, game}
+  end
+
+  def get_opponents_id(%__MODULE__{attacker: player_id, defender: nil}, player_id), do: nil
+  def get_opponents_id(%__MODULE__{attacker: player_id, defender: defender}, player_id), do: defender
+  def get_opponents_id(%__MODULE__{attacker: attacker, defender: player_id}, player_id), do: attacker
+  # ...
+end
+</code></pre> <p>The <code>Game</code> module handles two different <code>:get_data</code> messages. The first one, which doesn&#39;t receive a <code>player_id</code>, simply replies with the game state. On the other hand, the second one which receives the <code>player_id</code> and which is the one being called from the <code>GameChannel</code>, it does something a little more complex. First, it creates a new <code>game_data</code> map by adding the <code>:my_board</code> key with the player&#39;s board to the game state. Then it gets the opponent&#39;s id from the game&#39;s state using the passed <code>player_id</code>. If it is not null, or in other words, if the opponent already joined the game, if <em>updates</em> the <code>game_data</code> map a adding the <code>:opponents_board</code> and as value the result of calling <code>Board.get_opponents_data(opponent_id)</code>. Finally it replies the <code>game_data</code> map.</p> <p>That is all for now. In the next part, we are going to code the functionality related to placing ships, sending chat messages and handling possile errors thanks to <strong>OTP</strong>. Meanwhile, feel free to checkout the final (but still in progress, though) source code or challenge a friend to a <a title="Phoenix Battleship" href="https://phoenix-battleship.herokuapp.com/">battleship game</a>.</p> <div class=btn-wrapper> <a href="https://phoenix-battleship.herokuapp.com/" target=_blank class=btn><i class="fa fa-cloud"></i> Live demo</a> <a href="https://github.com/bigardone/phoenix-battleship" target=_blank class=btn><i class="fa fa-github"></i> Source code</a> </div> <p>Happy coding!</p> <div id=disqus_thread></div> <script>
+  /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+  var disqus_shortname = 'codeloveandboards'; // required: replace example with your forum shortname
+  
+  /* * * DON'T EDIT BELOW THIS LINE * * */
+  (function() {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script> <noscript> Please enable JavaScript to view the <a href='//disqus.com/?ref_noscript'>comments powered by Disqus.</a> </noscript> <a class=dsq-brlink href='//disqus.com'> comments powered by <span class=logo-disqus>Disqus</span> </a> </article> </section> </div> </section> <footer id=main_footer> <ul class=article-nav> <li class=previous> <a href="/blog/2016/05/03/building-phoenix-battleship-pt-2/"><h4>previous post</h4> <h3> Building Phoenix Battleship (pt. 2) </h3> <div class=meta-data> <hr> posted May 3, 2016 on elixir, phoenix, otp </div> </a> </li> <li class=next> <a href="/blog/2016/07/28/building-phoenix-battleship-pt-4/"><h4>next post</h4> <h3> Building Phoenix Battleship (pt. 4) </h3> <div class=meta-data> <hr> posted Jul 28, 2016 on elixir, phoenix, otp </div> </a> </li> </ul> <section> <div class=container> <div class=center> <ul> <li> <a href='/blog'>Archives</a> </li> <li> <a href='//feeds.feedburner.com/CodeLoveAndBoards' target=_blank>RSS</a> </li> </ul> Copyright © 2017 - Ricardo García Vega - Code, Love & Boards! </div> </div> </section> </footer> <script src="../../../../../javascripts/blog-5ddb0520.js"></script> <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  
+  ga('create', 'UA-37802122-1', 'codeloveandboards.com');
+  ga('send', 'pageview');
+</script> <script>
+  _StatHat.push(["_trackCount", "g2pcD9xou7DlR0DtndiwvSBBYU5k", 1.0]);
+</script> </body> </html>

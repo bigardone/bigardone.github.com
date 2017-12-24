@@ -1,0 +1,139 @@
+<!DOCTYPE html> <!--[if lt IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8 lt-ie7" lang=en-us><![endif]--> <!--[if IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8" lang=en-us><![endif]--> <!--[if IE 8]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if IE 9]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if lt IE 10]><html class="no-js lt-ie10" lang=en-us><![endif]--> <!--[if !IE]>><![endif]--> <html class=no-js lang=en> <head> <title>Asignación masiva de parámetros en Rails 4 - Code, Love & Boards</title> <meta charset=utf-8 content='text/html' http-equiv=content-type> <meta content='ie=edge,chrome=1' http-equiv=x-ua-compatible> <meta content='A blog about coding web apps, loving life and board sports by Ricardo García Vega' name=description> <meta content='Ricardo García Vega - http://twitter.com/bigardone' name=author> <meta content='code, rails' name=keywords> <meta content='initial-scale=1.0,user-scalable=no,maximum-scale=1,width=device-width' name=viewport> <link href='//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css' rel=stylesheet> <link href="//fonts.googleapis.com/css?family=Montserrat:400,700|Lora:400,700" media=screen rel=stylesheet /> <link href="../../../../../stylesheets/blog-ed6b1e0f.css" media=all rel=stylesheet /> <link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/styles/tomorrow.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/highlight.min.js'></script> <link href='/images/apple-touch-icon-57x57-6e598dc4.png' rel=apple-touch-icon sizes=57x57> <link href='/images/apple-touch-icon-114x114-5be964ba.png' rel=apple-touch-icon sizes=114x114> <link href='/images/apple-touch-icon-72x72-70084a85.png' rel=apple-touch-icon sizes=72x72> <link href='/images/apple-touch-icon-144x144-1dbb56c1.png' rel=apple-touch-icon sizes=144x144> <link href='/images/apple-touch-icon-60x60-d05a5ea9.png' rel=apple-touch-icon sizes=60x60> <link href='/images/apple-touch-icon-120x120-5dafce59.png' rel=apple-touch-icon sizes=120x120> <link href='/images/apple-touch-icon-76x76-b2c0d784.png' rel=apple-touch-icon sizes=76x76> <link href='/images/apple-touch-icon-152x152-45595360.png' rel=apple-touch-icon sizes=152x152> <link href='/images/favicon-160x160-944ce76e.png' rel=icon sizes=160x160 type='image/png'> <link href='/images/favicon-96x96-b7e4e089.png' rel=icon sizes=96x96 type='image/png'> <link href='/images/favicon-32x32-b7f34a79.png' rel=icon sizes=32x32 type='image/png'> <link href='/images/favicon-16x16-2712c528.png' rel=icon sizes=16x16 type='image/png'> <meta content='#9f00a7' name=msapplication-TileColor> <meta content='/images/mstile-144x144-028d4c4c.png' name=msapplication-TileImage> <script>
+  var _StatHat = _StatHat || [];
+  _StatHat.push(['_setUser', 'NzIzMCDaNaL5bvEP1HQkMYwfYsQe']);
+  (function() {
+          var sh = document.createElement('script'); sh.type = 'text/javascript';
+          sh.async = true;
+          sh.src = '//www.stathat.com/javascripts/api.js';
+          var s = document.getElementsByTagName('script')[0];
+          s.parentNode.insertBefore(sh, s);
+  })();
+</script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Asignación masiva de parámetros en Rails 4</h1> <h3></h3> <div class=meta-data> <hr> posted Aug 12, 2013 on <a class=tag href="/blog/tags/code.html">code</a> <a class=tag href="/blog/tags/rails.html">rails</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <p><small style="font-style: italic;">Post originalmente escrito para el blog de <a href=" http://blog.diacode.com/asignacion-masiva-de-parametros-en-rails-4" target=_blank>Diacode</a>, que dice así:</small></p> <p>La semana pasada fue movidita en <strong>Diacode</strong>. Uno de nuestros clientes en San Francisco nos propuso que le desarrollasemos un <a href="//es.wikipedia.org/wiki/Producto_viable_m%C3%ADnimo" target=_blank>MVP</a> para una nueva idea de negocio que tenía en mente. Se trataba de un pequeño <strong>ecommerce</strong> donde iba a poner a la venta una serie de productos nuevos, y teníamos que hacer el diseño, logo, envío de notificaciones por correo, gestión de stock, pedidos, etc y todo esto tan solo en 3 días. Para desarrollar algo así de rápido, poder ofrecerle resultados visibles al cliente desde el primer momento sobre la evolución de nuestro trabajo, y permitirnos reaccionar de manera ágil y flexible a los cambios que nos sugería cada vez que recibíamos feedback suyo, optamos por usar <strong>Rails 4</strong>, ya que además nos vendría bien para poder probar alguna de las funcionalidades nuevas con respecto a la versión anterior.</p> <p>Una de las cosas que más me gusta controlar a la hora de programar es que un usuario no pueda enviar peticiones a la aplicación con datos que <strong>no deberían ir en esa petición</strong>, y justo en la nueva versión de Rails han añadido un mecanismo para poder controlar esto. Veamos un ejemplo muy sencillo:</p> <h3>El ejemplo más sencillo</h3> <p>Supongamos que tenemos este modelo <strong>Usuario</strong> en nuestra aplicación:</p> <pre><code class="ruby"># app/models/user.rb
+
+# == Schema Information
+#
+# Table name: users
+#
+#  id                     :integer          not null, primary key
+#  email                  :string(255)      default(&quot;&quot;), not null
+#  name                   :string(255)
+#  is_admin               :boolean          default(false), Especifica si el usuario tiene privilegios de administrador o no
+#  ...
+
+class User &lt; ActiveRecord::Base
+
+  ...
+
+end
+
+</code></pre> <p>Es un modelo muy sencillo, con su email, su nombre y un campo para determinar si el usuario <strong>tiene privilegios de administrador o no</strong>. Para permitir la creación de nuevos usuarios, podríamos presentarle al usuario un <strong>formulario</strong> tal que así:</p> <pre><code class="html">
+&lt;form method=&quot;post&quot; action=&quot;/users&quot;&gt;
+  &lt;input type=&quot;text&quot; name=&quot;user[email]&quot; /&gt;
+  &lt;input type=&quot;text&quot; name=&quot;user[name]&quot; /&gt;
+  &lt;input type=&quot;submit&quot; /&gt;
+&lt;/form&gt;
+
+</code></pre> <p>Y en nuestro <strong>controller</strong> solo tendríamos que crear el nuevo <strong>User</strong> con los parámetros recibidos del formulario:</p> <pre><code class="ruby">
+# app/controllers/users_controller.rb
+
+...
+
+def create
+  @user = User.create params[:user]
+end
+
+...
+
+</code></pre> <p>A simple vista esto parece que puede funcionar bien, y de hecho lo hace. El usuario podría darse de alta, y gracias al esquema de nuestra base de datos, no tendría activo el campo <strong>is_admin</strong>, con lo que según la lógica de este ejemplo no tendría privilegios de administrador. Pero en realidad este ejemplo <strong>no es nada seguro</strong>, ya que un usuario un poco avispado podría colarse como administrador simplemente cambiando el formulario un poco:</p> <pre><code class="html">
+&lt;form method=&quot;post&quot; action=&quot;/users&quot;&gt;
+  &lt;input type=&quot;text&quot; name=&quot;user[email]&quot; /&gt;
+  &lt;input type=&quot;text&quot; name=&quot;user[name]&quot; /&gt;
+
+  &lt;input type=&quot;hidden&quot; name=&quot;user[is_admin]&quot; value=&quot;true&quot; /&gt; &lt;!-- Campo añadido con el inspeccionador web del navegador --&gt;
+
+  &lt;input type=&quot;submit&quot; /&gt;
+&lt;/form&gt;
+
+</code></pre> <p>Una vez el usuario ha añadido ese campo, se añadiría a los atributos del nuevo <strong>Usuario</strong> a crear, con lo que se auto asignaría esos privelegios que no queremos que tenga de ninguna de las maneras. ¿Qué mecanismos tenemos para evitar esto?</p> <h3>Atributos accesibles y atributos protegidos</h3> <p>Para evitar esto, <strong>Rails 3</strong> implementó un sistema para marcar los atributos de un modelo de tal manera que pudieran ser asignados de manera masiva o no. Esto se realiza a través de dos métodos, uno llamado <strong>attr_accessible</strong> donde se listan los atributos que <strong>si</strong> pueden ser asignados de manera masiva, y otro llamadao <strong>attr_protected</strong> que hace lo contrario, marcar atributos para evitar ser asignados de manera masiva.</p> <pre><code class="ruby"># app/models/user.rb
+
+# == Schema Information
+#
+# Table name: users
+#
+#  id                     :integer          not null, primary key
+#  email                  :string(255)      default(&quot;&quot;), not null
+#  name                   :string(255)
+#  is_admin               :boolean          default(false), Especifica si el usuario tiene privilegios de administrador o no
+#  ...
+
+class User &lt; ActiveRecord::Base
+  attr_accessible :email, :name
+
+  ...
+
+end
+
+</code></pre> <p>Ahora ya tenemos protegido a nuestro modelo de tal manera que si se le asignase de manera masiva otro parámetro que no estuviera incluido en la lista de <strong>attr_accessible</strong>, sería ignorado.</p> <p>En un principio parece que ya está solucionado y podría ser cierto, pero este es un ejemplo muy sencillo y lo malo de usar <strong>attr_accessible</strong> y <strong>attr_protected</strong> era que la responsabilidad de que funcionase correctamente racaía directamente sobre el desarrollador y que <strong>decidiese o se acordase</strong> de marcar todos los <strong>atributos importantes como accesibles</strong>. Y reconozcámoslo, todos cometemos errores tarde o temprano, y olvidarse añadir un atributo con <strong>attr_accesible</strong> puede ser más común de lo que uno cree.</p> <h3>Egor Homakov, su hack a GitHub y el cambio en Rails</h3> <p>Uno de los ejemplos más conocidos sobre alguien que explotó esta debilidad en la seguridad de Rails, fué <a href="//homakov.blogspot.com.es/" target=_blank title="Egor Homakov">Egor Homakov</a>, quien analizando y haciendo conjeturas sobre <strong>GitHub</strong> y la estructura de su base de datos, fué capaz de añadir su clave pública al repositorio de Rails <strong>y conseguir permisos para poder hacer commits</strong>. Entonces se decidió hacer <strong>attr_accessible</strong> seguro siempre, y no permitir añadir <strong>ningún</strong> parámetro de manera masiva al no ser que fuera especificado de esa manera previamente.</p> <p>Esto ha desatado otra polémica. <strong>¿Dónde se debería controlar qué atributos son permitidos y qué no?</strong> ¿En el modelo o en el controlador? Por un lado, y estando acostumbrados a ello, el sitio más lógico sería en el propio modelo, pero ¿qué pasa con esos atributos que podrían ser asignados dependiendo de un estado concreto del sistema ajeno al propio modelo? Imaginad, por ejemplo, que en nuestro caso quisiéramos que un usuario administrador pudiera asignar de manera masiva ese campo para crear otros usuarios administradores... para estos casos, lo más lógico sería que esto se hiciera en el controlador, ya que es el sitio que parece más óptimo para controlar si un usuario conectado puedo tener privilegios para hacer eso o no.</p> <h3>Rails 4 y strong parameters</h3> <p>Con la llegada de la última versión, el equipo de Rails ha decido que el responsable de marcar qué atributos son permitidos para la asignación masiva tiene que ser el <strong>controller</strong>, prohibiendo de manera predeterminada la asignación directa de parámetros. Esto se consigue usando la gema <a href="https://github.com/rails/strong_parameters" title="Strong paramaters" target=_blank>strong<em>parameters</a>, la cual han añadido al propio core de Rails 4. Para usarla en nuestro ejemplo, sería muy sencillo, solo tenemos que eliminar el método **attr</em>accessible** de nuestro modelo:</p> <pre><code class="ruby"># app/models/user.rb
+
+# == Schema Information
+#
+# Table name: users
+#
+#  id                     :integer          not null, primary key
+#  email                  :string(255)      default(&quot;&quot;), not null
+#  name                   :string(255)
+#  is_admin               :boolean          default(false), Especifica si el usuario tiene privilegios de administrador o no
+#  ...
+
+class User &lt; ActiveRecord::Base
+
+  ...
+
+end
+
+</code></pre> <p>Y en nuestro <strong>controller</strong> simplemente especificar qué parámetros son permitidos:</p> <pre><code class="ruby">
+# app/controllers/users_controller.rb
+
+...
+
+def create
+  # De esta manera tendríamos un ActiveModel::ForbiddenAttributes
+  # @user = User.create(params[:user])
+
+  # Manera correcta ahora:
+  @user = User.create(user_params)
+end
+
+...
+
+private
+
+def user_params
+  # Aquí podríamos añadir lógica para aceptar
+  # unos parámetros u otros dependiendo del tipo de usuario
+  params.require(:user).permit(:email, :name)
+end
+
+...
+
+</code></pre> <p>De esta manera, le estamos diciendo que dentro de los parámetros, y mas concretamente dentro de los que estén bajo la clave <code>:user</code>, están permitidos los que se llamen email y name. Si se le asignase cualquier otro parámetro, dependiendo de nuestra configuración, podríamos hacer que saliese por el <strong>log</strong> o que lanzase una <strong>excepción</strong>. En el caso de que nos olvidemos de usar este método, Rails nos lanzaría un <code>ActiveModel::ForbiddenAttributes</code> recordándonos que estamos asignando directamente parámetros de manera masiva, con el peligro que esto conlleva.</p> <p>A mi personalmente, aunque se me ha hecho un poco raro al principio, me ha gustado esta nueva manera de enfocar la asignación de parámetros... ¿y a vosotros qué os ha parecido?</p> <p>Love &amp; boards!</p> <div id=disqus_thread></div> <script>
+  /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+  var disqus_shortname = 'codeloveandboards'; // required: replace example with your forum shortname
+  
+  /* * * DON'T EDIT BELOW THIS LINE * * */
+  (function() {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script> <noscript> Please enable JavaScript to view the <a href='//disqus.com/?ref_noscript'>comments powered by Disqus.</a> </noscript> <a class=dsq-brlink href='//disqus.com'> comments powered by <span class=logo-disqus>Disqus</span> </a> </article> </section> </div> </section> <footer id=main_footer> <ul class=article-nav> <li class=previous> <a href="/blog/2013/07/24/peticiones-http-de-manera-sencilla-con-faraday/"><h4>previous post</h4> <h3> Peticiones HTTP de manera sencilla con Faraday </h3> <div class=meta-data> <hr> posted Jul 24, 2013 on code, rails </div> </a> </li> <li class=next> <a href="/blog/2013/08/28/herramientas-colaborativas-para-equipos-remotos/"><h4>next post</h4> <h3> Herramientas colaborativas para equipos remotos </h3> <div class=meta-data> <hr> posted Aug 28, 2013 on tools </div> </a> </li> </ul> <section> <div class=container> <div class=center> <ul> <li> <a href='/blog'>Archives</a> </li> <li> <a href='//feeds.feedburner.com/CodeLoveAndBoards' target=_blank>RSS</a> </li> </ul> Copyright © 2017 - Ricardo García Vega - Code, Love & Boards! </div> </div> </section> </footer> <script src="../../../../../javascripts/blog-5ddb0520.js"></script> <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  
+  ga('create', 'UA-37802122-1', 'codeloveandboards.com');
+  ga('send', 'pageview');
+</script> <script>
+  _StatHat.push(["_trackCount", "g2pcD9xou7DlR0DtndiwvSBBYU5k", 1.0]);
+</script> </body> </html>

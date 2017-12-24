@@ -1,0 +1,234 @@
+<!DOCTYPE html> <!--[if lt IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8 lt-ie7" lang=en-us><![endif]--> <!--[if IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8" lang=en-us><![endif]--> <!--[if IE 8]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if IE 9]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if lt IE 10]><html class="no-js lt-ie10" lang=en-us><![endif]--> <!--[if !IE]>><![endif]--> <html class=no-js lang=en> <head> <title>Phoenix & Elm landing page (pt.1) - Code, Love & Boards</title> <meta charset=utf-8 content='text/html' http-equiv=content-type> <meta content='ie=edge,chrome=1' http-equiv=x-ua-compatible> <meta content='Bootstrapping the project and the basic API functionality to save our first leads' name=description> <meta content='Ricardo García Vega - http://twitter.com/bigardone' name=author> <meta content='elixir, phoenix, elm' name=keywords> <meta content='initial-scale=1.0,user-scalable=no,maximum-scale=1,width=device-width' name=viewport> <link href='//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css' rel=stylesheet> <link href="//fonts.googleapis.com/css?family=Montserrat:400,700|Lora:400,700" media=screen rel=stylesheet /> <link href="../../../../../stylesheets/blog-ed6b1e0f.css" media=all rel=stylesheet /> <link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/styles/tomorrow.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/highlight.min.js'></script> <link href='/images/apple-touch-icon-57x57-6e598dc4.png' rel=apple-touch-icon sizes=57x57> <link href='/images/apple-touch-icon-114x114-5be964ba.png' rel=apple-touch-icon sizes=114x114> <link href='/images/apple-touch-icon-72x72-70084a85.png' rel=apple-touch-icon sizes=72x72> <link href='/images/apple-touch-icon-144x144-1dbb56c1.png' rel=apple-touch-icon sizes=144x144> <link href='/images/apple-touch-icon-60x60-d05a5ea9.png' rel=apple-touch-icon sizes=60x60> <link href='/images/apple-touch-icon-120x120-5dafce59.png' rel=apple-touch-icon sizes=120x120> <link href='/images/apple-touch-icon-76x76-b2c0d784.png' rel=apple-touch-icon sizes=76x76> <link href='/images/apple-touch-icon-152x152-45595360.png' rel=apple-touch-icon sizes=152x152> <link href='/images/favicon-160x160-944ce76e.png' rel=icon sizes=160x160 type='image/png'> <link href='/images/favicon-96x96-b7e4e089.png' rel=icon sizes=96x96 type='image/png'> <link href='/images/favicon-32x32-b7f34a79.png' rel=icon sizes=32x32 type='image/png'> <link href='/images/favicon-16x16-2712c528.png' rel=icon sizes=16x16 type='image/png'> <meta content='#9f00a7' name=msapplication-TileColor> <meta content='/images/mstile-144x144-028d4c4c.png' name=msapplication-TileImage> <script>
+  var _StatHat = _StatHat || [];
+  _StatHat.push(['_setUser', 'NzIzMCDaNaL5bvEP1HQkMYwfYsQe']);
+  (function() {
+          var sh = document.createElement('script'); sh.type = 'text/javascript';
+          sh.async = true;
+          sh.src = '//www.stathat.com/javascripts/api.js';
+          var s = document.getElementsByTagName('script')[0];
+          s.parentNode.insertBefore(sh, s);
+  })();
+</script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Phoenix & Elm landing page (pt.1)</h1> <h3></h3> <div class=meta-data> <hr> posted Dec 2, 2017 on <a class=tag href="/blog/tags/elixir.html">elixir</a> <a class=tag href="/blog/tags/phoenix.html">phoenix</a> <a class=tag href="/blog/tags/elm.html">elm</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <div class=index> <p>This post belongs to the <strong>Phoenix & Elm landing page</strong> series.</p> <ol> <li><a href="/blog/2017/12/01/phoenix-elm-landing-page-pt-1/">Bootstrapping the project and the basic API functionality to save our first leads</a></li> <li><a href="/blog/2017/12/24/phoenix-elm-landing-page-pt-2/">Building the landing page UI and the basic Elm subscription form</a></li> <li>Coming soon...</li> </ol> <a href="https://github.com/bigardone/phoenix-and-elm-landing-page" target=_blank><i class="fa fa-github"></i> Source code</a> </div> <p>In these series, we are going to cover some common patterns and best practices related to using <strong>Phoenix</strong> and <strong>Elm</strong> to build a simple landing page with a subscription form. The primary goal is to achieve the following list of tasks:</p> <ul> <li>Create a new <strong>Phoenix</strong> project.</li> <li>Add a new <strong>Phoenix</strong> context for marketing leads.</li> <li>Add an <strong>API</strong> endpoint to insert a lead&#39;s data into the database.</li> <li>Build the landing page template using <strong>Phoenix</strong> and <a href="https://bulma.io/">Bulma</a> as our CSS framework of choice.</li> <li>Add <strong>Elm</strong> to the project and build a subscription form that points to the API endpoint described previously.</li> <li>Add <a href="https://developers.google.com/recaptcha/">Google&#39;s reCAPTCHA</a> widget to the <strong>Elm</strong> subscription form, and how to render it and how to handle a visitor&#39;s <strong>reCAPTCHA</strong> response.</li> <li>Build an HTTP client using <a href="https://github.com/edgurgel/httpoison">HTTPoison</a> to verify the token received by the <strong>reCAPTCHA</strong> widget against <strong>Google&#39;s reCAPTCHA API</strong> from our backend.</li> <li>Build another HTTP client to subscribe leads to an email marketing service such as <a href="https://mailchimp.com">MailChimp</a>.</li> <li>Add tests covering the subscription process using <strong>mocks</strong> for the HTTP clients.</li> </ul> <p>Now that we have detailed what we need let&#39;s get cracking!</p> <p><img src="/images/blog/phoenix-elm-landing-page/landing-page-9e2448ef.jpg" alt="Landing page" style="background: #fff;"/></p> <h3>Creating the Phoenix project</h3> <p>Let&#39;s start by bootstrapping a new <strong>Phoenix</strong> project as we usually do:</p> <pre><code>$ mix phx.new landing_page
+* creating landing_page/config/config.exs
+* creating landing_page/config/dev.exs
+* creating landing_page/config/prod.exs
+...
+</code></pre> <p>After the task finishes, we can go to the generated project folder and create the database:</p> <pre><code>$ cd landing_page
+$ mix ecto.create
+The database for LandingPage.Repo has already been created
+</code></pre> <p>Now we are ready to start working on the backend.</p> <h3>The Marketing context and Lead schema</h3> <p>Before continuing, let&#39;s stop for a second and think about what is the primary goal of our future landing page. The principal goal is not only to be the temporally home site of our awesome new product that we are working on but to let potential leads subscribe so we can take any marketing or business decision that we might need, like for instance sending them the latest news and promotions via email campaigns. Having this in mind, we can identify a <code>Marketing</code> context and a <code>leads</code> table for the database, so let&#39;s create both of them using the new <strong>Phoenix</strong> context generator:</p> <pre><code>$ mix phx.gen.context Marketing Lead leads full_name:string email:string
+* creating lib/landing_page/marketing/lead.ex
+* creating priv/repo/migrations/20171202101203_create_leads.exs
+* creating lib/landing_page/marketing/marketing.ex
+* injecting lib/landing_page/marketing/marketing.ex
+* creating test/landing_page/marketing/marketing_test.exs
+* injecting test/landing_page/marketing/marketing_test.exs
+</code></pre> <p>Before running the migrations task, we need to tweak the migration file just created to add a <code>unique</code> index to the <code>email</code> column, because we do not want leads subscribing multiple times with the same <code>email</code>:</p> <pre><code class="elixir"># priv/repo/migrations/20171201145808_create_leads.exs
+
+defmodule LandingPage.Repo.Migrations.CreateLeads do
+  use Ecto.Migration
+
+  def change do
+    create table(:leads) do
+      add(:full_name, :string, null: false)
+      add(:email, :string, null: false)
+
+      timestamps()
+    end
+
+    create(unique_index(:leads, [:email]))
+  end
+end
+</code></pre> <p>Now we can run the migrations task to create the table:</p> <pre><code>mix ecto.migrate
+[info] == Running LandingPage.Repo.Migrations.CreateLeads.change/0 forward
+[info] create table leads
+[info] create index leads_email_index
+[info] == Migrated in 0.0s
+</code></pre> <p>We also have to add the necessary validation rules and constraints to the <code>Lead</code> schema module, so let&#39;s edit it:</p> <pre><code class="elixir"># lib/landing_page/marketing/lead.ex
+
+defmodule LandingPage.Marketing.Lead do
+  use Ecto.Schema
+  import Ecto.Changeset
+  alias LandingPage.Marketing.Lead
+
+  @derive {Poison.Encoder, only: [:full_name, :email]}
+
+  schema &quot;leads&quot; do
+    field(:email, :string)
+    field(:full_name, :string)
+
+    timestamps()
+  end
+
+  @doc false
+  def changeset(%Lead{} = lead, attrs) do
+    lead
+    |&gt; cast(attrs, [:full_name, :email])
+    |&gt; validate_required([:full_name, :email])
+    |&gt; unique_constraint(:email)
+  end
+end
+</code></pre> <p>Apart from adding the <code>unique_constraint</code> check function, we are also adding the <code>@derive</code> clause specifying the fields we want to return when a <code>%Lead{}</code> struct is automatically encoded by <strong>Poison</strong>, which is very convenient while developing <strong>JSON APIs</strong>, as we are going to see in a minute.</p> <h3>The API endpoint and saving leads</h3> <p>Now that our context and schema are ready to start saving leads, let&#39;s add the new <strong>route</strong> that we are going to use for this purpose:</p> <pre><code class="elixir"># lib/landing_page_web/router.ex
+
+defmodule LandingPageWeb.Router do
+  use LandingPageWeb, :router
+
+    # ...
+
+  # Other scopes may use custom stacks.
+  scope &quot;/api&quot;, LandingPageWeb do
+    pipe_through(:api)
+
+    scope &quot;/v1&quot;, V1 do
+      post(&quot;/leads&quot;, LeadController, :create)
+    end
+  end
+end
+</code></pre> <p>Let&#39;s continue with a more test-driven approach and create a new test file that covers how we expect the controller to work:</p> <pre><code class="elixir"># test/landing_page_web/controllers/v1/lead_controller_test.exs
+
+defmodule LandingPageWeb.V1.LeadControllerTest do
+  use LandingPageWeb.ConnCase
+
+  describe &quot;POST /api/v1/leads&quot; do
+    test &quot;returns error response with invalid parms&quot;, %{conn: conn} do
+      conn = post(conn, lead_path(conn, :create), %{&quot;lead&quot; =&gt; %{}})
+
+      assert json_response(conn, 422) == %{
+               &quot;full_name&quot; =&gt; [&quot;can&#39;t be blank&quot;],
+               &quot;email&quot; =&gt; [&quot;can&#39;t be blank&quot;]
+             }
+    end
+
+    test &quot;returns success response with valid params&quot;, %{conn: conn} do
+      params = %{
+        &quot;lead&quot; =&gt; %{&quot;full_name&quot; =&gt; &quot;John&quot;, &quot;email&quot; =&gt; &quot;foo@bar.com&quot;}
+      }
+
+      conn = post(conn, lead_path(conn, :create), params)
+      assert json_response(conn, 200) == params[&quot;lead&quot;]
+    end
+  end
+end
+</code></pre> <p>It is a very basic test, but it pretty much covers what we need at the moment. If the <code>lead</code> parameter is invalid, it should return a <code>422</code> response (unprocessable entity) along with the validation errors. On the other hand, if the sent parameters are correct, it will return a success response along with the inserted data. Let&#39;s run the <code>mix test</code> task and see what happens:</p> <pre><code>$ mix test test/landing_page_web/controllers/v1/lead_controller_test.exs
+
+
+  1) test POST /api/v1/leads returns success response with valid params (LandingPageWeb.V1.LeadControllerTest)
+     test/landing_page_web/controllers/v1/lead_controller_test.exs:14
+     ** (UndefinedFunctionError) function LandingPageWeb.V1.LeadController.init/1 is undefined (module LandingPageWeb.V1.LeadController is not available)
+     code: conn = post(conn, lead_path(conn, :create), params)
+     stacktrace:
+       LandingPageWeb.V1.LeadController.init(:create)
+       (landing_page) lib/landing_page_web/router.ex:1: anonymous fn/1 in LandingPageWeb.Router.__match_route__/4
+       (phoenix) lib/phoenix/router.ex:278: Phoenix.Router.__call__/1
+       (landing_page) lib/landing_page_web/endpoint.ex:1: LandingPageWeb.Endpoint.plug_builder_call/2
+       (landing_page) lib/landing_page_web/endpoint.ex:1: LandingPageWeb.Endpoint.call/2
+       (phoenix) lib/phoenix/test/conn_test.ex:224: Phoenix.ConnTest.dispatch/5
+       test/landing_page_web/controllers/v1/lead_controller_test.exs:19: (test)
+
+
+
+  2) test POST /api/v1/leads returns error response with invalid parms (LandingPageWeb.V1.LeadControllerTest)
+     test/landing_page_web/controllers/v1/lead_controller_test.exs:5
+     ** (UndefinedFunctionError) function LandingPageWeb.V1.LeadController.init/1 is undefined (module LandingPageWeb.V1.LeadController is not available)
+     code: conn = post(conn, lead_path(conn, :create), %{&quot;lead&quot; =&gt; %{}})
+     stacktrace:
+       LandingPageWeb.V1.LeadController.init(:create)
+       (landing_page) lib/landing_page_web/router.ex:1: anonymous fn/1 in LandingPageWeb.Router.__match_route__/4
+       (phoenix) lib/phoenix/router.ex:278: Phoenix.Router.__call__/1
+       (landing_page) lib/landing_page_web/endpoint.ex:1: LandingPageWeb.Endpoint.plug_builder_call/2
+       (landing_page) lib/landing_page_web/endpoint.ex:1: LandingPageWeb.Endpoint.call/2
+       (phoenix) lib/phoenix/test/conn_test.ex:224: Phoenix.ConnTest.dispatch/5
+       test/landing_page_web/controllers/v1/lead_controller_test.exs:6: (test)
+
+
+
+Finished in 0.09 seconds
+2 tests, 2 failures
+
+Randomized with seed 665970
+</code></pre> <p>As expected, the test is failing because we have not created the controller module yet, so let&#39;s add it:</p> <pre><code class="elixir"># lib/landing_page_web/controllers/v1/lead_controller.ex
+
+defmodule LandingPageWeb.V1.LeadController do
+  use LandingPageWeb, :controller
+
+  alias LandingPage.Marketing
+
+  plug(:scrub_params, &quot;lead&quot;)
+
+  def create(conn, %{&quot;lead&quot; =&gt; params}) do
+    with {:ok, lead} &lt;- Marketing.create_lead(params) do
+      json(conn, lead)
+    end
+  end
+end
+</code></pre> <p>We are using the <code>scrub_params</code> plug to check if the lead parameter is present and to convert any of its empty keys to nil values. To create the lead, we are using <code>Marketing.create_lead</code>, which we created before while generating the context. However, we are only pattern matching against the successful <code>{:ok, lead}</code> response, and there might be validation errors, throwing a runtime error due to the missing pattern matching against <code>{:error, _}</code>. So what is the reason for doing it like so? Simply because we want to introduce the new <code>Phoenix.Controller.action_fallback/1</code> macro, which registers a <code>plug</code> to call as a fallback when an action doesn&#39;t return a valid <code>%Plug.Conn{}</code> structure. In our particular case, if there is any validation error, it returns a <code>{:error, %Ecto.Changeset{}}</code> that we need to handle, so let&#39;s setup the fallback controller:</p> <pre><code class="elixir"># lib/landing_page_web.ex
+
+defmodule LandingPageWeb do
+# ...
+
+  def controller do
+    quote do
+      use Phoenix.Controller, namespace: LandingPageWeb
+      import Plug.Conn
+      import LandingPageWeb.Router.Helpers
+      import LandingPageWeb.Gettext
+
+      action_fallback(LandingPageWeb.FallbackController)
+    end
+  end
+
+  # ...
+end
+</code></pre> <p>Adding <code>action_fallback</code> to the main <code>LandingPageWeb</code> module makes it available to all of the controllers, but we also have to create the <code>FallbackController</code> plug module itself, implementing the <code>call/2</code> function:</p> <pre><code class="elixir"># lib/landing_page_web/controllers/fallback_controller.ex
+
+defmodule LandingPageWeb.FallbackController do
+  use LandingPageWeb, :controller
+
+  def call(conn, {:error, %Ecto.Changeset{} = changeset}) do
+    conn
+    |&gt; put_status(:unprocessable_entity)
+    |&gt; render(LandingPageWeb.ErrorView, &quot;error.json&quot;, changeset: changeset)
+  end
+end
+</code></pre> <p>When it receives an error with a <code>changeset</code>, it sets the <code>unprocessable_entity</code> status to the connection and renders the <code>error.json</code> template from the <code>LandingPageWeb.ErrorView</code> module that we also need to implement in the existing module:</p> <pre><code class="elixir"># lib/landing_page_web/views/error_view.ex
+
+defmodule LandingPageWeb.ErrorView do
+  use LandingPageWeb, :view
+
+  import LandingPageWeb.ErrorHelpers
+
+  # ...
+
+  def render(&quot;error.json&quot;, %{changeset: changeset}) do
+    Ecto.Changeset.traverse_errors(changeset, &amp;translate_error/1)
+  end
+
+  # ...
+end
+</code></pre> <p>Calling Ectos&#39;s <code>traverse_errors</code> using the <code>translate_errors</code> from the <code>ErrorHelpers</code> module, returns the list of changeset errors we have described in the controller&#39;s test. Let&#39;s rerun the test task to verify that we are good to go:</p> <pre><code>$ mix test test/landing_page_web/controllers/v1/lead_controller_test.exs
+..
+Finished in 0.1 seconds
+2 tests, 0 failures
+
+Randomized with seed 304229
+</code></pre> <p>Awesome, all test are passing, and the controller is working as we initially planned. In regards to the back-end we have everything that we need, for now, so in the next part we will focus on the front-end side, install all dependencies that we need such as <strong>Elm</strong> and <strong>Bulma</strong>, building the basic layout and the subscription form to start saving the first leads. In the meantime, you can check out the source code of what we have done so far <a href="https://github.com/bigardone/phoenix-and-elm-landing-page/tree/tutorial/part-1">here</a>.</p> <p>Happy coding!</p> <div id=disqus_thread></div> <script>
+  /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+  var disqus_shortname = 'codeloveandboards'; // required: replace example with your forum shortname
+  
+  /* * * DON'T EDIT BELOW THIS LINE * * */
+  (function() {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script> <noscript> Please enable JavaScript to view the <a href='//disqus.com/?ref_noscript'>comments powered by Disqus.</a> </noscript> <a class=dsq-brlink href='//disqus.com'> comments powered by <span class=logo-disqus>Disqus</span> </a> </article> </section> </div> </section> <footer id=main_footer> <ul class=article-nav> <li class=previous> <a href="/blog/2017/10/03/migrating-activerecord-sti-to-ecto/"><h4>previous post</h4> <h3> Migrating ActiveRecord STI to Ecto (pt. 1) </h3> <div class=meta-data> <hr> posted Oct 3, 2017 on elixir, ecto </div> </a> </li> <li class=next> <a href="/blog/2017/12/23/phoenix-elm-landing-page-pt-2/"><h4>next post</h4> <h3> Phoenix & Elm landing page (pt.2) </h3> <div class=meta-data> <hr> posted Dec 23, 2017 on elixir, phoenix, elm </div> </a> </li> </ul> <section> <div class=container> <div class=center> <ul> <li> <a href='/blog'>Archives</a> </li> <li> <a href='//feeds.feedburner.com/CodeLoveAndBoards' target=_blank>RSS</a> </li> </ul> Copyright © 2017 - Ricardo García Vega - Code, Love & Boards! </div> </div> </section> </footer> <script src="../../../../../javascripts/blog-5ddb0520.js"></script> <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  
+  ga('create', 'UA-37802122-1', 'codeloveandboards.com');
+  ga('send', 'pageview');
+</script> <script>
+  _StatHat.push(["_trackCount", "g2pcD9xou7DlR0DtndiwvSBBYU5k", 1.0]);
+</script> </body> </html>
