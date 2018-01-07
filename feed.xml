@@ -14,14 +14,14 @@
     <link rel="alternate" href="http://codeloveandboards.com/blog/2017/12/23/phoenix-elm-landing-page-pt-2/"/>
     <id>http://codeloveandboards.com/blog/2017/12/23/phoenix-elm-landing-page-pt-2/</id>
     <published>2017-12-24T07:44:00Z</published>
-    <updated>2017-12-24T08:45:24+01:00</updated>
+    <updated>2018-01-07T19:06:12+01:00</updated>
     <author>
       <name>Article Author</name>
     </author>
     <content type="html">&lt;div class="index"&gt;
   &lt;p&gt;This post belongs to the &lt;strong&gt;Phoenix &amp; Elm landing page&lt;/strong&gt; series.&lt;/p&gt;
   &lt;ol&gt;
-    &lt;li&gt;&lt;a href="/blog/2017/12/01/phoenix-elm-landing-page-pt-1/"&gt;Bootstrapping the project and the basic API functionality to save our first leads&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="/blog/2017/12/02/phoenix-elm-landing-page-pt-1/"&gt;Bootstrapping the project and the basic API functionality to save our first leads&lt;/a&gt;&lt;/li&gt;
     &lt;li&gt;&lt;a href="/blog/2017/12/24/phoenix-elm-landing-page-pt-2/"&gt;Building the landing page UI and the basic Elm subscription form&lt;/a&gt;&lt;/li&gt;
     &lt;li&gt;Coming soon...&lt;/li&gt;
   &lt;/ol&gt;
@@ -958,14 +958,14 @@ you can check out the source code of the part
     <link rel="alternate" href="http://codeloveandboards.com/blog/2017/12/02/phoenix-elm-landing-page-pt-1/"/>
     <id>http://codeloveandboards.com/blog/2017/12/02/phoenix-elm-landing-page-pt-1/</id>
     <published>2017-12-02T08:00:00Z</published>
-    <updated>2017-12-23T19:05:38+01:00</updated>
+    <updated>2018-01-07T19:06:22+01:00</updated>
     <author>
       <name>Article Author</name>
     </author>
     <content type="html">&lt;div class="index"&gt;
   &lt;p&gt;This post belongs to the &lt;strong&gt;Phoenix &amp; Elm landing page&lt;/strong&gt; series.&lt;/p&gt;
   &lt;ol&gt;
-    &lt;li&gt;&lt;a href="/blog/2017/12/01/phoenix-elm-landing-page-pt-1/"&gt;Bootstrapping the project and the basic API functionality to save our first leads&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="/blog/2017/12/02/phoenix-elm-landing-page-pt-1/"&gt;Bootstrapping the project and the basic API functionality to save our first leads&lt;/a&gt;&lt;/li&gt;
     &lt;li&gt;&lt;a href="/blog/2017/12/24/phoenix-elm-landing-page-pt-2/"&gt;Building the landing page UI and the basic Elm subscription form&lt;/a&gt;&lt;/li&gt;
     &lt;li&gt;Coming soon...&lt;/li&gt;
   &lt;/ol&gt;
