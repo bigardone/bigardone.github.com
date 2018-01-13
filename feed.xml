@@ -14,7 +14,7 @@
     <link rel="alternate" href="http://codeloveandboards.com/blog/2017/12/23/phoenix-elm-landing-page-pt-2/"/>
     <id>http://codeloveandboards.com/blog/2017/12/23/phoenix-elm-landing-page-pt-2/</id>
     <published>2017-12-24T07:44:00Z</published>
-    <updated>2018-01-13T08:17:00+01:00</updated>
+    <updated>2018-01-13T08:51:51+01:00</updated>
     <author>
       <name>Article Author</name>
     </author>
@@ -96,7 +96,7 @@ of the landing page:&lt;/p&gt;
   &amp;lt;div class=&amp;quot;right&amp;quot; id=&amp;quot;subscribe_form&amp;quot;&amp;gt;
     &amp;lt;section class=&amp;quot;section&amp;quot;&amp;gt;
       &amp;lt;div class=&amp;quot;container is-fluid&amp;quot;&amp;gt;
-        &amp;lt;div id=&amp;quot;elm_container&amp;quot;&amp;gt;&amp;lt;/div&amp;gt;
+        &amp;lt;div id=&amp;quot;form_container&amp;quot;&amp;gt;&amp;lt;/div&amp;gt;
       &amp;lt;/div&amp;gt;
     &amp;lt;/section&amp;gt;
   &amp;lt;/div&amp;gt;
@@ -270,7 +270,7 @@ main =
 
 import Elm from &amp;#39;./elm/main&amp;#39;;
 
-const elmContainer = document.querySelector(&amp;#39;#elm_container&amp;#39;);
+const elmContainer = document.querySelector(&amp;#39;#form_container&amp;#39;);
 
 if (elmContainer) {
   const app = Elm.Main.embed(elmContainer);

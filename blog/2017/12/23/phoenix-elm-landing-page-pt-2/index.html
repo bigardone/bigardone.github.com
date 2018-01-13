@@ -48,7 +48,7 @@
   &lt;div class=&quot;right&quot; id=&quot;subscribe_form&quot;&gt;
     &lt;section class=&quot;section&quot;&gt;
       &lt;div class=&quot;container is-fluid&quot;&gt;
-        &lt;div id=&quot;elm_container&quot;&gt;&lt;/div&gt;
+        &lt;div id=&quot;form_container&quot;&gt;&lt;/div&gt;
       &lt;/div&gt;
     &lt;/section&gt;
   &lt;/div&gt;
@@ -149,7 +149,7 @@ main =
 
 import Elm from &#39;./elm/main&#39;;
 
-const elmContainer = document.querySelector(&#39;#elm_container&#39;);
+const elmContainer = document.querySelector(&#39;#form_container&#39;);
 
 if (elmContainer) {
   const app = Elm.Main.embed(elmContainer);
