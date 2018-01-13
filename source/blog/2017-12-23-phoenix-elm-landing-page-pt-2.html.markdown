@@ -1,6 +1,6 @@
 ---
 title: Phoenix & Elm landing page (pt.2)
-date: 2017-12-24
+date: 2017-12-23 23:44 PST
 tags: elixir, phoenix, elm
 excerpt: Building the landing page UI and the basic Elm subscription form
 ---
@@ -8,8 +8,8 @@ excerpt: Building the landing page UI and the basic Elm subscription form
 <div class="index">
   <p>This post belongs to the <strong>Phoenix & Elm landing page</strong> series.</p>
   <ol>
-    <li><a href="/blog/2017/12/01/phoenix-elm-landing-page-pt-1/">Bootstrapping the project and the basic API functionality to save our first leads</a></li>
-    <li><a href="/blog/2017/12/24/phoenix-elm-landing-page-pt-2/">Building the landing page UI and the basic Elm subscription form</a></li>
+    <li><a href="/blog/2017/12/02/phoenix-elm-landing-page-pt-1/">Bootstrapping the project and the basic API functionality to save our first leads</a></li>
+    <li><a href="/blog/2017/12/23/phoenix-elm-landing-page-pt-2/">Building the landing page UI and the basic Elm subscription form</a></li>
     <li>Coming soon...</li>
   </ol>
 
@@ -195,6 +195,13 @@ look like the following:
 }
 ```
 
+We also need to install **Brunch's Elm** package:
+
+``` bash
+$ cd assets
+$ npm install --save-dev elm-brunch
+```
+
 When working with **Elm**, something that I usually do is to create an src
 folder inside `assets/elm` where I put there all my **Elm** source files. The
 reason for this is that I sometimes install third-party libraries, and
@@ -258,7 +265,7 @@ Lastly, we have to embed the generated javascript by **Elm** in the
 
 import Elm from './elm/main';
 
-const elmContainer = document.querySelector('#elm_container');
+const elmContainer = document.querySelector('#form_container');
 
 if (elmContainer) {
   const app = Elm.Main.embed(elmContainer);
@@ -954,3 +961,4 @@ you can check out the source code of the part
 [here](https://github.com/bigardone/phoenix-and-elm-landing-page/tree/tutorial/part-2).
 
 Merry Christmas and Happy New Coding Year!
+

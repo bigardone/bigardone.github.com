@@ -8,8 +8,8 @@ excerpt: Bootstrapping the project and the basic API functionality to save our f
 <div class="index">
   <p>This post belongs to the <strong>Phoenix & Elm landing page</strong> series.</p>
   <ol>
-    <li><a href="/blog/2017/12/01/phoenix-elm-landing-page-pt-1/">Bootstrapping the project and the basic API functionality to save our first leads</a></li>
-    <li><a href="/blog/2017/12/24/phoenix-elm-landing-page-pt-2/">Building the landing page UI and the basic Elm subscription form</a></li>
+    <li><a href="/blog/2017/12/02/phoenix-elm-landing-page-pt-1/">Bootstrapping the project and the basic API functionality to save our first leads</a></li>
+    <li><a href="/blog/2017/12/23/phoenix-elm-landing-page-pt-2/">Building the landing page UI and the basic Elm subscription form</a></li>
     <li>Coming soon...</li>
   </ol>
 
@@ -26,7 +26,6 @@ In these series, we are going to cover some common patterns and best practices r
 - Add **Elm** to the project and build a subscription form that points to the API endpoint described previously.
 - Add [Google's reCAPTCHA](https://developers.google.com/recaptcha/) widget to the **Elm** subscription form, and how to render it and how to handle a visitor's **reCAPTCHA** response.
 - Build an HTTP client using [HTTPoison](https://github.com/edgurgel/httpoison) to verify the token received by the **reCAPTCHA** widget against **Google's reCAPTCHA API** from our backend.
-- Build another HTTP client to subscribe leads to an email marketing service such as [MailChimp](https://mailchimp.com).
 - Add tests covering the subscription process using **mocks** for the HTTP clients.
 
 Now that we have detailed what we need let's get cracking!
