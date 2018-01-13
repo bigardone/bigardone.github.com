@@ -48,7 +48,7 @@
   &lt;div class=&quot;right&quot; id=&quot;subscribe_form&quot;&gt;
     &lt;section class=&quot;section&quot;&gt;
       &lt;div class=&quot;container is-fluid&quot;&gt;
-        &lt;div id=&quot;form_container&quot;&gt;&lt;/div&gt;
+        &lt;div id=&quot;elm_container&quot;&gt;&lt;/div&gt;
       &lt;/div&gt;
     &lt;/section&gt;
   &lt;/div&gt;
@@ -106,6 +106,8 @@ $ elm package install elm-lang/html -y
   },
   &quot;elm-version&quot;: &quot;0.18.0 &lt;= v &lt; 0.19.0&quot;
 }
+</code></pre> <p>We also need to install <strong>Brunch&#39;s Elm</strong> package:</p> <pre><code class="bash">$ cd assets
+$ npm install --save-dev elm-brunch
 </code></pre> <p>When working with <strong>Elm</strong>, something that I usually do is to create an src folder inside <code>assets/elm</code> where I put there all my <strong>Elm</strong> source files. The reason for this is that I sometimes install third-party libraries, and I like to separate them from my source files, so I place them in an <code>assets/elm/vendor</code> folder. Therefore, don&#39;t forget to change the <code>&quot;source-directories&quot;: [&quot;src&quot;]</code> line, otherwise your <strong>Elm</strong> files are not going to compile at all. We still have to make <strong>Brunch</strong> detect and build <strong>Elm</strong> files, so let&#39;s edit the <strong>Brunch</strong> configuration file once more:</p> <pre><code class="js">// assets/brunch-config.js
 
 exports.config = {
