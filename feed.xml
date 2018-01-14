@@ -5,16 +5,16 @@
   <id>http://codeloveandboards.com/blog</id>
   <link href="http://codeloveandboards.com/blog"/>
   <link href="http://codeloveandboards.com/feed.xml" rel="self"/>
-  <updated>2017-12-24T07:44:00Z</updated>
+  <updated>2018-01-07T07:06:00Z</updated>
   <author>
     <name>Blog Author</name>
   </author>
   <entry>
-    <title>Phoenix &amp; Elm landing page (pt.2)</title>
-    <link rel="alternate" href="http://codeloveandboards.com/blog/2017/12/23/phoenix-elm-landing-page-pt-2/"/>
-    <id>http://codeloveandboards.com/blog/2017/12/23/phoenix-elm-landing-page-pt-2/</id>
-    <published>2017-12-24T07:44:00Z</published>
-    <updated>2018-01-13T08:51:51+01:00</updated>
+    <title>Phoenix &amp; Elm landing page (pt.3)</title>
+    <link rel="alternate" href="http://codeloveandboards.com/blog/2018/01/06/phoenix-elm-landing-page-pt-3/"/>
+    <id>http://codeloveandboards.com/blog/2018/01/06/phoenix-elm-landing-page-pt-3/</id>
+    <published>2018-01-07T07:06:00Z</published>
+    <updated>2018-01-14T08:27:17+01:00</updated>
     <author>
       <name>Article Author</name>
     </author>
@@ -23,7 +23,895 @@
   &lt;ol&gt;
     &lt;li&gt;&lt;a href="/blog/2017/12/02/phoenix-elm-landing-page-pt-1/"&gt;Bootstrapping the project and the basic API functionality to save our first leads&lt;/a&gt;&lt;/li&gt;
     &lt;li&gt;&lt;a href="/blog/2017/12/23/phoenix-elm-landing-page-pt-2/"&gt;Building the landing page UI and the basic Elm subscription form&lt;/a&gt;&lt;/li&gt;
-    &lt;li&gt;Coming soon...&lt;/li&gt;
+    &lt;li&gt;&lt;a href="/blog/2018/01/06/phoenix-elm-landing-page-pt-3/"&gt;Adding Google reCAPTCHA support to avoid spambots&lt;/a&gt;&lt;/li&gt;
+  &lt;/ol&gt;
+
+  &lt;a href="https://github.com/bigardone/phoenix-and-elm-landing-page" target="_blank"&gt;&lt;i class="fa fa-github"&gt;&lt;/i&gt; Source code&lt;/a&gt;
+&lt;/div&gt;
+
+&lt;p&gt;In the &lt;a href="/blog/2017/12/23/phoenix-elm-landing-page-pt-2/&amp;amp;lt;Paste"&gt;previous part&lt;/a&gt; of the series, we created the landing page main
+layout and implemented the Elm subscription form, which lets visitors
+subscribe, saving their name and email in the leads database table. We do
+not want spambots to subscribe, therefore, in this part we are going
+to add a protective layer to the subscription process using &lt;a href="https://developers.google.com/recaptcha/"&gt;Google&amp;#39;s
+reCAPTCHA&lt;/a&gt;, which consists of two different steps:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Adding the &lt;strong&gt;reCAPTCHA&lt;/strong&gt; widget to the Elm subscription form, and sending
+the user&amp;#39;s response along with the name and email.&lt;/li&gt;
+&lt;li&gt;Verifying in the server-side the user&amp;#39;s response against &lt;strong&gt;Google&amp;#39;s RECAPTCHA API&lt;/strong&gt; to verify whether is valid or not&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Without further ado, let&amp;#39;s do this!&lt;/p&gt;
+
+&lt;h3&gt;Adding the reCAPTCHA widget to the form&lt;/h3&gt;
+
+&lt;p&gt;First of all, we need to head to &lt;a href="https://www.google.com/recaptcha/admin"&gt;Google&amp;#39;s reCAPTCHA admin
+site&lt;/a&gt; and register our website,
+using localhost as the domain, to get the necessary keys that we need.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="/images/blog/phoenix-elm-landing-page/recaptcha-admin.jpg"
+alt="Navigation flow" style="background: #fff;" /&gt;&lt;/p&gt;
+
+&lt;p&gt;Next, we have to add &lt;strong&gt;Google&amp;#39;s reCAPTCHA&lt;/strong&gt; script in the main template, so
+let&amp;#39;s edit it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/landing_page_web/templates/layout/app.html.eex
+
+&amp;lt;!DOCTYPE html&amp;gt;
+&amp;lt;html lang=&amp;quot;en&amp;quot;&amp;gt;
+  &amp;lt;!--... --&amp;gt;
+
+  &amp;lt;body class=&amp;quot;landing-page&amp;quot;&amp;gt;
+    &amp;lt;!--... --&amp;gt;
+
+    &amp;lt;script src=&amp;quot;https://www.google.com/recaptcha/api.js?onload=onloadCallback&amp;amp;render=explicit&amp;quot; async defer&amp;gt;&amp;lt;/script&amp;gt;
+  &amp;lt;/body&amp;gt;
+&amp;lt;/html&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We are not only adding the script but passing the &lt;code&gt;onload&lt;/code&gt; and &lt;code&gt;render&lt;/code&gt;
+parameters to render the widget explicitly and to call the
+&lt;code&gt;onloadCallback&lt;/code&gt; function once the script gets loaded. The plan is to
+render the widget inside the Elm form, and for that we need the script to
+be loaded before rendering it, so let&amp;#39;s edit the main &lt;code&gt;app.js&lt;/code&gt; file to
+achieve this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="js"&gt;// assets/js/app.js
+
+import Elm from &amp;#39;./elm/main&amp;#39;;
+
+window.onloadCallback = () =&amp;gt; {
+  const formContainer = document.querySelector(&amp;#39;#form_container&amp;#39;);
+
+  if (formContainer) {
+    const app = Elm.Main.embed(formContainer);
+  }
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now that the &lt;strong&gt;Elm&lt;/strong&gt; program is embedded once the script is ready, we have to
+render the widget somehow using its internal API. Before continuing any
+further, let&amp;#39;s update the &lt;code&gt;View&lt;/code&gt; module and add a new div where we want to
+render the widget:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elm"&gt;# assets/elm/src/View.elm
+
+module View exposing (view)
+
+-- ...
+
+formView : SubscribeForm -&amp;gt; Html Msg
+formView subscribeForm =
+        -- ...
+
+        , Html.div
+                [ Html.class &amp;quot;field&amp;quot; ]
+                [ Html.div
+                        [ Html.id &amp;quot;recaptcha&amp;quot; ]
+                        []
+                , validationErrorView &amp;quot;recaptcha_token&amp;quot; validationErrors
+                ]
+
+        -- ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;How can we tell the external &lt;strong&gt;reCAPTCHA&lt;/strong&gt; script that we want it to
+render the widget inside the div with &lt;code&gt;recaptcha&lt;/code&gt; id? In Elm, the proper way
+of communicating with external &lt;strong&gt;JavaScript&lt;/strong&gt; is by using &lt;strong&gt;ports&lt;/strong&gt;, so let&amp;#39;s go
+ahead and create a new module with a port to initialize the widget:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elm"&gt;-- assets/elm/src/Ports.elm
+
+port module Ports exposing (..)
+
+-- OUT PORTS
+
+
+port initRecaptcha : String -&amp;gt; Cmd msg
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;initRecaptcha&lt;/code&gt; port function receives a string which is the id of the
+container where we want to render the widget and returns a command.
+Therefore, we can use it in the main &lt;code&gt;init&lt;/code&gt; function, and the port will get
+called once the program starts for the first time:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elm"&gt;-- assets/elm/src/Main.elm
+
+module Main exposing (main)
+
+import Ports
+-- ...
+
+init : ( Model, Cmd Msg )
+init =
+    initialModel ! [ Ports.initRecaptcha &amp;quot;recaptcha&amp;quot; ]
+
+-- ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now we can go back to the &lt;code&gt;app.js&lt;/code&gt; script and subscribe to the
+&lt;code&gt;initRecaptcha&lt;/code&gt; port:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="js"&gt;// assets/javascript/app.js
+
+import Elm from &amp;#39;./elm/main&amp;#39;;
+
+window.onloadCallback = () =&amp;gt; {
+  const formContainer = document.querySelector(&amp;#39;#form_container&amp;#39;);
+
+  if (formContainer) {
+    const app = Elm.Main.embed(formContainer);
+    let recaptcha;
+
+    app.ports.initRecaptcha.subscribe(id =&amp;gt; {
+      window.requestAnimationFrame(() =&amp;gt; {
+        recaptcha = grecaptcha.render(id, {
+          sitekey: &amp;#39;YOUR_SITE_KEY&amp;#39;,
+        });
+      });
+    });
+  }
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;app.ports&lt;/code&gt; contains all the ports from the Elm program. By subscribing to
+any of them, we are making the passed function to get called anytime
+a port gets triggered by the Elm runtime. In our case, it is using
+&lt;strong&gt;Google&amp;#39;s reCAPTCHA&lt;/strong&gt; script to render the widget inside the specified id,
+using the &lt;code&gt;sitekey&lt;/code&gt; we created previously from the admin site. Also, note
+that we are wrapping the render function inside
+&lt;code&gt;window.requestAnimationFrame&lt;/code&gt;, forcing the script to initialize the widget
+immediately after the form renders for the first time. Not doing it like
+so may create race conditions between Elm programs and external JavaScript
+components, so don&amp;#39;t forget using it. Let&amp;#39;s jump to the browser and see
+the result:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="/images/blog/phoenix-elm-landing-page/landing-page.jpg" alt="Landing
+page" style="background: #fff;" /&gt;&lt;/p&gt;
+
+&lt;p&gt;The widget renders as expected, yay!&lt;/p&gt;
+
+&lt;h3&gt;Setting the reCAPTCHA token&lt;/h3&gt;
+
+&lt;p&gt;When a visitor clicks on the widget, it generates a token that we need to
+validate against Google reCAPTCHA API, so we need to send it to the server
+along with the &lt;code&gt;full_name&lt;/code&gt; and the &lt;code&gt;email&lt;/code&gt;. Before this, let&amp;#39;s edit the model
+module to add a new key in the &lt;code&gt;SubscribeForm&lt;/code&gt; so we can store the token:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elm"&gt;-- assets/elm/src/Model.elm
+
+module Model exposing (..)
+
+
+type alias FormFields =
+    { fullName : String
+    , email : String
+    , recaptchaToken : Maybe String
+    }
+
+-- ...
+
+emptyFormFields : FormFields
+emptyFormFields =
+    { fullName = &amp;quot;&amp;quot;
+    , email = &amp;quot;&amp;quot;
+    , recaptchaToken = Nothing
+    }
+
+-- ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;How can we store in it the token received from the external &lt;strong&gt;reCAPTCHA&lt;/strong&gt;
+widget? As sending messages to external &lt;strong&gt;JavaScript&lt;/strong&gt;, &lt;strong&gt;Elm&lt;/strong&gt; can also receive
+messages from the outer world by subscribing to incoming ports. Knowing
+this, let&amp;#39;s create a new port which receives the &lt;strong&gt;reCAPTCHA&lt;/strong&gt; token from the
+widget:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elm"&gt;-- assets/elm/src/Ports.elm
+
+port module Ports exposing (..)
+
+-- ...
+
+
+-- IN PORTS
+
+
+port setRecaptchaToken : (String -&amp;gt; msg) -&amp;gt; Sub msg
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When &lt;strong&gt;Elm&lt;/strong&gt; receives the &lt;code&gt;setRecaptchaToken&lt;/code&gt; port, we want it to set the token
+in the model, and for that, we need to create a new message type:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elm"&gt;-- assets/elm/src/Messages.elm
+
+type Msg
+    = HandleFullNameInput String
+    -- ...
+    | SetRecaptchaToken String
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We also need to handle this message in the &lt;code&gt;update&lt;/code&gt; function:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elm"&gt;-- assets/elm/src/Update.elm
+
+module Update exposing (update)
+
+update : Msg -&amp;gt; Model -&amp;gt; ( Model, Cmd Msg )
+update msg model =
+    -- ...
+
+    SetRecaptchaToken token -&amp;gt;
+        { model | subscribeForm = Editing { formFields | recaptchaToken = Just token } } ! []
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As mentioned before, &lt;strong&gt;Elm&lt;/strong&gt; needs to subscribe to incoming ports, so let&amp;#39;s go
+ahead and define the &lt;code&gt;subscriptions&lt;/code&gt; function to put all the pieces together:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elm"&gt;-- assets/elm/src/Main.elm
+
+-- ...
+
+subscriptions : Model -&amp;gt; Sub Msg
+subscriptions model =
+    Ports.setRecaptchaToken SetRecaptchaToken
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The only thing left is sending the token from &lt;strong&gt;JavaScript&lt;/strong&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="js"&gt;// assets/javascript/app.js
+
+import Elm from &amp;#39;./elm/main&amp;#39;;
+
+window.onloadCallback = () =&amp;gt; {
+  // ...
+
+    app.ports.initRecaptcha.subscribe(id =&amp;gt; {
+      window.requestAnimationFrame(() =&amp;gt; {
+        recaptcha = grecaptcha.render(id, {
+          sitekey: &amp;#39;YOUR_SITE_KEY&amp;#39;,
+          callback: app.ports.setRecaptchaToken.send, // &amp;lt;- CHECK THIS OUT
+        });
+      });
+    });
+
+  // ...
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;strong&gt;reCAPTCHA&lt;/strong&gt; widget has a callback option which is a function that gets
+called after checking the visitor&amp;#39;s response and which contains the token,
+and which we can use to send the &lt;code&gt;setRecaptchaToken&lt;/code&gt; port message to &lt;strong&gt;Elm&lt;/strong&gt;.
+Let&amp;#39;s check that everything is working as expected:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="/images/blog/phoenix-elm-landing-page/settoken-port.gif"
+alt="Navigation flow" style="background: #fff;" /&gt;&lt;/p&gt;
+
+&lt;p&gt;Using &lt;strong&gt;Elm&amp;#39;s debugger&lt;/strong&gt;, we can verify that when we click on the &lt;strong&gt;reCAPTCHA
+widget&lt;/strong&gt;, ELm handles the &lt;code&gt;SetRecaptchaToken&lt;/code&gt; message, setting the
+&lt;code&gt;recaptchaToken&lt;/code&gt; received through the &lt;code&gt;setRecaptchaToken&lt;/code&gt; port in the model.
+The only thing left, for now, is preventing sending the form while the
+&lt;code&gt;recaptchaToken&lt;/code&gt; is not set, so let&amp;#39;s fix this in the view module:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elm"&gt;-- assets/elm/src/View.elm
+
+module View exposing (view)
+
+-- ...
+
+formView : SubscribeForm -&amp;gt; Html Msg
+formView subscribeForm =
+    let
+        { fullName, email, recaptchaToken } =
+            extractFormFields subscribeForm
+
+
+        -- ...
+
+        buttonDisabled =
+            fullName
+                == &amp;quot;&amp;quot;
+                || email
+                == &amp;quot;&amp;quot;
+                || recaptchaToken
+                == Nothing
+                || recaptchaToken
+                == Just &amp;quot;&amp;quot;
+                || saving
+                || invalid
+
+        -- ...
+    in
+        -- ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Finally, we have to include the &lt;code&gt;recaptchaToken&lt;/code&gt; value to the HTTP request body:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elm"&gt;-- assets/elm/src/Commands.elm
+
+module Commands exposing (subscribe)
+
+-- ...
+
+encodeModel : FormFields -&amp;gt; JD.Value
+encodeModel { fullName, email, recaptchaToken } =
+    JE.object
+        [ ( &amp;quot;lead&amp;quot;
+          , JE.object
+                -- ...
+
+                , ( &amp;quot;recaptcha_token&amp;quot;, JE.string &amp;quot;foo&amp;quot; )
+                ]
+          )
+        ]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3&gt;Server-side reCAPTCHA token validation&lt;/h3&gt;
+
+&lt;p&gt;Now that the form is sending the token, we can implement the second step
+of the process, which is validating it against &lt;strong&gt;Google&amp;#39;s API&lt;/strong&gt;. Although we
+are somehow forcing the &lt;code&gt;recaptcha_token&lt;/code&gt; value to have a non-empty value,
+let&amp;#39;s add a validation check on the backend, so no leads with empty tokens
+can get saved. As we only need to validate it, and not save it, we can add
+a virtual field to the &lt;code&gt;Lead&lt;/code&gt; schema:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/landing_page/marketing/lead.ex
+
+defmodule LandingPage.Marketing.Lead do
+  use Ecto.Schema
+  import Ecto.Changeset
+  alias LandingPage.Marketing.Lead
+
+  @derive {Poison.Encoder, only: [:full_name, :email]}
+
+  schema &amp;quot;leads&amp;quot; do
+    field(:email, :string)
+    field(:full_name, :string)
+
+    field(:recaptcha_token, :string, virtual: true)
+
+    timestamps()
+  end
+
+  @fields ~w(full_name email recaptcha_token)a
+
+  @doc false
+  def changeset(%Lead{} = lead, attrs) do
+    lead
+    |&amp;gt; cast(attrs, @fields)
+    |&amp;gt; validate_required(@fields)
+    |&amp;gt; unique_constraint(:email)
+  end
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This change breaks the tests, so let&amp;#39;s go ahead and fix them:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# test/landing_page/marketing/marketing_test.exs
+
+defmodule LandingPage.MarketingTest do
+  use LandingPage.DataCase
+
+  # ...
+
+  @valid_attrs %{
+    &amp;quot;email&amp;quot; =&amp;gt; &amp;quot;some email&amp;quot;,
+    &amp;quot;full_name&amp;quot; =&amp;gt; &amp;quot;some full_name&amp;quot;,
+    &amp;quot;recaptcha_token&amp;quot; =&amp;gt; &amp;quot;foo&amp;quot;
+  }
+  @invalid_attrs %{email: nil, full_name: nil, recaptcha_token: nil}
+
+  # ...
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# test/landing_page_web/controllers/v1/lead_controller_test.exs
+
+defmodule LandingPageWeb.V1.LeadControllerTest do
+  use LandingPageWeb.ConnCase
+
+  # ...
+
+
+  describe &amp;quot;POST /api/v1/leads&amp;quot; do
+    test &amp;quot;returns error response with invalid params&amp;quot;, %{conn: conn} do
+      conn = post(conn, lead_path(conn, :create), %{&amp;quot;lead&amp;quot; =&amp;gt; %{}})
+
+      assert json_response(conn, 422) == %{
+               &amp;quot;full_name&amp;quot; =&amp;gt; [&amp;quot;can&amp;#39;t be blank&amp;quot;],
+               &amp;quot;email&amp;quot; =&amp;gt; [&amp;quot;can&amp;#39;t be blank&amp;quot;],
+               &amp;quot;recaptcha_token&amp;quot; =&amp;gt; [&amp;quot;can&amp;#39;t be blank&amp;quot;]
+             }
+    end
+
+    test &amp;quot;returns success response with valid params&amp;quot;, %{conn: conn} do
+      params = %{
+        &amp;quot;lead&amp;quot; =&amp;gt; %{&amp;quot;full_name&amp;quot; =&amp;gt; &amp;quot;John&amp;quot;, &amp;quot;email&amp;quot; =&amp;gt; &amp;quot;foo@bar.com&amp;quot;, &amp;quot;recaptcha_token&amp;quot; =&amp;gt; &amp;quot;foo&amp;quot;}
+      }
+
+      conn = post(conn, lead_path(conn, :create), params)
+      assert json_response(conn, 200) == %{&amp;quot;full_name&amp;quot; =&amp;gt; &amp;quot;John&amp;quot;, &amp;quot;email&amp;quot; =&amp;gt; &amp;quot;foo@bar.com&amp;quot;}
+    end
+  end
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If we now run the test suite, we can see that every test is passing now:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="bash"&gt;➜ mix test
+...........
+
+Finished in 0.1 seconds
+11 tests, 0 failures
+
+Randomized with seed 66361
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To check whether Google has verified the user, we have to send an HTTP
+request to &lt;code&gt;https://www.google.com/recaptcha/api/siteverify&lt;/code&gt; with the
+token. For that we first need to install an HTTP client like
+&lt;a href="https://github.com/edgurgel/httpoison"&gt;HTTPoison&lt;/a&gt;, so let&amp;#39; go ahead and add
+it to the dependencies list:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# mix.exs
+
+# ...
+
+  defp deps do
+    [
+      # ...
+      {:httpoison, &amp;quot;~&amp;gt; 0.13&amp;quot;}
+    ]
+  end
+
+# ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;After running the necessary &lt;code&gt;mix deps.get&lt;/code&gt; task, we are ready to implement
+our &lt;strong&gt;Google&amp;#39;s HTTP client&lt;/strong&gt;, so let&amp;#39;s create the following module:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/landing_page/clients/google/recaptcha_http.ex
+
+defmodule LandingPage.Clients.GoogleRecaptchaHttp do
+  use HTTPoison.Base
+
+  @secret_key Application.get_env(:landing_page, :google_recaptcha)[:secret_key]
+
+  def verify(token) do
+    params = %{
+      secret: @secret_key,
+      response: token
+    }
+
+    &amp;quot;/siteverify&amp;quot;
+    |&amp;gt; get!([], params: params)
+    |&amp;gt; case do
+         %{status_code: 200, body: body} -&amp;gt;
+           {:ok, body}
+
+         response -&amp;gt;
+           {:error, response}
+       end
+  end
+
+  def process_url(url) do
+    &amp;quot;https://www.google.com/recaptcha/api&amp;quot; &amp;lt;&amp;gt; url
+  end
+
+  def process_response_body(body), do: Poison.decode!(body, keys: :atoms)
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Using &lt;code&gt;HTTPoison.Base&lt;/code&gt; gives us mostly all the functionality that we need
+out of the box. The &lt;code&gt;verify/1&lt;/code&gt; function receives a token and sends an HTTP
+request against the specified URL, with the &lt;code&gt;secret_key&lt;/code&gt; and the user&amp;#39;s
+token. Depending on the result, it returns a tuple with the &lt;code&gt;:ok&lt;/code&gt; atom and
+the processed body using the &lt;code&gt;process_response_body/1&lt;/code&gt; function, or one
+containing &lt;code&gt;:error&lt;/code&gt; and the response. To finish the client, we need to set
+the value of &lt;code&gt;@secret_key&lt;/code&gt; in the application&amp;#39;s config:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# config/config.exs
+
+# ...
+
+config :landing_page,
+  google_recaptcha: [
+    secret_key: &amp;quot;SET_HERE_YOUR_SECRET_KEY&amp;quot;
+  ]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Jumping back to the &lt;a href="https://developers.google.com/recaptcha/docs/verify"&gt;reCAPTCHA
+docs&lt;/a&gt;, we can see that
+the response body looks like the following:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="json"&gt;{
+  &amp;quot;success&amp;quot;: true|false,
+  &amp;quot;challenge_ts&amp;quot;: timestamp,  // timestamp of the challenge load (ISO format yyyy-MM-dd&amp;#39;T&amp;#39;HH:mm:ssZZ)
+  &amp;quot;hostname&amp;quot;: string,         // the hostname of the site where the reCAPTCHA was solved
+  &amp;quot;error-codes&amp;quot;: [...]        // optional
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Having this in mind, we can go ahead and create a new function in the
+&lt;code&gt;Marketing&lt;/code&gt; module to subscribe and create new leads:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/landing_page/marketing/marketing.ex
+
+alias LandingPage.Clients.GoogleRecaptchaHttp
+# ...
+
+defmodule LandingPage.Marketing do
+  # ...
+
+  def subscribe(lead_params) do
+    token = Map.get(lead_params, &amp;quot;recaptcha_token&amp;quot;)
+
+    with %Ecto.Changeset{valid?: true} = changeset &amp;lt;- Lead.changeset(%Lead{}, lead_params),
+         {:ok, %{success: true}} &amp;lt;- GoogleRecaptchaHttp.verify(token),
+         {:ok, lead} &amp;lt;- Repo.insert(changeset) do
+      {:ok, lead}
+    else
+      {:ok, %{success: false}} -&amp;gt;
+        {:error, :invalid_recaptcha_token}
+
+      {:error, response} -&amp;gt;
+        {:error, response}
+
+      other -&amp;gt;
+        {:error, other}
+    end
+  end
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So, if everything goes as expected, &lt;code&gt;subscribe/1&lt;/code&gt; receives the
+&lt;code&gt;lead_params&lt;/code&gt; and validates them against a lead changeset, verifying the
+token using the client, inserting the lead and returning a tuple
+containing it. On the other hand, if the token validation returns &lt;code&gt;{:ok,
+    %{success: false}}&lt;/code&gt;, which means that is not valid, it returns a &lt;code&gt;{:error,
+:invalid_recaptcha_token}&lt;/code&gt; tuple.&lt;/p&gt;
+
+&lt;p&gt;Let&amp;#39; write some tests to check that everything is currently behaving as it
+should:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# test/landing_page/marketing/marketing_test.exs
+
+defmodule LandingPage.MarketingTest do
+  use LandingPage.DataCase
+
+  # ...
+
+  describe &amp;quot;leads&amp;quot; do
+    # ...
+
+    test &amp;quot;subscribe/1 with valid data and token creates a lead&amp;quot; do
+      assert {:ok, %Lead{}} = Marketing.subscribe(@valid_attrs)
+    end
+
+    test &amp;quot;subscribe/1 with invalid token returns error changeset&amp;quot; do
+      params = %{@valid_attrs | &amp;quot;recaptcha_token&amp;quot; =&amp;gt; &amp;quot;invalid&amp;quot;}
+      assert {:error, :invalid_recaptcha_token} = Marketing.subscribe(params)
+    end
+  end
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Before running the test, let&amp;#39;s think about our current solution for
+a second. Every time that we run the tests, the &lt;code&gt;GoogleRecaptchaHttp&lt;/code&gt; client
+is going to be sending requests, slowing down the test suite, and we do
+not really want that. Moreover, knowing beforehand what the Google&amp;#39;s API
+returns, we no longer need to send a real request to test what we need.
+There are many ways of implementing a workaround for this, but one of my
+favorite ones is creating a mock client, which returns fake responses,
+based on the API specification, and use either of the clients depending on
+the environment. Let&amp;#39;s stick to this approach, and create a new mock
+client:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/landing_page/clients/google/recaptcha_mock.ex
+
+defmodule LandingPage.Clients.GoogleRecaptchaMock do
+  def verify(&amp;quot;invalid&amp;quot;), do: {:ok, %{success: false}}
+  def verify(_token), do: {:ok, %{success: true}}
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To use a specific client depending on the current environment that the
+application is running in, we can just set the module we want to use in
+that environment configuration file:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# config/config.exs
+
+# ...
+
+config :landing_page,
+  google_recaptcha: [
+    secret_key: &amp;quot;SET_HERE_YOUR_SECRET_KEY&amp;quot;,
+    client: LandingPage.Clients.GoogleRecaptchaHttp
+  ]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# config/test.exs
+
+# ...
+
+config :landing_page,
+  google_recaptcha: [
+    client: LandingPage.Clients.GoogleRecaptchaMock
+  ]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Finally, let&amp;#39;s refactor the &lt;code&gt;Marketing&lt;/code&gt; module to use the client set in the
+environment:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/landing_page/marketing/marketing.ex
+
+alias LandingPage.Clients.GoogleRecaptchaHttp
+# ...
+
+@google_recaptcha_client Application.get_env(:landing_page, :google_recaptcha)[:client]
+
+defmodule LandingPage.Marketing do
+  # ...
+
+  def subscribe(lead_params) do
+    token = Map.get(lead_params, &amp;quot;recaptcha_token&amp;quot;)
+
+    with %Ecto.Changeset{valid?: true} = changeset &amp;lt;- Lead.changeset(%Lead{}, lead_params),
+         {:ok, %{success: true}} &amp;lt;- @google_recaptcha_client.verify(token),
+         {:ok, lead} &amp;lt;- Repo.insert(changeset) do
+      {:ok, lead}
+    else
+      # ...
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;@google_recaptcha_client&lt;/code&gt; contains the client module, which in the test
+environment is the mock client, so we can non safely run the tests:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;➜ mix test test/landing_page/marketing/marketing_test.exs
+....
+
+Finished in 0.1 seconds
+4 tests, 0 failures
+
+Randomized with seed 506123
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And they all pass, yay!&lt;/p&gt;
+
+&lt;p&gt;We are still missing an important part though. We need to update the
+&lt;code&gt;LeadController&lt;/code&gt; module to use the new &lt;code&gt;subscribe&lt;/code&gt; function we just
+created:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/landing_page_web/controllers/v1/lead_controller.ex
+
+defmodule LandingPageWeb.V1.LeadController do
+  use LandingPageWeb, :controller
+
+  alias LandingPage.Marketing
+
+  plug(:scrub_params, &amp;quot;lead&amp;quot;)
+
+  def create(conn, %{&amp;quot;lead&amp;quot; =&amp;gt; params}) do
+    with {:ok, lead} &amp;lt;- Marketing.subscribe(params) do
+      json(conn, lead)
+    end
+  end
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We also need to handle in the &lt;code&gt;FallbackController&lt;/code&gt; module the &lt;code&gt;{:error,
+:invalid_recaptcha_token}&lt;/code&gt; response resulting from an invalid token check:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/landing_page_web/controllers/fallback_controller.ex
+
+defmodule LandingPageWeb.FallbackController do
+  use LandingPageWeb, :controller
+
+  # ...
+
+  def call(conn, {:error, :invalid_recaptcha_token}) do
+    conn
+    |&amp;gt; put_status(:unprocessable_entity)
+    |&amp;gt; render(LandingPageWeb.ErrorView, &amp;quot;invalid_recaptcha_token.json&amp;quot;)
+  end
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Finally, let&amp;#39;s edit the &lt;code&gt;ErrorView&lt;/code&gt; module in order to add the
+necessary render function:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/landing_page_web/views/error_view.ex
+
+defmodule LandingPageWeb.ErrorView do
+  # ...
+
+  def render(&amp;quot;invalid_recaptcha_token.json&amp;quot;, _) do
+    %{recaptcha_token: [&amp;quot;the response is invalid&amp;quot;]}
+  end
+
+  # ...
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Following the same convention for validation errors, we return a map with
+the error we want to render below the &lt;strong&gt;reCAPTCHA widget&lt;/strong&gt;. Let&amp;#39;s add a test
+to check that it works:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# test/landing_page_web/controllers/v1/lead_controller_test.exs
+
+defmodule LandingPageWeb.V1.LeadControllerTest do
+  use LandingPageWeb.ConnCase
+
+  describe &amp;quot;POST /api/v1/leads&amp;quot; do
+    # ...
+
+    test &amp;quot;returns error response with invalid token&amp;quot;, %{conn: conn} do
+      params = %{
+        &amp;quot;lead&amp;quot; =&amp;gt; %{
+          &amp;quot;full_name&amp;quot; =&amp;gt; &amp;quot;John&amp;quot;,
+          &amp;quot;email&amp;quot; =&amp;gt; &amp;quot;foo@bar.com&amp;quot;,
+          &amp;quot;recaptcha_token&amp;quot; =&amp;gt; &amp;quot;invalid&amp;quot;
+        }
+      }
+
+      conn = post(conn, lead_path(conn, :create), params)
+
+      assert json_response(conn, 422) == %{
+               &amp;quot;recaptcha_token&amp;quot; =&amp;gt; [&amp;quot;the response is invalid&amp;quot;]
+             }
+    end
+  end
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code&gt;➜ mix test  test/landing_page_web/controllers/v1/lead_controller_test.exs
+...
+
+Finished in 0.1 seconds
+3 tests, 0 failures
+
+Randomized with seed 723440
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To test it in the browser, we can edit the Elm &lt;code&gt;Commands&lt;/code&gt; module and
+simply set a hardcoded value for the &lt;code&gt;recaptcha_token&lt;/code&gt; parameter:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="/images/blog/phoenix-elm-landing-page/token-error.gif"
+alt="Token error" style="background: #fff;" /&gt;&lt;/p&gt;
+
+&lt;p&gt;However, wait a minute. If the token is invalid, there is no current way
+of resetting the widget again, so the user is not able to resubmit the
+form. Let&amp;#39;s fix this.&lt;/p&gt;
+
+&lt;h3&gt;Resetting the token on error&lt;/h3&gt;
+
+&lt;p&gt;Luckily for us, the widget has a &lt;code&gt;reset&lt;/code&gt; function and we
+can call it through an Elm port. Let&amp;#39;s edit the &lt;code&gt;Ports&lt;/code&gt; module and add
+a new outgoing port:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elm"&gt;-- assets/elm/src/Ports.elm
+
+port module Ports exposing (..)
+
+-- OUT PORTS
+
+
+-- ...
+
+
+port resetRecaptcha : () -&amp;gt; Cmd msg
+
+
+-- ...
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Next, we have to subscribe to the new port and call the widget&amp;#39;s &lt;code&gt;reset&lt;/code&gt;
+function:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="js"&gt;// assets/javascript/app.js
+
+import Elm from &amp;#39;./elm/main&amp;#39;;
+
+window.onloadCallback = () =&amp;gt; {
+  const formContainer = document.querySelector(&amp;#39;#form_container&amp;#39;);
+
+  if (formContainer) {
+    const app = Elm.Main.embed(formContainer);
+    let recaptcha;
+
+    // ...
+
+    app.ports.resetRecaptcha.subscribe(() =&amp;gt; {
+      grecaptcha.reset(recaptcha);
+    });
+  }
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And finally, we have to trigger the &lt;code&gt;resetRecaptcha&lt;/code&gt; wherever we need, so
+let&amp;#39;s do it on any response error that we receive from the server:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elm"&gt;-- assets/elm/src/Update.elm
+
+module Update exposing (update)
+
+update : Msg -&amp;gt; Model -&amp;gt; ( Model, Cmd Msg )
+update msg model =
+    -- ...
+
+      SubscribeResponse (Err (BadStatus response)) -&amp;gt;
+          case Decode.decodeString validationErrorsDecoder response.body of
+              Ok validationErrors -&amp;gt;
+                  { model | subscribeForm = Invalid { formFields | recaptchaToken = Nothing } validationErrors } ! [ Ports.resetRecaptcha () ]
+
+              Err error -&amp;gt;
+                  { model | subscribeForm = Errored { formFields | recaptchaToken = Nothing } &amp;quot;Oops! Something went wrong!&amp;quot; } ! [ Ports.resetRecaptcha () ]
+
+      SubscribeResponse (Err error) -&amp;gt;
+          { model | subscribeForm = Errored { formFields | recaptchaToken = Nothing } &amp;quot;Oops! Something went wrong!&amp;quot; } ! [ Ports.resetRecaptcha () ]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Let&amp;#39;s jump back to the browser and check that it actually is working fine:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="/images/blog/phoenix-elm-landing-page/token-reset.gif"
+alt="Token reset" style="background: #fff;" /&gt;&lt;/p&gt;
+
+&lt;p&gt;The widget is reset as expected, allowing the user to click it again.
+Let&amp;#39;s remove the hardcoded value from the &lt;code&gt;recaptcha_token&lt;/code&gt; on the post
+parameters and test that everything works fine and the lead subscribes
+successfully:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="/images/blog/phoenix-elm-landing-page/final-result.gif"
+alt="Final result" style="background: #fff;" /&gt;&lt;/p&gt;
+
+&lt;p&gt;And there we go. Our very basic landing page is ready for deployment and
+subscribing new leads, without making us worry about spambots. I hope you
+have enjoyed these series as much as I have enjoyed doing them. See you
+next time, and don&amp;#39;t forget to check the code from this part
+&lt;a href="https://github.com/bigardone/phoenix-and-elm-landing-page/tree/tutorial/part-3"&gt;here&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Happy coding!&lt;/p&gt;
+</content>
+  </entry>
+  <entry>
+    <title>Phoenix &amp; Elm landing page (pt.2)</title>
+    <link rel="alternate" href="http://codeloveandboards.com/blog/2017/12/23/phoenix-elm-landing-page-pt-2/"/>
+    <id>http://codeloveandboards.com/blog/2017/12/23/phoenix-elm-landing-page-pt-2/</id>
+    <published>2017-12-24T07:44:00Z</published>
+    <updated>2018-01-14T08:24:47+01:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;div class="index"&gt;
+  &lt;p&gt;This post belongs to the &lt;strong&gt;Phoenix &amp; Elm landing page&lt;/strong&gt; series.&lt;/p&gt;
+  &lt;ol&gt;
+    &lt;li&gt;&lt;a href="/blog/2017/12/02/phoenix-elm-landing-page-pt-1/"&gt;Bootstrapping the project and the basic API functionality to save our first leads&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="/blog/2017/12/23/phoenix-elm-landing-page-pt-2/"&gt;Building the landing page UI and the basic Elm subscription form&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="/blog/2018/01/06/phoenix-elm-landing-page-pt-3/"&gt;Adding Google reCAPTCHA support to avoid spambots&lt;/a&gt;&lt;/li&gt;
   &lt;/ol&gt;
 
   &lt;a href="https://github.com/bigardone/phoenix-and-elm-landing-page" target="_blank"&gt;&lt;i class="fa fa-github"&gt;&lt;/i&gt; Source code&lt;/a&gt;
@@ -964,7 +1852,7 @@ you can check out the source code of the part
     <link rel="alternate" href="http://codeloveandboards.com/blog/2017/12/02/phoenix-elm-landing-page-pt-1/"/>
     <id>http://codeloveandboards.com/blog/2017/12/02/phoenix-elm-landing-page-pt-1/</id>
     <published>2017-12-02T08:00:00Z</published>
-    <updated>2018-01-07T19:10:45+01:00</updated>
+    <updated>2018-01-14T08:25:16+01:00</updated>
     <author>
       <name>Article Author</name>
     </author>
@@ -973,7 +1861,7 @@ you can check out the source code of the part
   &lt;ol&gt;
     &lt;li&gt;&lt;a href="/blog/2017/12/02/phoenix-elm-landing-page-pt-1/"&gt;Bootstrapping the project and the basic API functionality to save our first leads&lt;/a&gt;&lt;/li&gt;
     &lt;li&gt;&lt;a href="/blog/2017/12/23/phoenix-elm-landing-page-pt-2/"&gt;Building the landing page UI and the basic Elm subscription form&lt;/a&gt;&lt;/li&gt;
-    &lt;li&gt;Coming soon...&lt;/li&gt;
+    &lt;li&gt;&lt;a href="/blog/2018/01/06/phoenix-elm-landing-page-pt-3/"&gt;Adding Google reCAPTCHA support to avoid spambots&lt;/a&gt;&lt;/li&gt;
   &lt;/ol&gt;
 
   &lt;a href="https://github.com/bigardone/phoenix-and-elm-landing-page" target="_blank"&gt;&lt;i class="fa fa-github"&gt;&lt;/i&gt; Source code&lt;/a&gt;
@@ -989,7 +1877,6 @@ you can check out the source code of the part
 &lt;li&gt;Add &lt;strong&gt;Elm&lt;/strong&gt; to the project and build a subscription form that points to the API endpoint described previously.&lt;/li&gt;
 &lt;li&gt;Add &lt;a href="https://developers.google.com/recaptcha/"&gt;Google&amp;#39;s reCAPTCHA&lt;/a&gt; widget to the &lt;strong&gt;Elm&lt;/strong&gt; subscription form, and how to render it and how to handle a visitor&amp;#39;s &lt;strong&gt;reCAPTCHA&lt;/strong&gt; response.&lt;/li&gt;
 &lt;li&gt;Build an HTTP client using &lt;a href="https://github.com/edgurgel/httpoison"&gt;HTTPoison&lt;/a&gt; to verify the token received by the &lt;strong&gt;reCAPTCHA&lt;/strong&gt; widget against &lt;strong&gt;Google&amp;#39;s reCAPTCHA API&lt;/strong&gt; from our backend.&lt;/li&gt;
-&lt;li&gt;Build another HTTP client to subscribe leads to an email marketing service such as &lt;a href="https://mailchimp.com"&gt;MailChimp&lt;/a&gt;.&lt;/li&gt;
 &lt;li&gt;Add tests covering the subscription process using &lt;strong&gt;mocks&lt;/strong&gt; for the HTTP clients.&lt;/li&gt;
 &lt;/ul&gt;
 
@@ -2916,786 +3803,6 @@ urlUpdate model =
 &lt;p&gt;That is pretty much it. If we now refresh the browser and navigate through the application, everything should just work as before.
 Yay! If you are missing anything, please check out the branch I have prepared with all the changes for this part.
 I hope you have enjoyed the series and thanks for all the support.&lt;/p&gt;
-
-&lt;p&gt;Happy coding!&lt;/p&gt;
-
-&lt;div class="btn-wrapper"&gt;
-  &lt;a href="https://phoenix-and-elm.herokuapp.com/" target="_blank" class="btn"&gt;&lt;i class="fa fa-cloud"&gt;&lt;/i&gt; Live demo&lt;/a&gt;
-  &lt;a href="https://github.com/bigardone/phoenix-and-elm" target="_blank" class="btn"&gt;&lt;i class="fa fa-github"&gt;&lt;/i&gt; Source code&lt;/a&gt;
-&lt;/div&gt;
-</content>
-  </entry>
-  <entry>
-    <title>Phoenix and Elm, a real use case (pt. 5)</title>
-    <link rel="alternate" href="http://codeloveandboards.com/blog/2017/03/07/phoenix-and-elm-a-real-use-case-pt-5/"/>
-    <id>http://codeloveandboards.com/blog/2017/03/07/phoenix-and-elm-a-real-use-case-pt-5/</id>
-    <published>2017-03-08T06:32:00Z</published>
-    <updated>2017-04-22T07:33:20+02:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;div class="index"&gt;
-  &lt;p&gt;This post belongs to the &lt;strong&gt;Phoenix and Elm, a real use case&lt;/strong&gt; series.&lt;/p&gt;
-  &lt;ol&gt;
-    &lt;li&gt;&lt;a href="/blog/2017/02/02/phoenix-and-elm-a-real-use-case-pt-1/"&gt;Introduction to creating a SPA with Phoenix and Elm&lt;/a&gt;&lt;/li&gt;
-    &lt;li&gt;&lt;a href="/blog/2017/02/08/phoenix-and-elm-a-real-use-case-pt-2/"&gt;Rendering the initial contact list&lt;/a&gt;&lt;/li&gt;
-    &lt;li&gt;&lt;a href="/blog/2017/02/14/phoenix-and-elm-a-real-use-case-pt-3/"&gt;Adding full text search and pagination navigation to the contact list&lt;/a&gt;&lt;/li&gt;
-    &lt;li&gt;&lt;a href="/blog/2017/02/23/phoenix-and-elm-a-real-use-case-pt-4/"&gt;Better state with union types, search resetting and keyed nodes.&lt;/a&gt;&lt;/li&gt;
-    &lt;li&gt;&lt;a href="/blog/2017/03/07/phoenix-and-elm-a-real-use-case-pt-5/"&gt;Implementing Elm routing&lt;/a&gt;&lt;/li&gt;
-    &lt;li&gt;&lt;a href="/blog/2017/03/19/phoenix-and-elm-a-real-use-case-pt-6/"&gt;Poenix and Elm communication through WebSockets&lt;/a&gt;&lt;/li&gt;
-  &lt;/ol&gt;
-
-  &lt;a href="https://phoenix-and-elm.herokuapp.com/" target="_blank"&gt;&lt;i class="fa fa-cloud"&gt;&lt;/i&gt; Live demo&lt;/a&gt; |
-  &lt;a href="https://github.com/bigardone/phoenix-and-elm" target="_blank"&gt;&lt;i class="fa fa-github"&gt;&lt;/i&gt; Source code&lt;/a&gt;
-&lt;/div&gt;
-
-&lt;h2&gt;Implementing Elm routing&lt;/h2&gt;
-
-&lt;p&gt;In the &lt;a href="/blog/2017/02/23/phoenix-and-elm-a-real-use-case-pt-4/"&gt;previous part&lt;/a&gt;, we did some enhancements to our contact list application. These changes include
-union types in the model to represent more precisely what is the current state of the application,
-resetting the search result and using keyed Html nodes for a more efficient rendering. Today we are
-going to go a step further and implement the contact detail page, which a user can visit by clicking
-on any of the contact cards. Let&amp;#39;s do this!&lt;/p&gt;
-
-&lt;h3&gt;Phoenix changes&lt;/h3&gt;
-
-&lt;p&gt;In regards to the backend, we need our &lt;strong&gt;API&lt;/strong&gt; to have a new route like &lt;code&gt;/api/contacts/:id&lt;/code&gt; which
-returns the &lt;strong&gt;JSON&lt;/strong&gt; representation of the contact corresponding to that id. Let&amp;#39;s start by adding
-the new show action to the &lt;code&gt;router.ex&lt;/code&gt; file:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="ruby"&gt;# web/router.ex
-
-defmodule PhoenixAndElm.Router do
-  use PhoenixAndElm.Web, :router
-
-  # ...
-
-  scope &amp;quot;/api&amp;quot;, PhoenixAndElm do
-    pipe_through :api
-
-    resources &amp;quot;/contacts&amp;quot;, ContactController, only: [:index, :show]
-  end
-
-  # ...
-
-  scope &amp;quot;/&amp;quot;, PhoenixAndElm do
-    pipe_through :browser # Use the default browser stack
-
-    get &amp;quot;/*path&amp;quot;, PageController, :index
-  end
-end
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Take note that we are handling any route that doesn&amp;#39;t belong to the &lt;strong&gt;API&lt;/strong&gt; pipe with the &lt;code&gt;PageController&lt;/code&gt;.
-The reason for this is that we want to handle all the &lt;strong&gt;URLs&lt;/strong&gt; from the frontend. Once this is ready,
-let&amp;#39;s update the &lt;code&gt;ContactController&lt;/code&gt; module to add the action:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="ruby"&gt;# web/controllers/contact_controller.ex
-
-defmodule PhoenixAndElm.ContactController do
-  use PhoenixAndElm.Web, :controller
-
-  # ...
-
-  def show(conn, %{&amp;quot;id&amp;quot; =&amp;gt; id}) do
-    contact = Repo.get(Contact, id)
-
-    render conn, contact: contact
-  end
-end
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;We also need to update the &lt;code&gt;ContactView&lt;/code&gt; module to handle the corresponding response:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="ruby"&gt;# web/views/contact_view.ex
-
-defmodule PhoenixAndElm.ContactView do
-  use PhoenixAndElm.Web, :view
-
-  # ...
-
-  def render(&amp;quot;show.json&amp;quot;, %{contact: contact}), do: contact
-end
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;With these changes our backend is ready, so if we visit &lt;a href="http://localhost:4000/api/contacts/id"&gt;http://localhost:4000/api/contacts/id&lt;/a&gt; where
-id corresponds to an existing contact id, we should see the following &lt;strong&gt;JSON&lt;/strong&gt; response in the browser:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="json"&gt;{
-  picture: &amp;quot;http://api.randomuser.me/portraits/women/1.jpg&amp;quot;,
-  phone_number: &amp;quot;761/266-1174&amp;quot;,
-  location: &amp;quot;Denmark&amp;quot;,
-  last_name: &amp;quot;Heaney&amp;quot;,
-  id: 180,
-  headline: &amp;quot;Est repellat omnis.&amp;quot;,
-  gender: 1,
-  first_name: &amp;quot;Axel&amp;quot;,
-  email: &amp;quot;axel@green.org&amp;quot;,
-  birth_date: &amp;quot;1975-11-03&amp;quot;
-}
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h3&gt;The Routing module&lt;/h3&gt;
-
-&lt;p&gt;To implement routing in &lt;strong&gt;Elm&lt;/strong&gt;, we are going to need two additional packages for handling browser location
-changes and routes matching. These packages are &lt;a href="http://package.elm-lang.org/packages/elm-lang/navigation/2.1.0"&gt;Elm Navigation&lt;/a&gt;
-and &lt;a href="http://package.elm-lang.org/packages/evancz/url-parser/2.0.1"&gt;UrlParser&lt;/a&gt;, so let&amp;#39;s install them:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="bash"&gt;elm package install elm-lang/navigation -y
-elm package install evancz/url-parser -y
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Next, we are going to define the &lt;code&gt;Routing&lt;/code&gt; &lt;strong&gt;Elm&lt;/strong&gt; module, with all the functionality in regards to parsing
-the browser location and matching the routes of our application:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- web/elm/Routing.elm
-
-module Routing exposing (..)
-
-import Navigation
-import UrlParser exposing (..)
-
-
-type Route
-    = HomeIndexRoute
-    | NotFoundRoute
-
-
-matchers : Parser (Route -&amp;gt; a) a
-matchers =
-    oneOf
-        [ map HomeIndexRoute &amp;lt;| s &amp;quot;&amp;quot;
-        ]
-
-
-parse : Navigation.Location -&amp;gt; Route
-parse location =
-    case UrlParser.parsePath matchers location of
-        Just route -&amp;gt;
-            route
-
-        Nothing -&amp;gt;
-            NotFoundRoute
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;We start by creating a new union type named &lt;code&gt;Route&lt;/code&gt;, which contains all of the possible routes of our application:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;HomeIndexRoute&lt;/code&gt;, for the contact list.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;NotFoundRoute&lt;/code&gt;, for any other route.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Next we define the matchers function which matches the current browser&amp;#39;s location with our previously described routes,
-and for the time being, we only need to map &lt;code&gt;/&lt;/code&gt; to &lt;code&gt;HomeIndexRoute&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;Finally, the &lt;code&gt;parse&lt;/code&gt; function takes the location and returns the corresponding route using the &lt;code&gt;matchers&lt;/code&gt;
-function, returning &lt;code&gt;NotFoundRoute&lt;/code&gt; when the location does not correspond to any of the matched routes.&lt;/p&gt;
-
-&lt;h3&gt;Handling Url changes&lt;/h3&gt;
-
-&lt;p&gt;To handle these changes, we have to make some refactoring in our existing modules. The first of these changes
-is in the Main module, where instead o using &lt;code&gt;Html.program&lt;/code&gt; we have to wrap our initial application in a &lt;code&gt;Navigation.program&lt;/code&gt;:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- web/elm/Main.elm
-
-module Main exposing (..)
-
-import Messages exposing (Msg(..))
-import Model exposing (..)
-import Navigation
-import Routing exposing (parse)
-import Update exposing (..)
-import View exposing (view)
-
-
-init : Navigation.Location -&amp;gt; ( Model, Cmd Msg )
-init location =
-    let
-        currentRoute =
-            parse location
-
-        model =
-            initialModel currentRoute
-    in
-        urlUpdate model
-
-
-main : Program Never Model Msg
-main =
-    Navigation.program UrlChange
-        { init = init
-        , view = view
-        , update = update
-        , subscriptions = always &amp;lt;| Sub.none
-        }
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;&lt;code&gt;Navigation.program&lt;/code&gt; takes a new &lt;code&gt;UrlChange&lt;/code&gt; parameter which is a new message triggered every time the &lt;strong&gt;URL&lt;/strong&gt; changes,
-and the init function takes the current location, parses it to a known route and sets it in the model using the &lt;code&gt;initialModel&lt;/code&gt; function,
-returning the &lt;code&gt;urlUpdate&lt;/code&gt; function response. These are many changes so let&amp;#39;s start by updating the &lt;code&gt;Model&lt;/code&gt; to add the current route:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- web/elm/Model.elm
-
-module Model exposing (..)
-
-import Routing exposing (Route)
-
--- ...
-
-type alias Model =
-    { contactList : RemoteData String ContactList
-    , search : String
-    , route : Route
-    }
-
--- ...
-
-initialModel : Route -&amp;gt; Model
-initialModel route =
-    { contactList = NotRequested
-    , search = &amp;quot;&amp;quot;
-    , route = route
-    }
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Now let&amp;#39;s move on to the &lt;code&gt;Messages&lt;/code&gt; module to add the &lt;code&gt;UrlChange&lt;/code&gt; message type:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- web/elm/Messages.elm
-
-module Messages exposing (..)
-
--- ...
-import Navigation
-
-
-type Msg
-    = FetchResult (Result Http.Error ContactList)
-    -- ...
-    | UrlChange Navigation.Location
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Finally, we need to implement the &lt;code&gt;UrlChange&lt;/code&gt; case in the &lt;code&gt;Update&lt;/code&gt; module:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- web/elm/Update.elm
-
-module Update exposing (..)
-
--- ...
-import Routing exposing (Route(..), parse)
-
-
-update : Msg -&amp;gt; Model -&amp;gt; ( Model, Cmd Msg )
-update msg model =
-    case msg of
-        -- ...
-
-        UrlChange location -&amp;gt;
-            let
-                currentRoute =
-                    parse location
-            in
-                urlUpdate { model | route = currentRoute }
-
-
-urlUpdate : Model -&amp;gt; ( Model, Cmd Msg )
-urlUpdate model =
-    case model.route of
-        HomeIndexRoute -&amp;gt;
-            model ! [ fetch 1 &amp;quot;&amp;quot; ]
-
-        _ -&amp;gt;
-            model ! []
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;In addition to setting the current route every time the location changes, we have added the
-&lt;code&gt;urlUpdate&lt;/code&gt; function as well. This function is critical, as it returns any route-specific command
-we need to run. This means that everytime a user visits the &lt;code&gt;HomeIndexRoute&lt;/code&gt; path, the application
-will automatically fetch the first page of contacts (like we were doing before in the init
-function of the &lt;code&gt;Main&lt;/code&gt; module). The following chart illustrates, more or less, how the
-&lt;code&gt;Navigation.Program&lt;/code&gt; flow looks like:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="/images/blog/phoenix_and_elm/navigation-flow.jpg" alt="Navigation flow" style="background: #fff;" /&gt;&lt;/p&gt;
-
-&lt;ol&gt;
-&lt;li&gt;The &lt;strong&gt;browser&lt;/strong&gt; sends a &lt;strong&gt;location change&lt;/strong&gt; event to the main &lt;code&gt;Navigation.Program&lt;/code&gt;.&lt;/li&gt;
-&lt;li&gt;The &lt;code&gt;Navigation.Program&lt;/code&gt; triggers the &lt;code&gt;UrlChange&lt;/code&gt; message, handled by the &lt;code&gt;update&lt;/code&gt; function of the &lt;code&gt;Update&lt;/code&gt; module.&lt;/li&gt;
-&lt;li&gt;This calls the &lt;code&gt;parse&lt;/code&gt; function of the &lt;code&gt;Routing&lt;/code&gt; module, which returns the matched &lt;code&gt;Route&lt;/code&gt;.&lt;/li&gt;
-&lt;li&gt;The &lt;code&gt;update&lt;/code&gt; function returns the new update model and the specific commands for that route (if any).&lt;/li&gt;
-&lt;li&gt;The &lt;code&gt;Navigation.Program&lt;/code&gt; uses the &lt;code&gt;view&lt;/code&gt; function along with the received &lt;code&gt;model&lt;/code&gt; to render the &lt;strong&gt;Html&lt;/strong&gt;.&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;h3&gt;Route specific views&lt;/h3&gt;
-
-&lt;p&gt;Our routes are going to render different Html, so we still need to update the &lt;code&gt;View&lt;/code&gt; module to implement this:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- web/elm/View.elm
-
-module View exposing (..)
-
-import ContactList.View exposing (indexView)
--- ...
-
-view : Model -&amp;gt; Html Msg
-view model =
-    section
-        []
-        [ headerView
-        , div []
-            [ page model ]
-        ]
-
--- ...
-
-page : Model -&amp;gt; Html Msg
-page model =
-    case model.route of
-        HomeIndexRoute -&amp;gt;
-            indexView model
-
-        NotFoundRoute -&amp;gt;
-            notFoundView
-
-notFoundView : Html Msg
-notFoundView =
-    text &amp;quot;Route not found&amp;quot;
-
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;The &lt;code&gt;page&lt;/code&gt; function patterns match against the current route of the model, calling the specific view function for that route. That &lt;code&gt;notFoundView&lt;/code&gt; is very simple,
-so let&amp;#39;s create a nicer one and make it look like the other warning messages we already have in the contact list search. We are probably going to
-need this function in other places, therefore instead of using it directly from the &lt;code&gt;ContactList.View&lt;/code&gt;, let&amp;#39;s move it to a different module called &lt;code&gt;Common.View&lt;/code&gt;:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- web/elm/Common/View.elm
-
-module Common.View exposing (warningMessage)
-
-import Html exposing (..)
-import Html.Attributes exposing (class)
-import Messages exposing (Msg(..))
-
-
-warningMessage : String -&amp;gt; String -&amp;gt; Html Msg -&amp;gt; Html Msg
-warningMessage iconClasses message content =
-    div
-        [ class &amp;quot;warning&amp;quot; ]
-        [ span
-            [ class &amp;quot;fa-stack&amp;quot; ]
-            [ i [ class iconClasses ] [] ]
-        , h4
-            []
-            [ text message ]
-        , content
-        ]
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Don&amp;#39;t forget to remove it from the &lt;code&gt;ContactList.View&lt;/code&gt; and add the necessary import in it:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- web/elm/ContactList/View.elm
-
-module ContactList.View exposing (indexView)
-
-import Common.View exposing (warningMessage)
-
--- ...
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Now we can refactor the previously created &lt;code&gt;notFoundView&lt;/code&gt; function in order to make it look how we want:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- web/elm/View.elm
-
-module View exposing (..)
-
-import Common.View exposing (warningMessage)
-
--- ...
-
-notFoundView : Html Msg
-notFoundView =
-    warningMessage
-        &amp;quot;fa fa-meh-o fa-stack-2x&amp;quot;
-        &amp;quot;Page not found&amp;quot;
-        backToHomeLink
-
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Cool! We do not only want to show the message but also give the user the chance to go back to
-the index route and display the contact list, that is why we have also added that convenient
-&lt;code&gt;backToHomeLink&lt;/code&gt; function call as the last parameter of &lt;code&gt;warningMessage&lt;/code&gt;. Let&amp;#39;s add its implementation
-in the &lt;code&gt;Common.View&lt;/code&gt; module:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- web/elm/Common/View.elm
-
-module Common.View exposing (warningMessage, backToHomeLink)
-
--- ...
-
-
-backToHomeLink : Html Msg
-backToHomeLink =
-    a
-        [ onClick &amp;lt;| NavigateTo HomeIndexRoute ]
-        [ text &amp;quot;← Back to contact list&amp;quot; ]
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;As you can see, it is just a basic link that triggers the &lt;code&gt;NavigateTo&lt;/code&gt; message passing it the route to navigate to,
-in this case, the &lt;code&gt;HomeIndexRoute&lt;/code&gt;. Let&amp;#39;s add its definition to the &lt;code&gt;Messages&lt;/code&gt; module:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- web/elm/Messages.elm
-
-module Messages exposing (..)
-
-import Routing exposing (Route)
--- ...
-
-type Msg
-    = FetchResult (Result Http.Error ContactList)
-    -- ...
-    | NavigateTo Route
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Furthermore, we have to add it&amp;#39;s implementation in the &lt;code&gt;Update&lt;/code&gt; module:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- web/elm/Upate.elm
-
-module Update exposing (..)
-
-import Navigation
-
--- ...
-
-update : Msg -&amp;gt; Model -&amp;gt; ( Model, Cmd Msg )
-update msg model =
-    case msg of
-        -- ...
-
-        NavigateTo route -&amp;gt;
-            model ! [ Navigation.newUrl &amp;lt;| toPath route ]
-
--- ...
-
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;In this case, it is returning the model and a command created by the &lt;code&gt;newUrl&lt;/code&gt; function from the &lt;code&gt;Navigation&lt;/code&gt;
-module, which receives an &lt;strong&gt;URL&lt;/strong&gt; string and adds it to the browser history, creating a location change and
-triggering all the flow we have seen earlier again. However, how can we get a string &lt;strong&gt;URL&lt;/strong&gt; having only a &lt;code&gt;Route&lt;/code&gt;?
-That is where toPath function comes into play. Let&amp;#39;s create it in the &lt;code&gt;Routing&lt;/code&gt; module:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- web/elm/Routing.elm
-
-module Routing exposing (..)
-
--- ...
-
-toPath : Route -&amp;gt; String
-toPath route =
-    case route of
-        HomeIndexRoute -&amp;gt;
-            &amp;quot;/&amp;quot;
-
-        NotFoundRoute -&amp;gt;
-            &amp;quot;/not-found&amp;quot;
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Using pattern matching against the received route, it returns an &lt;strong&gt;URL&lt;/strong&gt;.As easy as pie! If we are not missing
-anything and after the compiler ends compiling, this is what happens if we visit an
-incorrect route like &lt;a href="http://localhost:4000/foo"&gt;http://localhost:4000/foo&lt;/a&gt;:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="/images/blog/phoenix_and_elm/404.jpg" alt="404" style="background: #fff;" /&gt;&lt;/p&gt;
-
-&lt;h3&gt;Show contact route&lt;/h3&gt;
-
-&lt;p&gt;Now that we have covered the &lt;code&gt;HomeIndexRoute&lt;/code&gt; and &lt;code&gt;NotFoundRoute&lt;/code&gt; routes, let&amp;#39;s update the &lt;code&gt;Routing&lt;/code&gt; module to add the changes we need
-to add a new route, which shows a contact&amp;#39;s detail page:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- web/elm/Routing.elm
-
-module Routing exposing (..)
-
--- ...
-
-type Route
-    = HomeIndexRoute
-    -- ...
-    | ShowContactRoute Int
-
-toPath : Route -&amp;gt; String
-toPath route =
-    case route of
-        -- ...
-
-        ShowContactRoute id -&amp;gt;
-            &amp;quot;/contacts/&amp;quot; ++ toString id
-
-        -- ...
-
-matchers : Parser (Route -&amp;gt; a) a
-matchers =
-    oneOf
-        [ -- ...
-        , map ShowContactRoute &amp;lt;| s &amp;quot;contacts&amp;quot; &amp;lt;/&amp;gt; int
-        ]
-
--- ...
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;So when the user visits a path like &lt;code&gt;/contacts/id&lt;/code&gt;, we need to retrieve that contact&amp;#39;s data from the &lt;strong&gt;API&lt;/strong&gt;
-endpoint we created at the beginning of this post, and store it somewhere in our program model.
-Let&amp;#39;s update the &lt;code&gt;Model&lt;/code&gt; module:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- web/elm/Model.elm
-
-module Model exposing (..)
-
--- ...
-
-type alias Model =
-    { -- ...
-    , contact : RemoteData String Contact
-    }
-
--- ...
-
-initialModel : Route -&amp;gt; Model
-initialModel route =
-    {
-    , contact = NotRequested
-    }
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Following the same pattern we set up in the previous part for handling remote data, we have added a new
-contact to the &lt;code&gt;Model&lt;/code&gt; record, initialized with &lt;code&gt;NotRequested&lt;/code&gt;. Now that we know how the flow works, next step
-is creating the command which is returned along with the model once the new route is visited.
-This command sends the Http request asking for the given user&amp;#39;s data:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- web/elm/Commands.elm
-
-module Commands exposing (..)
-
-import Decoders exposing (contactListDecoder, contactDecoder)
-
--- ...
-
-fetchContact : Int -&amp;gt; Cmd Msg
-  fetchContact id =
-      let
-          apiUrl =
-              &amp;quot;/api/contacts/&amp;quot; ++ toString id
-
-          request =
-              Http.get apiUrl contactDecoder
-      in
-          Http.send FetchContactResult request
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;The response gets parsed with the &lt;code&gt;contactDecoder&lt;/code&gt;, and the result handled with the &lt;code&gt;FetchContactResult&lt;/code&gt; message,
-which we need to add to the &lt;code&gt;Messages&lt;/code&gt; module:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- web/elm/Messages.elm
-
-module Messages exposing (..)
-
-import Model exposing (ContactList, Contact)
--- ...
-
-
-type Msg
-    -- ...
-    | FetchContactResult (Result Http.Error Contact)
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Next, we need to edit the &lt;code&gt;Update&lt;/code&gt; module to implement these results:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- web/elm/Update.elm
-
-module Update exposing (..)
-
-import Commands exposing (fetch, fetchContact)
--- ...
-
-update : Msg -&amp;gt; Model -&amp;gt; ( Model, Cmd Msg )
-update msg model =
-    case msg of
-        -- ...
-
-        FetchContactResult (Ok response) -&amp;gt;
-            { model | contact = Success response } ! []
-
-        FetchContactResult (Err error) -&amp;gt;
-            { model | contact = Failure &amp;quot;Contact not found&amp;quot; } ! []
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;If the result of the &lt;strong&gt;Http&lt;/strong&gt; request and decoding is &lt;code&gt;Ok&lt;/code&gt; then it sets the current contact in the model.
-On the other hand, if it fails, it establishes a friendly message to show to the user. However, there&amp;#39;s
-something we are missing here. How is the &lt;code&gt;fetchContact&lt;/code&gt; going to be triggered? Well, we have to do it
-whenever a user visits the show contact route, and this gets done in two different ways:&lt;/p&gt;
-
-&lt;ol&gt;
-&lt;li&gt;By clicking on a contact&amp;#39;s card in the contact list.&lt;/li&gt;
-&lt;li&gt;Visiting the Url directly from the browser.&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;In any of these cases we have to fetch the contact when the &lt;strong&gt;Url&lt;/strong&gt; corresponds to the &lt;code&gt;ShowContactRoute&lt;/code&gt;, so let&amp;#39;s update once more the &lt;code&gt;Update&lt;/code&gt; module
-to implement this:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- web/elm/Update.elm
-
-module Update exposing (..)
-
-import Commands exposing (fetch, fetchContact)
-
--- ...
-
-urlUpdate : Model -&amp;gt; ( Model, Cmd Msg )
-  urlUpdate model =
-      case model.route of
-          HomeIndexRoute -&amp;gt;
-              model ! [ fetch 1 &amp;quot;&amp;quot; ]
-
-          ShowContactRoute id -&amp;gt;
-              { model | contact = Requesting } ! [ fetchContact id ]
-
-          _ -&amp;gt;
-              model ! []
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Let&amp;#39;s move on to the &lt;code&gt;Contact.View&lt;/code&gt; and add the &lt;code&gt;onClick&lt;/code&gt; handler to the card:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- web/elm/Contact/View.elm
-
-module Contact.View exposing (..)
-
--- ...
-
-contactView : Contact -&amp;gt; ( String, Html Msg )
-contactView model =
-    let
-        -- ...
-    in
-        ( toString model.id
-        , div
-            [ classes
-            , onClick &amp;lt;| NavigateTo &amp;lt;| ShowContactRoute model.id
-            ]
-
-            -- ...
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Remember that int the main &lt;code&gt;View&lt;/code&gt; module we are using route-specific view functions, so let&amp;#39;s add the handler for the
-&lt;code&gt;ShowContactRoute&lt;/code&gt; route:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- web/elm/View.elm
-
-module View exposing (..)
-
-import Contact.View exposing (showContactView)
-
--- ...
-
-page : Model -&amp;gt; Html Msg
-page model =
-    case model.route of
-        -- ...
-
-        ShowContactRoute id -&amp;gt;
-            showContactView model
-
-        -- ...
-
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;As you can see, we are using a &lt;code&gt;showContactView&lt;/code&gt; function from the &lt;code&gt;Contact.View&lt;/code&gt; module that we need to implement:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- web/elm/Contact/View.elm
-
-module Contact.View exposing (..)
-
--- ...
-
-showContactView : Model -&amp;gt; Html Msg
-  showContactView model =
-      case model.contact of
-          Success contact -&amp;gt;
-              let
-                  classes =
-                      classList
-                          [ ( &amp;quot;person-detail&amp;quot;, True )
-                          , ( &amp;quot;male&amp;quot;, contact.gender == 0 )
-                          , ( &amp;quot;female&amp;quot;, contact.gender == 1 )
-                          ]
-
-                  ( _, content ) =
-                      contactView contact
-              in
-                  div
-                      [ id &amp;quot;contacts_show&amp;quot; ]
-                      [ header []
-                          [ h3
-                              []
-                              [ text &amp;quot;Person detail&amp;quot; ]
-                          ]
-                      , backToHomeLink
-                      , div
-                          [ classes ]
-                          [ content ]
-                      ]
-
-          Requesting -&amp;gt;
-              warningMessage
-                  &amp;quot;fa fa-spin fa-cog fa-2x fa-fw&amp;quot;
-                  &amp;quot;Fetching contact&amp;quot;
-                  (text &amp;quot;&amp;quot;)
-
-          Failure error -&amp;gt;
-              warningMessage
-                  &amp;quot;fa fa-meh-o fa-stack-2x&amp;quot;
-                  error
-                  backToHomeLink
-
-          NotRequested -&amp;gt;
-              text &amp;quot;&amp;quot;
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Following the same RemoteData pattern that in the &lt;code&gt;ContactList.View&lt;/code&gt; main function, we handle all the
-possible different values of the model&amp;#39;s contact. The &lt;code&gt;Success&lt;/code&gt; branch wraps the existing &lt;code&gt;contactView&lt;/code&gt;
-function in an &lt;strong&gt;Html&lt;/strong&gt; div with its header and back-to-home link, to navigate back to the &lt;code&gt;HomeIndexRoute&lt;/code&gt; route.
-After the compilation ends, we can refresh our browser, click on any of the contact cards and see
-how the list disappears to show only our selected contact:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="/images/blog/phoenix_and_elm/show-contact.gif" alt="Show contact" style="background: #fff;" /&gt;&lt;/p&gt;
-
-&lt;p&gt;I&amp;#39;s working like a charm. But if you paginate or make a search, click on a contact and then
-return back to the contact list, you will notice that the current search and pagination is lost.
-This is becacuse we are always fetching the first page in the &lt;code&gt;urlUpdate&lt;/code&gt; function, so let&amp;#39;s do a little refactor to solve this:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- web/elm/Update.elm
-
-module Update exposing (..)
-
--- ...
-
-urlUpdate : Model -&amp;gt; ( Model, Cmd Msg )
-  urlUpdate model =
-      case model.route of
-          HomeIndexRoute -&amp;gt;
-              case model.contactList of
-                  NotRequested -&amp;gt;
-                      model ! [ fetch 1 &amp;quot;&amp;quot; ]
-
-                  _ -&amp;gt;
-                      model ! []
-
-          -- ...
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;With this little change, we are only resetting the pagination and search only when the contact list has
-not been requested previously. Let&amp;#39;s get back to the browser and see what happens now:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="/images/blog/phoenix_and_elm/show-contact-2.gif" alt="Show contact" style="background: #fff;" /&gt;&lt;/p&gt;
-
-&lt;p&gt;We have our &lt;strong&gt;Elm&lt;/strong&gt; routes completely working, yay! This is all for now, but in the next part of the series,
-we are going to add support for one of the features that makes Phoenix so awesome, &lt;strong&gt;WebSockets&lt;/strong&gt;, removing
-the &lt;strong&gt;API&lt;/strong&gt; controller and replacing it with a &lt;strong&gt;Phoenix&lt;/strong&gt; channel, seeing how to connect to it from &lt;strong&gt;Elm&lt;/strong&gt; and send
-messages through it. In the meantime, here&amp;#39;s &lt;a href="https://github.com/bigardone/phoenix-and-elm/tree/tutorial/part-5"&gt;the source code&lt;/a&gt; of what we have done so far.&lt;/p&gt;
 
 &lt;p&gt;Happy coding!&lt;/p&gt;
 

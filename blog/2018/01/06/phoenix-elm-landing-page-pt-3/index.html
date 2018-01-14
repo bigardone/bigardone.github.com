@@ -1,0 +1,589 @@
+<!DOCTYPE html> <!--[if lt IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8 lt-ie7" lang=en-us><![endif]--> <!--[if IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8" lang=en-us><![endif]--> <!--[if IE 8]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if IE 9]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if lt IE 10]><html class="no-js lt-ie10" lang=en-us><![endif]--> <!--[if !IE]>><![endif]--> <html class=no-js lang=en> <head> <title>Phoenix & Elm landing page (pt.3) - Code, Love & Boards</title> <meta charset=utf-8 content='text/html' http-equiv=content-type> <meta content='ie=edge,chrome=1' http-equiv=x-ua-compatible> <meta content='Adding Google reCAPTCHA support to avoid spambots' name=description> <meta content='Ricardo García Vega - http://twitter.com/bigardone' name=author> <meta content='elixir, phoenix, elm' name=keywords> <meta content='initial-scale=1.0,user-scalable=no,maximum-scale=1,width=device-width' name=viewport> <link href='//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css' rel=stylesheet> <link href="//fonts.googleapis.com/css?family=Montserrat:400,700|Lora:400,700" media=screen rel=stylesheet /> <link href="../../../../../stylesheets/blog-ed6b1e0f.css" media=all rel=stylesheet /> <link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/styles/tomorrow.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/highlight.min.js'></script> <link href='/images/apple-touch-icon-57x57-6e598dc4.png' rel=apple-touch-icon sizes=57x57> <link href='/images/apple-touch-icon-114x114-5be964ba.png' rel=apple-touch-icon sizes=114x114> <link href='/images/apple-touch-icon-72x72-70084a85.png' rel=apple-touch-icon sizes=72x72> <link href='/images/apple-touch-icon-144x144-1dbb56c1.png' rel=apple-touch-icon sizes=144x144> <link href='/images/apple-touch-icon-60x60-d05a5ea9.png' rel=apple-touch-icon sizes=60x60> <link href='/images/apple-touch-icon-120x120-5dafce59.png' rel=apple-touch-icon sizes=120x120> <link href='/images/apple-touch-icon-76x76-b2c0d784.png' rel=apple-touch-icon sizes=76x76> <link href='/images/apple-touch-icon-152x152-45595360.png' rel=apple-touch-icon sizes=152x152> <link href='/images/favicon-160x160-944ce76e.png' rel=icon sizes=160x160 type='image/png'> <link href='/images/favicon-96x96-b7e4e089.png' rel=icon sizes=96x96 type='image/png'> <link href='/images/favicon-32x32-b7f34a79.png' rel=icon sizes=32x32 type='image/png'> <link href='/images/favicon-16x16-2712c528.png' rel=icon sizes=16x16 type='image/png'> <meta content='#9f00a7' name=msapplication-TileColor> <meta content='/images/mstile-144x144-028d4c4c.png' name=msapplication-TileImage> <script>
+  var _StatHat = _StatHat || [];
+  _StatHat.push(['_setUser', 'NzIzMCDaNaL5bvEP1HQkMYwfYsQe']);
+  (function() {
+          var sh = document.createElement('script'); sh.type = 'text/javascript';
+          sh.async = true;
+          sh.src = '//www.stathat.com/javascripts/api.js';
+          var s = document.getElementsByTagName('script')[0];
+          s.parentNode.insertBefore(sh, s);
+  })();
+</script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Phoenix & Elm landing page (pt.3)</h1> <h3></h3> <div class=meta-data> <hr> posted Jan 6, 2018 on <a class=tag href="/blog/tags/elixir.html">elixir</a> <a class=tag href="/blog/tags/phoenix.html">phoenix</a> <a class=tag href="/blog/tags/elm.html">elm</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <div class=index> <p>This post belongs to the <strong>Phoenix & Elm landing page</strong> series.</p> <ol> <li><a href="/blog/2017/12/02/phoenix-elm-landing-page-pt-1/">Bootstrapping the project and the basic API functionality to save our first leads</a></li> <li><a href="/blog/2017/12/23/phoenix-elm-landing-page-pt-2/">Building the landing page UI and the basic Elm subscription form</a></li> <li><a href="/blog/2018/01/06/phoenix-elm-landing-page-pt-3/">Adding Google reCAPTCHA support to avoid spambots</a></li> </ol> <a href="https://github.com/bigardone/phoenix-and-elm-landing-page" target=_blank><i class="fa fa-github"></i> Source code</a> </div> <p>In the <a href="/blog/2017/12/23/phoenix-elm-landing-page-pt-2/&amp;lt;Paste">previous part</a> of the series, we created the landing page main layout and implemented the Elm subscription form, which lets visitors subscribe, saving their name and email in the leads database table. We do not want spambots to subscribe, therefore, in this part we are going to add a protective layer to the subscription process using <a href="https://developers.google.com/recaptcha/">Google&#39;s reCAPTCHA</a>, which consists of two different steps:</p> <ul> <li>Adding the <strong>reCAPTCHA</strong> widget to the Elm subscription form, and sending the user&#39;s response along with the name and email.</li> <li>Verifying in the server-side the user&#39;s response against <strong>Google&#39;s RECAPTCHA API</strong> to verify whether is valid or not</li> </ul> <p>Without further ado, let&#39;s do this!</p> <h3>Adding the reCAPTCHA widget to the form</h3> <p>First of all, we need to head to <a href="https://www.google.com/recaptcha/admin">Google&#39;s reCAPTCHA admin site</a> and register our website, using localhost as the domain, to get the necessary keys that we need.</p> <p><img src="/images/blog/phoenix-elm-landing-page/recaptcha-admin-1f13e6d1.jpg" alt="Navigation flow" style="background: #fff;"/></p> <p>Next, we have to add <strong>Google&#39;s reCAPTCHA</strong> script in the main template, so let&#39;s edit it:</p> <pre><code class="elixir"># lib/landing_page_web/templates/layout/app.html.eex
+
+&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+  &lt;!--... --&gt;
+
+  &lt;body class=&quot;landing-page&quot;&gt;
+    &lt;!--... --&gt;
+
+    &lt;script src=&quot;https://www.google.com/recaptcha/api.js?onload=onloadCallback&amp;render=explicit&quot; async defer&gt;&lt;/script&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</code></pre> <p>We are not only adding the script but passing the <code>onload</code> and <code>render</code> parameters to render the widget explicitly and to call the <code>onloadCallback</code> function once the script gets loaded. The plan is to render the widget inside the Elm form, and for that we need the script to be loaded before rendering it, so let&#39;s edit the main <code>app.js</code> file to achieve this:</p> <pre><code class="js">// assets/js/app.js
+
+import Elm from &#39;./elm/main&#39;;
+
+window.onloadCallback = () =&gt; {
+  const formContainer = document.querySelector(&#39;#form_container&#39;);
+
+  if (formContainer) {
+    const app = Elm.Main.embed(formContainer);
+  }
+};
+</code></pre> <p>Now that the <strong>Elm</strong> program is embedded once the script is ready, we have to render the widget somehow using its internal API. Before continuing any further, let&#39;s update the <code>View</code> module and add a new div where we want to render the widget:</p> <pre><code class="elm"># assets/elm/src/View.elm
+
+module View exposing (view)
+
+-- ...
+
+formView : SubscribeForm -&gt; Html Msg
+formView subscribeForm =
+        -- ...
+
+        , Html.div
+                [ Html.class &quot;field&quot; ]
+                [ Html.div
+                        [ Html.id &quot;recaptcha&quot; ]
+                        []
+                , validationErrorView &quot;recaptcha_token&quot; validationErrors
+                ]
+
+        -- ...
+</code></pre> <p>How can we tell the external <strong>reCAPTCHA</strong> script that we want it to render the widget inside the div with <code>recaptcha</code> id? In Elm, the proper way of communicating with external <strong>JavaScript</strong> is by using <strong>ports</strong>, so let&#39;s go ahead and create a new module with a port to initialize the widget:</p> <pre><code class="elm">-- assets/elm/src/Ports.elm
+
+port module Ports exposing (..)
+
+-- OUT PORTS
+
+
+port initRecaptcha : String -&gt; Cmd msg
+
+</code></pre> <p>The <code>initRecaptcha</code> port function receives a string which is the id of the container where we want to render the widget and returns a command. Therefore, we can use it in the main <code>init</code> function, and the port will get called once the program starts for the first time:</p> <pre><code class="elm">-- assets/elm/src/Main.elm
+
+module Main exposing (main)
+
+import Ports
+-- ...
+
+init : ( Model, Cmd Msg )
+init =
+    initialModel ! [ Ports.initRecaptcha &quot;recaptcha&quot; ]
+
+-- ...
+</code></pre> <p>Now we can go back to the <code>app.js</code> script and subscribe to the <code>initRecaptcha</code> port:</p> <pre><code class="js">// assets/javascript/app.js
+
+import Elm from &#39;./elm/main&#39;;
+
+window.onloadCallback = () =&gt; {
+  const formContainer = document.querySelector(&#39;#form_container&#39;);
+
+  if (formContainer) {
+    const app = Elm.Main.embed(formContainer);
+    let recaptcha;
+
+    app.ports.initRecaptcha.subscribe(id =&gt; {
+      window.requestAnimationFrame(() =&gt; {
+        recaptcha = grecaptcha.render(id, {
+          sitekey: &#39;YOUR_SITE_KEY&#39;,
+        });
+      });
+    });
+  }
+};
+</code></pre> <p><code>app.ports</code> contains all the ports from the Elm program. By subscribing to any of them, we are making the passed function to get called anytime a port gets triggered by the Elm runtime. In our case, it is using <strong>Google&#39;s reCAPTCHA</strong> script to render the widget inside the specified id, using the <code>sitekey</code> we created previously from the admin site. Also, note that we are wrapping the render function inside <code>window.requestAnimationFrame</code>, forcing the script to initialize the widget immediately after the form renders for the first time. Not doing it like so may create race conditions between Elm programs and external JavaScript components, so don&#39;t forget using it. Let&#39;s jump to the browser and see the result:</p> <p><img src="/images/blog/phoenix-elm-landing-page/landing-page-9e2448ef.jpg" alt="Landing page" style="background: #fff;"/></p> <p>The widget renders as expected, yay!</p> <h3>Setting the reCAPTCHA token</h3> <p>When a visitor clicks on the widget, it generates a token that we need to validate against Google reCAPTCHA API, so we need to send it to the server along with the <code>full_name</code> and the <code>email</code>. Before this, let&#39;s edit the model module to add a new key in the <code>SubscribeForm</code> so we can store the token:</p> <pre><code class="elm">-- assets/elm/src/Model.elm
+
+module Model exposing (..)
+
+
+type alias FormFields =
+    { fullName : String
+    , email : String
+    , recaptchaToken : Maybe String
+    }
+
+-- ...
+
+emptyFormFields : FormFields
+emptyFormFields =
+    { fullName = &quot;&quot;
+    , email = &quot;&quot;
+    , recaptchaToken = Nothing
+    }
+
+-- ...
+</code></pre> <p>How can we store in it the token received from the external <strong>reCAPTCHA</strong> widget? As sending messages to external <strong>JavaScript</strong>, <strong>Elm</strong> can also receive messages from the outer world by subscribing to incoming ports. Knowing this, let&#39;s create a new port which receives the <strong>reCAPTCHA</strong> token from the widget:</p> <pre><code class="elm">-- assets/elm/src/Ports.elm
+
+port module Ports exposing (..)
+
+-- ...
+
+
+-- IN PORTS
+
+
+port setRecaptchaToken : (String -&gt; msg) -&gt; Sub msg
+</code></pre> <p>When <strong>Elm</strong> receives the <code>setRecaptchaToken</code> port, we want it to set the token in the model, and for that, we need to create a new message type:</p> <pre><code class="elm">-- assets/elm/src/Messages.elm
+
+type Msg
+    = HandleFullNameInput String
+    -- ...
+    | SetRecaptchaToken String
+</code></pre> <p>We also need to handle this message in the <code>update</code> function:</p> <pre><code class="elm">-- assets/elm/src/Update.elm
+
+module Update exposing (update)
+
+update : Msg -&gt; Model -&gt; ( Model, Cmd Msg )
+update msg model =
+    -- ...
+
+    SetRecaptchaToken token -&gt;
+        { model | subscribeForm = Editing { formFields | recaptchaToken = Just token } } ! []
+</code></pre> <p>As mentioned before, <strong>Elm</strong> needs to subscribe to incoming ports, so let&#39;s go ahead and define the <code>subscriptions</code> function to put all the pieces together:</p> <pre><code class="elm">-- assets/elm/src/Main.elm
+
+-- ...
+
+subscriptions : Model -&gt; Sub Msg
+subscriptions model =
+    Ports.setRecaptchaToken SetRecaptchaToken
+</code></pre> <p>The only thing left is sending the token from <strong>JavaScript</strong>:</p> <pre><code class="js">// assets/javascript/app.js
+
+import Elm from &#39;./elm/main&#39;;
+
+window.onloadCallback = () =&gt; {
+  // ...
+
+    app.ports.initRecaptcha.subscribe(id =&gt; {
+      window.requestAnimationFrame(() =&gt; {
+        recaptcha = grecaptcha.render(id, {
+          sitekey: &#39;YOUR_SITE_KEY&#39;,
+          callback: app.ports.setRecaptchaToken.send, // &lt;- CHECK THIS OUT
+        });
+      });
+    });
+
+  // ...
+};
+</code></pre> <p>The <strong>reCAPTCHA</strong> widget has a callback option which is a function that gets called after checking the visitor&#39;s response and which contains the token, and which we can use to send the <code>setRecaptchaToken</code> port message to <strong>Elm</strong>. Let&#39;s check that everything is working as expected:</p> <p><img src="/images/blog/phoenix-elm-landing-page/settoken-port-b7db7da0.gif" alt="Navigation flow" style="background: #fff;"/></p> <p>Using <strong>Elm&#39;s debugger</strong>, we can verify that when we click on the <strong>reCAPTCHA widget</strong>, ELm handles the <code>SetRecaptchaToken</code> message, setting the <code>recaptchaToken</code> received through the <code>setRecaptchaToken</code> port in the model. The only thing left, for now, is preventing sending the form while the <code>recaptchaToken</code> is not set, so let&#39;s fix this in the view module:</p> <pre><code class="elm">-- assets/elm/src/View.elm
+
+module View exposing (view)
+
+-- ...
+
+formView : SubscribeForm -&gt; Html Msg
+formView subscribeForm =
+    let
+        { fullName, email, recaptchaToken } =
+            extractFormFields subscribeForm
+
+
+        -- ...
+
+        buttonDisabled =
+            fullName
+                == &quot;&quot;
+                || email
+                == &quot;&quot;
+                || recaptchaToken
+                == Nothing
+                || recaptchaToken
+                == Just &quot;&quot;
+                || saving
+                || invalid
+
+        -- ...
+    in
+        -- ...
+</code></pre> <p>Finally, we have to include the <code>recaptchaToken</code> value to the HTTP request body:</p> <pre><code class="elm">-- assets/elm/src/Commands.elm
+
+module Commands exposing (subscribe)
+
+-- ...
+
+encodeModel : FormFields -&gt; JD.Value
+encodeModel { fullName, email, recaptchaToken } =
+    JE.object
+        [ ( &quot;lead&quot;
+          , JE.object
+                -- ...
+
+                , ( &quot;recaptcha_token&quot;, JE.string &quot;foo&quot; )
+                ]
+          )
+        ]
+</code></pre> <h3>Server-side reCAPTCHA token validation</h3> <p>Now that the form is sending the token, we can implement the second step of the process, which is validating it against <strong>Google&#39;s API</strong>. Although we are somehow forcing the <code>recaptcha_token</code> value to have a non-empty value, let&#39;s add a validation check on the backend, so no leads with empty tokens can get saved. As we only need to validate it, and not save it, we can add a virtual field to the <code>Lead</code> schema:</p> <pre><code class="elixir"># lib/landing_page/marketing/lead.ex
+
+defmodule LandingPage.Marketing.Lead do
+  use Ecto.Schema
+  import Ecto.Changeset
+  alias LandingPage.Marketing.Lead
+
+  @derive {Poison.Encoder, only: [:full_name, :email]}
+
+  schema &quot;leads&quot; do
+    field(:email, :string)
+    field(:full_name, :string)
+
+    field(:recaptcha_token, :string, virtual: true)
+
+    timestamps()
+  end
+
+  @fields ~w(full_name email recaptcha_token)a
+
+  @doc false
+  def changeset(%Lead{} = lead, attrs) do
+    lead
+    |&gt; cast(attrs, @fields)
+    |&gt; validate_required(@fields)
+    |&gt; unique_constraint(:email)
+  end
+end
+</code></pre> <p>This change breaks the tests, so let&#39;s go ahead and fix them:</p> <pre><code class="elixir"># test/landing_page/marketing/marketing_test.exs
+
+defmodule LandingPage.MarketingTest do
+  use LandingPage.DataCase
+
+  # ...
+
+  @valid_attrs %{
+    &quot;email&quot; =&gt; &quot;some email&quot;,
+    &quot;full_name&quot; =&gt; &quot;some full_name&quot;,
+    &quot;recaptcha_token&quot; =&gt; &quot;foo&quot;
+  }
+  @invalid_attrs %{email: nil, full_name: nil, recaptcha_token: nil}
+
+  # ...
+end
+</code></pre> <pre><code class="elixir"># test/landing_page_web/controllers/v1/lead_controller_test.exs
+
+defmodule LandingPageWeb.V1.LeadControllerTest do
+  use LandingPageWeb.ConnCase
+
+  # ...
+
+
+  describe &quot;POST /api/v1/leads&quot; do
+    test &quot;returns error response with invalid params&quot;, %{conn: conn} do
+      conn = post(conn, lead_path(conn, :create), %{&quot;lead&quot; =&gt; %{}})
+
+      assert json_response(conn, 422) == %{
+               &quot;full_name&quot; =&gt; [&quot;can&#39;t be blank&quot;],
+               &quot;email&quot; =&gt; [&quot;can&#39;t be blank&quot;],
+               &quot;recaptcha_token&quot; =&gt; [&quot;can&#39;t be blank&quot;]
+             }
+    end
+
+    test &quot;returns success response with valid params&quot;, %{conn: conn} do
+      params = %{
+        &quot;lead&quot; =&gt; %{&quot;full_name&quot; =&gt; &quot;John&quot;, &quot;email&quot; =&gt; &quot;foo@bar.com&quot;, &quot;recaptcha_token&quot; =&gt; &quot;foo&quot;}
+      }
+
+      conn = post(conn, lead_path(conn, :create), params)
+      assert json_response(conn, 200) == %{&quot;full_name&quot; =&gt; &quot;John&quot;, &quot;email&quot; =&gt; &quot;foo@bar.com&quot;}
+    end
+  end
+end
+</code></pre> <p>If we now run the test suite, we can see that every test is passing now:</p> <pre><code class="bash">➜ mix test
+...........
+
+Finished in 0.1 seconds
+11 tests, 0 failures
+
+Randomized with seed 66361
+</code></pre> <p>To check whether Google has verified the user, we have to send an HTTP request to <code>https://www.google.com/recaptcha/api/siteverify</code> with the token. For that we first need to install an HTTP client like <a href="https://github.com/edgurgel/httpoison">HTTPoison</a>, so let&#39; go ahead and add it to the dependencies list:</p> <pre><code class="elixir"># mix.exs
+
+# ...
+
+  defp deps do
+    [
+      # ...
+      {:httpoison, &quot;~&gt; 0.13&quot;}
+    ]
+  end
+
+# ...
+</code></pre> <p>After running the necessary <code>mix deps.get</code> task, we are ready to implement our <strong>Google&#39;s HTTP client</strong>, so let&#39;s create the following module:</p> <pre><code class="elixir"># lib/landing_page/clients/google/recaptcha_http.ex
+
+defmodule LandingPage.Clients.GoogleRecaptchaHttp do
+  use HTTPoison.Base
+
+  @secret_key Application.get_env(:landing_page, :google_recaptcha)[:secret_key]
+
+  def verify(token) do
+    params = %{
+      secret: @secret_key,
+      response: token
+    }
+
+    &quot;/siteverify&quot;
+    |&gt; get!([], params: params)
+    |&gt; case do
+         %{status_code: 200, body: body} -&gt;
+           {:ok, body}
+
+         response -&gt;
+           {:error, response}
+       end
+  end
+
+  def process_url(url) do
+    &quot;https://www.google.com/recaptcha/api&quot; &lt;&gt; url
+  end
+
+  def process_response_body(body), do: Poison.decode!(body, keys: :atoms)
+end
+</code></pre> <p>Using <code>HTTPoison.Base</code> gives us mostly all the functionality that we need out of the box. The <code>verify/1</code> function receives a token and sends an HTTP request against the specified URL, with the <code>secret_key</code> and the user&#39;s token. Depending on the result, it returns a tuple with the <code>:ok</code> atom and the processed body using the <code>process_response_body/1</code> function, or one containing <code>:error</code> and the response. To finish the client, we need to set the value of <code>@secret_key</code> in the application&#39;s config:</p> <pre><code class="elixir"># config/config.exs
+
+# ...
+
+config :landing_page,
+  google_recaptcha: [
+    secret_key: &quot;SET_HERE_YOUR_SECRET_KEY&quot;
+  ]
+</code></pre> <p>Jumping back to the <a href="https://developers.google.com/recaptcha/docs/verify">reCAPTCHA docs</a>, we can see that the response body looks like the following:</p> <pre><code class="json">{
+  &quot;success&quot;: true|false,
+  &quot;challenge_ts&quot;: timestamp,  // timestamp of the challenge load (ISO format yyyy-MM-dd&#39;T&#39;HH:mm:ssZZ)
+  &quot;hostname&quot;: string,         // the hostname of the site where the reCAPTCHA was solved
+  &quot;error-codes&quot;: [...]        // optional
+}
+</code></pre> <p>Having this in mind, we can go ahead and create a new function in the <code>Marketing</code> module to subscribe and create new leads:</p> <pre><code class="elixir"># lib/landing_page/marketing/marketing.ex
+
+alias LandingPage.Clients.GoogleRecaptchaHttp
+# ...
+
+defmodule LandingPage.Marketing do
+  # ...
+
+  def subscribe(lead_params) do
+    token = Map.get(lead_params, &quot;recaptcha_token&quot;)
+
+    with %Ecto.Changeset{valid?: true} = changeset &lt;- Lead.changeset(%Lead{}, lead_params),
+         {:ok, %{success: true}} &lt;- GoogleRecaptchaHttp.verify(token),
+         {:ok, lead} &lt;- Repo.insert(changeset) do
+      {:ok, lead}
+    else
+      {:ok, %{success: false}} -&gt;
+        {:error, :invalid_recaptcha_token}
+
+      {:error, response} -&gt;
+        {:error, response}
+
+      other -&gt;
+        {:error, other}
+    end
+  end
+end
+</code></pre> <p>So, if everything goes as expected, <code>subscribe/1</code> receives the <code>lead_params</code> and validates them against a lead changeset, verifying the token using the client, inserting the lead and returning a tuple containing it. On the other hand, if the token validation returns <code>{:ok, %{success: false}}</code>, which means that is not valid, it returns a <code>{:error, :invalid_recaptcha_token}</code> tuple.</p> <p>Let&#39; write some tests to check that everything is currently behaving as it should:</p> <pre><code class="elixir"># test/landing_page/marketing/marketing_test.exs
+
+defmodule LandingPage.MarketingTest do
+  use LandingPage.DataCase
+
+  # ...
+
+  describe &quot;leads&quot; do
+    # ...
+
+    test &quot;subscribe/1 with valid data and token creates a lead&quot; do
+      assert {:ok, %Lead{}} = Marketing.subscribe(@valid_attrs)
+    end
+
+    test &quot;subscribe/1 with invalid token returns error changeset&quot; do
+      params = %{@valid_attrs | &quot;recaptcha_token&quot; =&gt; &quot;invalid&quot;}
+      assert {:error, :invalid_recaptcha_token} = Marketing.subscribe(params)
+    end
+  end
+end
+</code></pre> <p>Before running the test, let&#39;s think about our current solution for a second. Every time that we run the tests, the <code>GoogleRecaptchaHttp</code> client is going to be sending requests, slowing down the test suite, and we do not really want that. Moreover, knowing beforehand what the Google&#39;s API returns, we no longer need to send a real request to test what we need. There are many ways of implementing a workaround for this, but one of my favorite ones is creating a mock client, which returns fake responses, based on the API specification, and use either of the clients depending on the environment. Let&#39;s stick to this approach, and create a new mock client:</p> <pre><code class="elixir"># lib/landing_page/clients/google/recaptcha_mock.ex
+
+defmodule LandingPage.Clients.GoogleRecaptchaMock do
+  def verify(&quot;invalid&quot;), do: {:ok, %{success: false}}
+  def verify(_token), do: {:ok, %{success: true}}
+end
+</code></pre> <p>To use a specific client depending on the current environment that the application is running in, we can just set the module we want to use in that environment configuration file:</p> <pre><code class="elixir"># config/config.exs
+
+# ...
+
+config :landing_page,
+  google_recaptcha: [
+    secret_key: &quot;SET_HERE_YOUR_SECRET_KEY&quot;,
+    client: LandingPage.Clients.GoogleRecaptchaHttp
+  ]
+</code></pre> <pre><code class="elixir"># config/test.exs
+
+# ...
+
+config :landing_page,
+  google_recaptcha: [
+    client: LandingPage.Clients.GoogleRecaptchaMock
+  ]
+</code></pre> <p>Finally, let&#39;s refactor the <code>Marketing</code> module to use the client set in the environment:</p> <pre><code class="elixir"># lib/landing_page/marketing/marketing.ex
+
+alias LandingPage.Clients.GoogleRecaptchaHttp
+# ...
+
+@google_recaptcha_client Application.get_env(:landing_page, :google_recaptcha)[:client]
+
+defmodule LandingPage.Marketing do
+  # ...
+
+  def subscribe(lead_params) do
+    token = Map.get(lead_params, &quot;recaptcha_token&quot;)
+
+    with %Ecto.Changeset{valid?: true} = changeset &lt;- Lead.changeset(%Lead{}, lead_params),
+         {:ok, %{success: true}} &lt;- @google_recaptcha_client.verify(token),
+         {:ok, lead} &lt;- Repo.insert(changeset) do
+      {:ok, lead}
+    else
+      # ...
+end
+</code></pre> <p><code>@google_recaptcha_client</code> contains the client module, which in the test environment is the mock client, so we can non safely run the tests:</p> <pre><code>➜ mix test test/landing_page/marketing/marketing_test.exs
+....
+
+Finished in 0.1 seconds
+4 tests, 0 failures
+
+Randomized with seed 506123
+</code></pre> <p>And they all pass, yay!</p> <p>We are still missing an important part though. We need to update the <code>LeadController</code> module to use the new <code>subscribe</code> function we just created:</p> <pre><code class="elixir"># lib/landing_page_web/controllers/v1/lead_controller.ex
+
+defmodule LandingPageWeb.V1.LeadController do
+  use LandingPageWeb, :controller
+
+  alias LandingPage.Marketing
+
+  plug(:scrub_params, &quot;lead&quot;)
+
+  def create(conn, %{&quot;lead&quot; =&gt; params}) do
+    with {:ok, lead} &lt;- Marketing.subscribe(params) do
+      json(conn, lead)
+    end
+  end
+end
+</code></pre> <p>We also need to handle in the <code>FallbackController</code> module the <code>{:error, :invalid_recaptcha_token}</code> response resulting from an invalid token check:</p> <pre><code class="elixir"># lib/landing_page_web/controllers/fallback_controller.ex
+
+defmodule LandingPageWeb.FallbackController do
+  use LandingPageWeb, :controller
+
+  # ...
+
+  def call(conn, {:error, :invalid_recaptcha_token}) do
+    conn
+    |&gt; put_status(:unprocessable_entity)
+    |&gt; render(LandingPageWeb.ErrorView, &quot;invalid_recaptcha_token.json&quot;)
+  end
+end
+</code></pre> <p>Finally, let&#39;s edit the <code>ErrorView</code> module in order to add the necessary render function:</p> <pre><code class="elixir"># lib/landing_page_web/views/error_view.ex
+
+defmodule LandingPageWeb.ErrorView do
+  # ...
+
+  def render(&quot;invalid_recaptcha_token.json&quot;, _) do
+    %{recaptcha_token: [&quot;the response is invalid&quot;]}
+  end
+
+  # ...
+end
+</code></pre> <p>Following the same convention for validation errors, we return a map with the error we want to render below the <strong>reCAPTCHA widget</strong>. Let&#39;s add a test to check that it works:</p> <pre><code class="elixir"># test/landing_page_web/controllers/v1/lead_controller_test.exs
+
+defmodule LandingPageWeb.V1.LeadControllerTest do
+  use LandingPageWeb.ConnCase
+
+  describe &quot;POST /api/v1/leads&quot; do
+    # ...
+
+    test &quot;returns error response with invalid token&quot;, %{conn: conn} do
+      params = %{
+        &quot;lead&quot; =&gt; %{
+          &quot;full_name&quot; =&gt; &quot;John&quot;,
+          &quot;email&quot; =&gt; &quot;foo@bar.com&quot;,
+          &quot;recaptcha_token&quot; =&gt; &quot;invalid&quot;
+        }
+      }
+
+      conn = post(conn, lead_path(conn, :create), params)
+
+      assert json_response(conn, 422) == %{
+               &quot;recaptcha_token&quot; =&gt; [&quot;the response is invalid&quot;]
+             }
+    end
+  end
+end
+</code></pre> <pre><code>➜ mix test  test/landing_page_web/controllers/v1/lead_controller_test.exs
+...
+
+Finished in 0.1 seconds
+3 tests, 0 failures
+
+Randomized with seed 723440
+</code></pre> <p>To test it in the browser, we can edit the Elm <code>Commands</code> module and simply set a hardcoded value for the <code>recaptcha_token</code> parameter:</p> <p><img src="/images/blog/phoenix-elm-landing-page/token-error-61d8d308.gif" alt="Token error" style="background: #fff;"/></p> <p>However, wait a minute. If the token is invalid, there is no current way of resetting the widget again, so the user is not able to resubmit the form. Let&#39;s fix this.</p> <h3>Resetting the token on error</h3> <p>Luckily for us, the widget has a <code>reset</code> function and we can call it through an Elm port. Let&#39;s edit the <code>Ports</code> module and add a new outgoing port:</p> <pre><code class="elm">-- assets/elm/src/Ports.elm
+
+port module Ports exposing (..)
+
+-- OUT PORTS
+
+
+-- ...
+
+
+port resetRecaptcha : () -&gt; Cmd msg
+
+
+-- ...
+
+</code></pre> <p>Next, we have to subscribe to the new port and call the widget&#39;s <code>reset</code> function:</p> <pre><code class="js">// assets/javascript/app.js
+
+import Elm from &#39;./elm/main&#39;;
+
+window.onloadCallback = () =&gt; {
+  const formContainer = document.querySelector(&#39;#form_container&#39;);
+
+  if (formContainer) {
+    const app = Elm.Main.embed(formContainer);
+    let recaptcha;
+
+    // ...
+
+    app.ports.resetRecaptcha.subscribe(() =&gt; {
+      grecaptcha.reset(recaptcha);
+    });
+  }
+};
+</code></pre> <p>And finally, we have to trigger the <code>resetRecaptcha</code> wherever we need, so let&#39;s do it on any response error that we receive from the server:</p> <pre><code class="elm">-- assets/elm/src/Update.elm
+
+module Update exposing (update)
+
+update : Msg -&gt; Model -&gt; ( Model, Cmd Msg )
+update msg model =
+    -- ...
+
+      SubscribeResponse (Err (BadStatus response)) -&gt;
+          case Decode.decodeString validationErrorsDecoder response.body of
+              Ok validationErrors -&gt;
+                  { model | subscribeForm = Invalid { formFields | recaptchaToken = Nothing } validationErrors } ! [ Ports.resetRecaptcha () ]
+
+              Err error -&gt;
+                  { model | subscribeForm = Errored { formFields | recaptchaToken = Nothing } &quot;Oops! Something went wrong!&quot; } ! [ Ports.resetRecaptcha () ]
+
+      SubscribeResponse (Err error) -&gt;
+          { model | subscribeForm = Errored { formFields | recaptchaToken = Nothing } &quot;Oops! Something went wrong!&quot; } ! [ Ports.resetRecaptcha () ]
+</code></pre> <p>Let&#39;s jump back to the browser and check that it actually is working fine:</p> <p><img src="/images/blog/phoenix-elm-landing-page/token-reset-c23ca9f1.gif" alt="Token reset" style="background: #fff;"/></p> <p>The widget is reset as expected, allowing the user to click it again. Let&#39;s remove the hardcoded value from the <code>recaptcha_token</code> on the post parameters and test that everything works fine and the lead subscribes successfully:</p> <p><img src="/images/blog/phoenix-elm-landing-page/final-result-ce062b52.gif" alt="Final result" style="background: #fff;"/></p> <p>And there we go. Our very basic landing page is ready for deployment and subscribing new leads, without making us worry about spambots. I hope you have enjoyed these series as much as I have enjoyed doing them. See you next time, and don&#39;t forget to check the code from this part <a href="https://github.com/bigardone/phoenix-and-elm-landing-page/tree/tutorial/part-3">here</a>.</p> <p>Happy coding!</p> <div id=disqus_thread></div> <script>
+  /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+  var disqus_shortname = 'codeloveandboards'; // required: replace example with your forum shortname
+  
+  /* * * DON'T EDIT BELOW THIS LINE * * */
+  (function() {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script> <noscript> Please enable JavaScript to view the <a href='//disqus.com/?ref_noscript'>comments powered by Disqus.</a> </noscript> <a class=dsq-brlink href='//disqus.com'> comments powered by <span class=logo-disqus>Disqus</span> </a> </article> </section> </div> </section> <footer id=main_footer> <ul class=article-nav> <li class=previous> <a href="/blog/2017/12/23/phoenix-elm-landing-page-pt-2/"><h4>previous post</h4> <h3> Phoenix & Elm landing page (pt.2) </h3> <div class=meta-data> <hr> posted Dec 23, 2017 on elixir, phoenix, elm </div> </a> </li> <li class=next> </li> </ul> <section> <div class=container> <div class=center> <ul> <li> <a href='/blog'>Archives</a> </li> <li> <a href='//feeds.feedburner.com/CodeLoveAndBoards' target=_blank>RSS</a> </li> </ul> Copyright © 2018 - Ricardo García Vega - Code, Love & Boards! </div> </div> </section> </footer> <script src="../../../../../javascripts/blog-5ddb0520.js"></script> <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  
+  ga('create', 'UA-37802122-1', 'codeloveandboards.com');
+  ga('send', 'pageview');
+</script> <script>
+  _StatHat.push(["_trackCount", "g2pcD9xou7DlR0DtndiwvSBBYU5k", 1.0]);
+</script> </body> </html>
