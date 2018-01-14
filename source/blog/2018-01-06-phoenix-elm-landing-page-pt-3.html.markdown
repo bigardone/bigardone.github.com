@@ -2,33 +2,43 @@
 title: Phoenix & Elm landing page (pt.3)
 date: 2018-01-06 23:06 PST
 tags: elixir, phoenix, elm
-excerpt: Adding Google reCAPTCHA support
-published: false
+excerpt: Adding Google reCAPTCHA support to avoid spambots
 ---
 
-In the previous part of the series, we created the landing page main
+<div class="index">
+  <p>This post belongs to the <strong>Phoenix & Elm landing page</strong> series.</p>
+  <ol>
+    <li><a href="/blog/2017/12/02/phoenix-elm-landing-page-pt-1/">Bootstrapping the project and the basic API functionality to save our first leads</a></li>
+    <li><a href="/blog/2017/12/23/phoenix-elm-landing-page-pt-2/">Building the landing page UI and the basic Elm subscription form</a></li>
+    <li><a href="/blog/2018/01/06/phoenix-elm-landing-page-pt-3/">Adding Google reCAPTCHA support to avoid spambots</a></li>
+  </ol>
+
+  <a href="https://github.com/bigardone/phoenix-and-elm-landing-page" target="_blank"><i class="fa fa-github"></i> Source code</a>
+</div>
+
+In the [previous part](/blog/2017/12/23/phoenix-elm-landing-page-pt-2/<Paste>) of the series, we created the landing page main
 layout and implemented the Elm subscription form, which lets visitors
 subscribe, saving their name and email in the leads database table. We do
-not want no spambots to subscribe, therefore, in this part, we are going
-to add a protective layer to the subscription flow using Google's
-reCAPTCHA, which consists of two different steps:
+not want spambots to subscribe, therefore, in this part we are going
+to add a protective layer to the subscription process using [Google's
+reCAPTCHA](https://developers.google.com/recaptcha/), which consists of two different steps:
 
-- Adding the reCAPTCHA widget to the Elm subscription form, and sending
+- Adding the **reCAPTCHA** widget to the Elm subscription form, and sending
   the user's response along with the name and email.
-- Verifying in the backend the user's response against Google's RECAPTCHA API to verify whether is valid or not
+- Verifying in the server-side the user's response against **Google's RECAPTCHA API** to verify whether is valid or not
 
 Without further ado, let's do this!
 
 ### Adding the reCAPTCHA widget to the form
 
-First of all, we need to head to Google's reCAPTCHA [admin
-site](https://www.google.com/recaptcha/admin) and register a new website,
+First of all, we need to head to [Google's reCAPTCHA admin
+site](https://www.google.com/recaptcha/admin) and register our website,
 using localhost as the domain, to get the necessary keys that we need.
 
 <img src="/images/blog/phoenix-elm-landing-page/recaptcha-admin.jpg"
 alt="Navigation flow" style="background: #fff;" />
 
-Next, we have to add Google's reCAPTCHA script in our main template, so
+Next, we have to add **Google's reCAPTCHA** script in the main template, so
 let's edit it:
 
 ``` elixir
@@ -67,10 +77,10 @@ window.onloadCallback = () => {
 };
 ```
 
-Now that the Elm program is embedded once the script is ready, we have to
+Now that the **Elm** program is embedded once the script is ready, we have to
 render the widget somehow using its internal API. Before continuing any
-further, let's update the View module and add a new div where we want the
-widget to get rendered:
+further, let's update the `View` module and add a new div where we want to
+render the widget:
 
 ``` elm
 # assets/elm/src/View.elm
@@ -94,9 +104,9 @@ formView subscribeForm =
 		-- ...
 ```
 
-How can we tell the external reCAPTCHA script that we want it to render
-the widget inside the div with id recaptcha? In Elm, the proper way of
-communicating with external javascript is by using ports, so let's go
+How can we tell the external **reCAPTCHA** script that we want it to
+render the widget inside the div with `recaptcha` id? In Elm, the proper way
+of communicating with external **JavaScript** is by using **ports**, so let's go
 ahead and create a new module with a port to initialize the widget:
 
 ``` elm
@@ -111,9 +121,9 @@ port initRecaptcha : String -> Cmd msg
 
 ```
 
-The initRecaptcha port function receives a string which is the id of the
+The `initRecaptcha` port function receives a string which is the id of the
 container where we want to render the widget and returns a command.
-Therefore, we can return it in the init function, and the port will get
+Therefore, we can use it in the main `init` function, and the port will get
 called once the program starts for the first time:
 
 ``` elm
@@ -157,15 +167,15 @@ window.onloadCallback = () => {
 };
 ```
 
-app.ports contains all the ports from the Elm program. By subscribing to
+`app.ports` contains all the ports from the Elm program. By subscribing to
 any of them, we are making the passed function to get called anytime
 a port gets triggered by the Elm runtime. In our case, it is using
-Google's reCAPTCHA script to render the widget inside the specified id,
-using the sitekey we created previously from the admin site. Also, note
+**Google's reCAPTCHA** script to render the widget inside the specified id,
+using the `sitekey` we created previously from the admin site. Also, note
 that we are wrapping the render function inside
-window.requestAnimationFrame, forcing the script to initialize the widget
+`window.requestAnimationFrame`, forcing the script to initialize the widget
 immediately after the form renders for the first time. Not doing it like
-so may create race conditions between Elm programs and external javascript
+so may create race conditions between Elm programs and external JavaScript
 components, so don't forget using it. Let's jump to the browser and see
 the result:
 
@@ -205,10 +215,10 @@ emptyFormFields =
 -- ...
 ```
 
-How can we store in it the token received from the external reCAPTCHA
-script? As sending messages to external javascript, Elm can also receive
+How can we store in it the token received from the external **reCAPTCHA**
+widget? As sending messages to external **JavaScript**, **Elm** can also receive
 messages from the outer world by subscribing to incoming ports. Knowing
-this, let's create a new port which receives the reCAPTCHA token from the
+this, let's create a new port which receives the **reCAPTCHA** token from the
 widget:
 
 ``` elm
@@ -225,7 +235,7 @@ port module Ports exposing (..)
 port setRecaptchaToken : (String -> msg) -> Sub msg
 ```
 
-When Elm receives the setRecaptchaToken port, we want it to set the token
+When **Elm** receives the `setRecaptchaToken` port, we want it to set the token
 in the model, and for that, we need to create a new message type:
 
 ``` elm
@@ -237,7 +247,7 @@ type Msg
     | SetRecaptchaToken String
 ```
 
-We also need to handle this message in the update function:
+We also need to handle this message in the `update` function:
 
 ``` elm
 -- assets/elm/src/Update.elm
@@ -252,8 +262,8 @@ update msg model =
         { model | subscribeForm = Editing { formFields | recaptchaToken = Just token } } ! []
 ```
 
-As mentioned before, Elm needs to subscribe to incoming ports, so let's go
-ahead and add the subscription to put all the pieces together:
+As mentioned before, **Elm** needs to subscribe to incoming ports, so let's go
+ahead and define the `subscriptions` function to put all the pieces together:
 
 ``` elm
 -- assets/elm/src/Main.elm
@@ -265,7 +275,7 @@ subscriptions model =
     Ports.setRecaptchaToken SetRecaptchaToken
 ```
 
-The only thing left is sending the token from javascript:
+The only thing left is sending the token from **JavaScript**:
 
 
 ``` js
@@ -289,19 +299,19 @@ window.onloadCallback = () => {
 };
 ```
 
-The reCAPTCHA widget has a callback option which is a function that gets
+The **reCAPTCHA** widget has a callback option which is a function that gets
 called after checking the visitor's response and which contains the token,
-and which we can use to send the setRecaptchaToken port message to Elm.
+and which we can use to send the `setRecaptchaToken` port message to **Elm**.
 Let's check that everything is working as expected:
 
 <img src="/images/blog/phoenix-elm-landing-page/settoken-port.gif"
 alt="Navigation flow" style="background: #fff;" />
 
-Using Elm's debugger, we can verify that when we click on the reCAPTCHA
-widget, ELm handles the SetRecaptchaToken message, setting the
-recaptchaToken received through the setRecaptchaToken port in the model.
+Using **Elm's debugger**, we can verify that when we click on the **reCAPTCHA
+widget**, ELm handles the `SetRecaptchaToken` message, setting the
+`recaptchaToken` received through the `setRecaptchaToken` port in the model.
 The only thing left, for now, is preventing sending the form while the
-recaptchaToken is not set, so let's fix this in the view module:
+`recaptchaToken` is not set, so let's fix this in the view module:
 
 ``` elm
 -- assets/elm/src/View.elm
@@ -336,7 +346,7 @@ formView subscribeForm =
         -- ...
 ```
 
-Finally, we have to include the recaptchaToken value to the HTTP request body:
+Finally, we have to include the `recaptchaToken` value to the HTTP request body:
 
 ``` elm
 -- assets/elm/src/Commands.elm
@@ -361,11 +371,11 @@ encodeModel { fullName, email, recaptchaToken } =
 ### Server-side reCAPTCHA token validation
 
 Now that the form is sending the token, we can implement the second step
-of the process, which is validating it against Google's API. Although we
-are somehow forcing the recaptcha_token value to have a non-empty value,
+of the process, which is validating it against **Google's API**. Although we
+are somehow forcing the `recaptcha_token` value to have a non-empty value,
 let's add a validation check on the backend, so no leads with empty tokens
 can get saved. As we only need to validate it, and not save it, we can add
-a virtual field to the Lead schema:
+a virtual field to the `Lead` schema:
 
 ``` elixir
 # lib/landing_page/marketing/lead.ex
@@ -465,8 +475,9 @@ Randomized with seed 66361
 
 To check whether Google has verified the user, we have to send an HTTP
 request to `https://www.google.com/recaptcha/api/siteverify` with the
-token. For that we first need to install an HTTP client like HTTPoison, so
-let' go ahead and add it to the dependencies list:
+token. For that we first need to install an HTTP client like
+[HTTPoison](https://github.com/edgurgel/httpoison), so let' go ahead and add
+it to the dependencies list:
 
 ``` elixir
 # mix.exs
@@ -484,7 +495,7 @@ let' go ahead and add it to the dependencies list:
 ```
 
 After running the necessary `mix deps.get` task, we are ready to implement
-our Google's HTTP client, so let's create the following module:
+our **Google's HTTP client**, so let's create the following module:
 
 ``` elixir
 # lib/landing_page/clients/google/recaptcha_http.ex
@@ -520,10 +531,10 @@ end
 ```
 
 Using `HTTPoison.Base` gives us mostly all the functionality that we need
-out of the box. The verify/1 function receives a token and sends an HTTP
+out of the box. The `verify/1` function receives a token and sends an HTTP
 request against the specified URL, with the `secret_key` and the user's
 token. Depending on the result, it returns a tuple with the `:ok` atom and
-the processed body using the process_response_body function, or one
+the processed body using the `process_response_body/1` function, or one
 containing `:error` and the response. To finish the client, we need to set
 the value of `@secret_key` in the application's config:
 
@@ -538,8 +549,9 @@ config :landing_page,
   ]
 ```
 
-Jumping back to the reCAPTCHA docs, we can see that the response body
-looks like the following:
+Jumping back to the [reCAPTCHA
+docs](https://developers.google.com/recaptcha/docs/verify), we can see that
+the response body looks like the following:
 
 ``` json
 {
@@ -586,8 +598,8 @@ end
 So, if everything goes as expected, `subscribe/1` receives the
 `lead_params` and validates them against a lead changeset, verifying the
 token using the client, inserting the lead and returning a tuple
-containing it. On the other hand, if the token validation returns {:ok,
-%{success: false}}, which means that is not valid, it returns a `{:error,
+containing it. On the other hand, if the token validation returns `{:ok,
+	%{success: false}}`, which means that is not valid, it returns a `{:error,
 :invalid_recaptcha_token}` tuple.
 
 Let' write some tests to check that everything is currently behaving as it
@@ -617,7 +629,7 @@ end
 ```
 
 Before running the test, let's think about our current solution for
-a second. Every time that we run the tests, the GoogleRecaptchaHttp client
+a second. Every time that we run the tests, the `GoogleRecaptchaHttp` client
 is going to be sending requests, slowing down the test suite, and we do
 not really want that. Moreover, knowing beforehand what the Google's API
 returns, we no longer need to send a real request to test what we need.
@@ -663,7 +675,7 @@ config :landing_page,
   ]
 ```
 
-Finally, let's refactor the Marketing module to use the client set in the
+Finally, let's refactor the `Marketing` module to use the client set in the
 environment:
 
 ``` elixir
@@ -763,7 +775,7 @@ end
 ```
 
 Following the same convention for validation errors, we return a map with
-the error we want to render below the reCAPTCHA widget. Let's add a test
+the error we want to render below the **reCAPTCHA widget**. Let's add a test
 to check that it works:
 
 ``` elixir
@@ -812,11 +824,11 @@ alt="Token error" style="background: #fff;" />
 
 However, wait a minute. If the token is invalid, there is no current way
 of resetting the widget again, so the user is not able to resubmit the
-form. Let's fix this:
+form. Let's fix this.
 
 ### Resetting the token on error
 
-Luckily for us, the widget has a `reset` function which resets it, and we
+Luckily for us, the widget has a `reset` function and we
 can call it through an Elm port. Let's edit the `Ports` module and add
 a new outgoing port:
 
@@ -892,7 +904,7 @@ Let's jump back to the browser and check that it actually is working fine:
 alt="Token reset" style="background: #fff;" />
 
 The widget is reset as expected, allowing the user to click it again.
-Let's remove the hardcoded value from the recaptcha_token on the post
+Let's remove the hardcoded value from the `recaptcha_token` on the post
 parameters and test that everything works fine and the lead subscribes
 successfully:
 
@@ -902,6 +914,7 @@ alt="Final result" style="background: #fff;" />
 And there we go. Our very basic landing page is ready for deployment and
 subscribing new leads, without making us worry about spambots. I hope you
 have enjoyed these series as much as I have enjoyed doing them. See you
-next time, and don't forget to check the code from this part here.
+next time, and don't forget to check the code from this part
+[here](https://github.com/bigardone/phoenix-and-elm-landing-page/tree/tutorial/part-3).
 
 Happy coding!
