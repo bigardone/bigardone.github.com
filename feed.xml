@@ -902,7 +902,7 @@ next time, and don&amp;#39;t forget to check the code from this part
     <link rel="alternate" href="http://codeloveandboards.com/blog/2017/12/23/phoenix-elm-landing-page-pt-2/"/>
     <id>http://codeloveandboards.com/blog/2017/12/23/phoenix-elm-landing-page-pt-2/</id>
     <published>2017-12-24T07:44:00Z</published>
-    <updated>2018-01-14T08:24:47+01:00</updated>
+    <updated>2018-04-12T17:19:06+02:00</updated>
     <author>
       <name>Article Author</name>
     </author>
@@ -954,7 +954,7 @@ the main layout template and remove all the default &lt;strong&gt;Phoenix&lt;/st
     &amp;lt;link rel=&amp;quot;stylesheet&amp;quot; href=&amp;quot;&amp;lt;%= static_path(@conn, &amp;quot;/css/app.css&amp;quot;) %&amp;gt;&amp;quot;&amp;gt;
   &amp;lt;/head&amp;gt;
 
-  &amp;lt;body&amp;gt;
+  &amp;lt;body class=&amp;quot;landing-page&amp;quot;&amp;gt;
     &amp;lt;%= render(@view_module, @view_template, assigns) %&amp;gt;
     &amp;lt;script src=&amp;quot;&amp;lt;%= static_path(@conn, &amp;quot;/js/app.js&amp;quot;) %&amp;gt;&amp;quot;&amp;gt;&amp;lt;/script&amp;gt;
   &amp;lt;/body&amp;gt;
