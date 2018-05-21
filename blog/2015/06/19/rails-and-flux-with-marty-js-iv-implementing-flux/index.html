@@ -8,6 +8,20 @@
           var s = document.getElementsByTagName('script')[0];
           s.parentNode.insertBefore(sh, s);
   })();
+</script> <link href='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.js'></script> <script>
+  window.addEventListener("load", function(){
+  window.cookieconsent.initialise({
+    "palette": {
+      "popup": {
+        "background": "#252e39"
+      },
+      "button": {
+        "background": "#217dbb"
+      }
+    },
+    "theme": "classic",
+    "position": "bottom-right"
+  })});
 </script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Rails and Flux with Marty.js IV: Implementing Flux</h1> <h3></h3> <div class=meta-data> <hr> posted Jun 19, 2015 on <a class=tag href="/blog/tags/rails.html">rails</a> <a class=tag href="/blog/tags/reactjs.html">reactjs</a> <a class=tag href="/blog/tags/flux.html">flux</a> <a class=tag href="/blog/tags/webpack.html">webpack</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <p>In the <a href="/blog/2015/06/14/rails-and-flux-with-marty-js-iii-the-main-application/">last post</a> of this series we took a look to the <strong>MainApplication</strong> and how it <a href="https://github.com/bigardone/rails_and_flux/blob/master/app/frontend/application.cjsx#L7" target=_blank>registers</a> the necessary elements that we are going to need. We also viewed how to create an <strong>ApplicationContainer</strong> which receives the main application as a prop and wraps the main React component which will have access to all the elements registered previously. Now we are ready to start implementing Flux, so let&#39;s do it!</p> <h3>The PeopleSection</h3> <p>If you first take a look to the <a href="https://github.com/bigardone/rails_and_flux/blob/master/app/frontend/flux/components/people/people_section.cjsx" target=_blank>source code</a> you can see that there are two main elements, the <strong>React</strong> component it self and a <strong>Marty&#39;s Container</strong> which wraps it. By doing this we are making the <strong>PeopleSection</strong> stateless, leaving the state requests to the <strong>Container</strong> which will pass it to the <strong>PeopleSection</strong> as <em>props</em>.</p> <h4>The React component</h4> <p>This is the main React component and parent of the rest of the components involved in the application.</p> <pre><code class="coffee"># /app/frontend/flux/components/people/people_section.cjsx
 
 # Requiring components involved

@@ -8,6 +8,20 @@
           var s = document.getElementsByTagName('script')[0];
           s.parentNode.insertBefore(sh, s);
   })();
+</script> <link href='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.js'></script> <script>
+  window.addEventListener("load", function(){
+  window.cookieconsent.initialise({
+    "palette": {
+      "popup": {
+        "background": "#252e39"
+      },
+      "button": {
+        "background": "#217dbb"
+      }
+    },
+    "theme": "classic",
+    "position": "bottom-right"
+  })});
 </script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Phoenix and Elm, a real use case (pt. 2)</h1> <h3></h3> <div class=meta-data> <hr> posted Feb 8, 2017 on <a class=tag href="/blog/tags/elixir.html">elixir</a> <a class=tag href="/blog/tags/phoenix.html">phoenix</a> <a class=tag href="/blog/tags/elm.html">elm</a> <a class=tag href="/blog/tags/ecto.html">ecto</a> <a class=tag href="/blog/tags/postgresql.html">postgresql</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <div class=index> <p>This post belongs to the <strong>Phoenix and Elm, a real use case</strong> series.</p> <ol> <li><a href="/blog/2017/02/02/phoenix-and-elm-a-real-use-case-pt-1/">Introduction to creating a SPA with Phoenix and Elm</a></li> <li><a href="/blog/2017/02/08/phoenix-and-elm-a-real-use-case-pt-2/">Rendering the initial contact list</a></li> <li><a href="/blog/2017/02/14/phoenix-and-elm-a-real-use-case-pt-3/">Adding full text search and pagination navigation to the contact list</a></li> <li><a href="/blog/2017/02/23/phoenix-and-elm-a-real-use-case-pt-4/">Better state with union types, search resetting and keyed nodes.</a></li> <li><a href="/blog/2017/03/07/phoenix-and-elm-a-real-use-case-pt-5/">Implementing Elm routing</a></li> <li><a href="/blog/2017/03/19/phoenix-and-elm-a-real-use-case-pt-6/">Poenix and Elm communication through WebSockets</a></li> </ol> <a href="https://phoenix-and-elm.herokuapp.com/" target=_blank><i class="fa fa-cloud"></i> Live demo</a> | <a href="https://github.com/bigardone/phoenix-and-elm" target=_blank><i class="fa fa-github"></i> Source code</a> </div> <h2>Initial contact list</h2> <p>In the <a href="/blog/2017/02/02/phoenix-and-elm-a-real-use-case-pt-1/">previous part</a> we setup the project and created the very basic <strong>Elm</strong> main module. Today we are going to render the first page of contacts, so let&#39;s get started with the backend part. I say page because we want to paginate the list of contacts instead of displaying all of them to the user. For this, we first need to install an <strong>Elixir</strong> dependency to help us with the pagination functionality. The library I usually use for this purpose is <a href="https://github.com/drewolson/scrivener_ecto">scrivener_ecto</a>, so let&#39;s add it to the <code>mix.exs</code> file:</p> <pre><code class="ruby"># mix.exs
 
 defmodule PhoenixAndElm.Mixfile do

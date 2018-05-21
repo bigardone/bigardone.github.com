@@ -8,6 +8,20 @@
           var s = document.getElementsByTagName('script')[0];
           s.parentNode.insertBefore(sh, s);
   })();
+</script> <link href='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.js'></script> <script>
+  window.addEventListener("load", function(){
+  window.cookieconsent.initialise({
+    "palette": {
+      "popup": {
+        "background": "#252e39"
+      },
+      "button": {
+        "background": "#217dbb"
+      }
+    },
+    "theme": "classic",
+    "position": "bottom-right"
+  })});
 </script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Ahorra tiempo generando tus vistas con Haml</h1> <h3></h3> <div class=meta-data> <hr> posted Jan 15, 2013 on <a class=tag href="/blog/tags/code.html">code</a> <a class=tag href="/blog/tags/haml.html">haml</a> <a class=tag href="/blog/tags/html.html">html</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <p>Después de haber escrito sobre <a title="Mejores hojas de estilo con Sass" href="//codeloveandboards.wordpress.com/2012/12/17/mejores-hojas-de-estilo-con-sass/">Sass</a> y <a title="Mejor JavaScript con CoffeeScript" href="//codeloveandboards.wordpress.com/2013/01/04/mejor-javascript-con-coffeescript/">CoffeScript</a>, y teniendo cubierto con ambas tanto la generación de las hojas de estilo como el javascript de una aplicación de manera simple y con una sintaxis más intuitiva, no podía deja atrás al origen de todo esto, <a title="Beautiful, DRY, well-indented, clear markup: templating haiku." href="//haml.info" target=_blank>Haml</a>, que viene a ser lo mismo pero para la generación de las plantillas HTML para las vistas.</p> <h3>Sintaxis</h3> <p>Estamos ante otro lenguaje de sintaxis simplificada, que nos ayuda a codificar de manera más rápida usando los menos caracteres posibles, y utilizando la indentación del documento para ir construyendo el árbol de elementos que generará nuestro HTML final. Olvidate de abrir etiquetas y de cerrarlas, de usar atributos como <strong>id=&quot;&quot;</strong> o <strong>class=&quot;&quot;</strong>, de volverte loco intentado encontrar donde cerrabas no se qué elemento, etc.</p> <p>Vamos a ver un ejemplo muy sencillo de html estático:</p> <pre><code class="html">&lt;div class=&quot;surf-spot&quot; id=&quot;salinas&quot;&gt;
   &lt;header&gt;
     &lt;h3&gt;Playa de Salinas&lt;/h3&gt;

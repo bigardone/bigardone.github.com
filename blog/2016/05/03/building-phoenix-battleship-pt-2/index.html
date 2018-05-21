@@ -8,6 +8,20 @@
           var s = document.getElementsByTagName('script')[0];
           s.parentNode.insertBefore(sh, s);
   })();
+</script> <link href='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.js'></script> <script>
+  window.addEventListener("load", function(){
+  window.cookieconsent.initialise({
+    "palette": {
+      "popup": {
+        "background": "#252e39"
+      },
+      "button": {
+        "background": "#217dbb"
+      }
+    },
+    "theme": "classic",
+    "position": "bottom-right"
+  })});
 </script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Building Phoenix Battleship (pt. 2)</h1> <h3></h3> <div class=meta-data> <hr> posted May 3, 2016 on <a class=tag href="/blog/tags/elixir.html">elixir</a> <a class=tag href="/blog/tags/phoenix.html">phoenix</a> <a class=tag href="/blog/tags/otp.html">otp</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <div class=index> <p>This post belongs to the <strong>Building Phoenix Battleship</strong> series.</p> <ol> <li><a href="/blog/2016/04/29/building-phoenix-battleship-pt-1">Designing the game mechanics</a></li> <li><a href="/blog/2016/05/03/building-phoenix-battleship-pt-2/">The lobby channel and game supervision</a></li> <li><a href="/blog/2016/05/21/building-phoenix-battleship-pt-3/">The game setup</a></li> <li><a href="/blog/2016/07/28/building-phoenix-battleship-pt-4/">Placing ships on the board's grid</a></li> <li><a href="/blog/2016/08/08/building-phoenix-battleship-pt-5/">Let the battle begin!</a></li> <li>Coming soon...</li> </ol> </div> <h2>The lobby channel and game supervision</h2> <p>On the previous part of this series, we did a quick tour through the main components which form part of our new game. Recalling the diagram, two of these elements are the <strong>LobbyChannel</strong>, which is the interface between the player&#39;s browser and the existing games, and the <strong>Battleship.Game.Supervisor</strong>, responsible for creating new games and listing existing games.</p> <p><img class=center src="/images/blog/building_phoenix_battleship/diagram-2-f3b58748.jpg"/></p> <h3>The LobbyChannel</h3> <p>Before continuing any further, there&#39;s an element not displayed in the diagram which is relevant and worth to mention. This element is the main controller of the application, the <code>Battleship.PageController</code>. Its importance comes from the fact that in its index action is where the <strong>random player id</strong> is generated.</p> <pre><code class="elixir"># web/controllers/page_controller.ex
 
 defmodule Battleship.PageController do

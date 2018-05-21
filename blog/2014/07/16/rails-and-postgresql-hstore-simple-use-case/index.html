@@ -8,6 +8,20 @@
           var s = document.getElementsByTagName('script')[0];
           s.parentNode.insertBefore(sh, s);
   })();
+</script> <link href='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.js'></script> <script>
+  window.addEventListener("load", function(){
+  window.cookieconsent.initialise({
+    "palette": {
+      "popup": {
+        "background": "#252e39"
+      },
+      "button": {
+        "background": "#217dbb"
+      }
+    },
+    "theme": "classic",
+    "position": "bottom-right"
+  })});
 </script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Rails and PostgreSQL hstore simple use case</h1> <h3></h3> <div class=meta-data> <hr> posted Jul 16, 2014 on <a class=tag href="/blog/tags/rails.html">rails</a> <a class=tag href="/blog/tags/postgresql.html">postgresql</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <p>As you saw in the latest post about <a href="/blog/2014/06/20/easy-multi-table-full-text-search-whith-rails">Rails and full-text search</a>, <strong>PostgreSQL</strong> has some nice and powerful features for managing data which can make your life easier. Another of this awesome features is the <strong>hstore</strong> column type, which gives you the ability to store hashes in columns. This means that you can store unstructured data in a column of our database using a key/value storage system, as it was a <strong>NoSQL</strong> database, and also query this data by their keys.</p> <h2>A real yet simple use case.</h2> <p>Another feature I wanted to add to the new pet project I&#39;m working on, was giving to users the ability to save custom searches assigning them a name, so if there&#39;s a frequently search they perform every once in a while, they can save it and afterwards select it from a drop-down menu, instead of having to fill every field on the search form. This can be implemented in many ways, but as I&#39;m using <strong>Rails 4</strong> and <strong>PostgreSQL</strong> I wanted to give a try to the <strong>hstore extension</strong>.</p> <h3>Preparing everything.</h3> <p>The first step is to activate it. The simplest way to do so is by creating a new migration:</p> <pre><code class="ruby">class CreateHstore &lt; ActiveRecord::Migration
   def up
     enable_extension &quot;hstore&quot;

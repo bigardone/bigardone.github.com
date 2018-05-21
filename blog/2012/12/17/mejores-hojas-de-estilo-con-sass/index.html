@@ -8,6 +8,20 @@
           var s = document.getElementsByTagName('script')[0];
           s.parentNode.insertBefore(sh, s);
   })();
+</script> <link href='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.js'></script> <script>
+  window.addEventListener("load", function(){
+  window.cookieconsent.initialise({
+    "palette": {
+      "popup": {
+        "background": "#252e39"
+      },
+      "button": {
+        "background": "#217dbb"
+      }
+    },
+    "theme": "classic",
+    "position": "bottom-right"
+  })});
 </script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Mejores hojas de estilo con Sass</h1> <h3></h3> <div class=meta-data> <hr> posted Dec 17, 2012 on <a class=tag href="/blog/tags/code.html">code</a> <a class=tag href="/blog/tags/sass.html">sass</a> <a class=tag href="/blog/tags/css.html">css</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <p>Cuando desarrollo el interfaz de alguna aplicación, siempre hay una cosa que me vuelve loco que son las hojas de estilo. Siempre empiezo organizándolas por apartados, intentando poner cada cosa en su su sitio, para que luego sea sencillo encontrar cada cosa y no volverme loco. Pero esta organización solía durarme pocas semanas, hasta que entraba en vorágine de cambios de diseño, y terminaba destrozando ese orden con el que había empezado... hasta que descubrí <a title="Sass - Syntactically Awesome Stylesheets" href="//sass-lang.com" target=_blank>Sass</a>!!!</p> <h3>¿Qué es Sass?</h3> <p>Sass son las siglas de Syntactically Awesome Stylesheets, o lo que viene a ser Hojas de Estilo Sintácticamente Impresionantes, un lenguaje que genera CSS y que os aseguro que hace honor a su nombre ya que imaginaos poder escribir vuestras hojas de estilo usando variables, funciones, extendiendo clases, usando bucles y muchas más cosas que harán que  escribir CSS sea divertido fácil de mantener y todo ello con una sintaxis muy simple e intuitiva.</p> <h3>Sintaxis</h3> <p>Bueno, en realidad hay dos sintaxis, que puedes elegir según la extensión del fichero que uses, una es .SCSS y la otra .SASS, la cual es la que yo prefiero, ya que es más simplificada, y te permite olvidarte de usar puntos y coma, llaves y demás elementos que en css son necesarios teniendo solo en cuenta que tienes que ser estricto con la indentación que uses (en mi caso 2 espacios), ya que luego te generará el css usando anidando los elementos usando esa indentación:</p> <pre><code class="sass">// Esto en .sass
 $primaryColor: #000
 $secondaryColor: lighten($primaryColor, 20%)

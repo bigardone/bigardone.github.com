@@ -8,6 +8,20 @@
           var s = document.getElementsByTagName('script')[0];
           s.parentNode.insertBefore(sh, s);
   })();
+</script> <link href='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.js'></script> <script>
+  window.addEventListener("load", function(){
+  window.cookieconsent.initialise({
+    "palette": {
+      "popup": {
+        "background": "#252e39"
+      },
+      "button": {
+        "background": "#217dbb"
+      }
+    },
+    "theme": "classic",
+    "position": "bottom-right"
+  })});
 </script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Desarrollo web moderno con Middleman, parte II</h1> <h3></h3> <div class=meta-data> <hr> posted Nov 15, 2013 on <a class=tag href="/blog/tags/code.html">code</a> <a class=tag href="/blog/tags/ruby.html">ruby</a> <a class=tag href="/blog/tags/web.html">web</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <p>En el <a href="/blog/2013/11/03/desarrollo-web-moderno-con-middleman-i">post anterior</a> conocimos <a href="//middlemanapp.com/" target=_blank title=Middleman>Middleman</a>, un generador de sitios web estáticos, que tiene un gran parecido a <strong>Ruby on Rails</strong> a la hora de utilizar tecnologías como <strong>Haml</strong>, <strong>Sass</strong> y <strong>CoffeeScript</strong>, además de gestionar los <em>assets</em> como hojas de estilos, scripts e imágenes de igual manera, lo que hace que el desarrollo de estos sitios estáticos sea mucho más dinámico y divertido.</p> <p>Para instalarlo solo tenemos que ejecutar lo siguiente desde nuestra consola:</p> <pre><code>gem install middleman
 </code></pre> <h3>Iniciando un nuevo proyecto</h3> <p>Para empezar a trabajar debemos crear el nuevo proyecto:</p> <pre><code>middleman init nuevo_proyecto
 </code></pre> <p>Con este comando se generará un nuevo <strong>esqueleto básico</strong> para nuestro proyecto, pero si queremos crear un esqueleto un poco más curioso, podemos usar una <strong>plantilla</strong> pasándole al comando <em>init</em> un parámetro con el nombre de la plantilla que queremos usar como base:</p> <pre><code>middleman init nuevo_proyecto --template=html5

@@ -8,6 +8,20 @@
           var s = document.getElementsByTagName('script')[0];
           s.parentNode.insertBefore(sh, s);
   })();
+</script> <link href='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.js'></script> <script>
+  window.addEventListener("load", function(){
+  window.cookieconsent.initialise({
+    "palette": {
+      "popup": {
+        "background": "#252e39"
+      },
+      "button": {
+        "background": "#217dbb"
+      }
+    },
+    "theme": "classic",
+    "position": "bottom-right"
+  })});
 </script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Migrating ActiveRecord STI to Ecto (pt. 1)</h1> <h3></h3> <div class=meta-data> <hr> posted Oct 3, 2017 on <a class=tag href="/blog/tags/elixir.html">elixir</a> <a class=tag href="/blog/tags/ecto.html">ecto</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <h2>From ActiveRecord STI to Ecto embedded schemas</h2> <p>Almost three years have passed since I wrote a post about <a href="/blog/2015/01/11/rails-sti-with-postgresql-hstore">Rails STI with PostgreSQL hstore</a>. At that time I was building a platform called <a href="https://eventos.talentoit.org/">Eventos Talento IT</a> which started as a place where developers could participate in raffles to win tickets for tech events, but we have ended up raffling books and courses as well. In the mentioned post, I explain how to achieve <strong>STI</strong> in <strong>Rails</strong> and <strong>PostgreSQL</strong> thanks to Postgres&#39;s <strong>hstore</strong> type. After these years, we want to make some improvements in the platform, so instead of updating the old codebase, I can&#39;t resist redoing everything in <strong>Elixir</strong> and, of course, <strong>Elm</strong>.</p> <p>After taking a look at the original <strong>Rails</strong> project and recalling the schema and models, I have encountered the first problem in regards to migrating ActiveRecord models to Ecto schemas, inheritance. In the old <strong>Rails</strong> project we have the following models:</p> <pre><code class="ruby"># app/models/item.rb
 
 # == Schema Information

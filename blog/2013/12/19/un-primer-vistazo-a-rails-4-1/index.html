@@ -8,6 +8,20 @@
           var s = document.getElementsByTagName('script')[0];
           s.parentNode.insertBefore(sh, s);
   })();
+</script> <link href='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.js'></script> <script>
+  window.addEventListener("load", function(){
+  window.cookieconsent.initialise({
+    "palette": {
+      "popup": {
+        "background": "#252e39"
+      },
+      "button": {
+        "background": "#217dbb"
+      }
+    },
+    "theme": "classic",
+    "position": "bottom-right"
+  })});
 </script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Un primer vistazo a Rails 4.1</h1> <h3></h3> <div class=meta-data> <hr> posted Dec 19, 2013 on <a class=tag href="/blog/tags/ruby.html">ruby</a> <a class=tag href="/blog/tags/rails.html">rails</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <p>Este año parace que Santa Claus se ha adelantado y nos ha traido esta semana la versión <em>beta</em> de <strong>Rails 4.1</strong>. Esta nueva versión me ha llamado especialmente la atención ya que han incorporado dentro del <em>core</em> del propio <strong>Rails</strong> varias funcionalidades y elementos que normalmente suelo usar a diario trabajando, y de los cuales además ya he escrito anteriormente en este blog.</p> <h3>Enumeradores para Active Record</h3> <p><a href="//codeloveandboards.com/blog/2013/05/19/simulando-enumeradores-en-nuestros-modelos" target=_blank>Simular enumeradores</a> en los modelos es algo que hago desde que empecé a desarrollar en <strong>Rails</strong> para poder luego asignárselos a campos de estado o de tipo. </p> <pre><code class="ruby">class SurfBoard &lt; ActiveRecord::Base
   TIPOS = [
     TIPO_SHORTBOARD = &#39;shortboard&#39;,

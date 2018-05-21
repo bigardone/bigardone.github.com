@@ -8,6 +8,20 @@
           var s = document.getElementsByTagName('script')[0];
           s.parentNode.insertBefore(sh, s);
   })();
+</script> <link href='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.js'></script> <script>
+  window.addEventListener("load", function(){
+  window.cookieconsent.initialise({
+    "palette": {
+      "popup": {
+        "background": "#252e39"
+      },
+      "button": {
+        "background": "#217dbb"
+      }
+    },
+    "theme": "classic",
+    "position": "bottom-right"
+  })});
 </script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Rails and React IV: Independent components communication</h1> <h3></h3> <div class=meta-data> <hr> posted Nov 28, 2014 on <a class=tag href="/blog/tags/rails.html">rails</a> <a class=tag href="/blog/tags/reactjs.html">reactjs</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <p>On my <a href="/blog/2014/10/06/rails-and-react-iii-parent-child-communication">previous post</a> about the <strong>Rails &amp; React</strong> series I explained how the communication between <strong>parent-child</strong> components works. The flow is very simple: as components must be as stateless as possible, parents pass the necessary data to their children as <strong>props</strong> and they also keep an eye on their events to propagate event handling all the way up back to the parents. But how do we make independent components, not sharing any parent, communicate with each other?</p> <h2>Pub/Sub event system</h2> <p>As <strong>React&#39;s</strong> official documentation specifies: </p> <blockquote> <p>For communication between two components that don&#39;t have a parent-child relationship, you can set up your own global event system.</p> </blockquote> <p>Basically what out components have to do is to subscribe to events in the <em>componentDidMount()</em> method, unsubscribe in the <em>componentWillUnmount()</em>, and call <em>setState()</em> when needed.</p> <h3>The <em>reset filter</em> button</h3> <p>So for the demo application I want to add a button to reset the filter when no matches are found while filtering our contacts. As I want this button to be placed anywhere we want, or even added multiple times in our main view and not necessary as a child of the <em>PeopleSection</em> component, it&#39;s the perfect candidate for a different communication approach.</p> <p><img src="/images/blog/rails_and_react_iv/reset_button-05cfd8d4.jpg" alt=Heroku style="background: #fff;"/> <div class=btn-wrapper> <a href="//rails-and-react-iii.herokuapp.com/" target=_blank class=btn><i class="fa fa-cloud"></i> Live demo</a> <a href="https://github.com/bigardone/rails_and_react/tree/feature/part_three" target=_blank class=btn><i class="fa fa-github"></i> Source code</a> </div></p> <p>Instead of creating my own <strong>pub/sub</strong> system, to handle events between independent components, I decided to use <a href="https://github.com/mroderick/PubSubJS" target=_blank>PubSubJS</a> which I have already used before and it works really well.</p> <p>After downloading the script and placing it in the <em>vendor/assets/javascripts</em> folder, we just have to require it in the <em>application.js.coffee</em> manifest:</p> <pre><code class="coffee"># app/assets/javascripts/application.js.coffee
 
 # ...

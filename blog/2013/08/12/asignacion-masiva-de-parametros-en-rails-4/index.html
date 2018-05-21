@@ -8,6 +8,20 @@
           var s = document.getElementsByTagName('script')[0];
           s.parentNode.insertBefore(sh, s);
   })();
+</script> <link href='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.js'></script> <script>
+  window.addEventListener("load", function(){
+  window.cookieconsent.initialise({
+    "palette": {
+      "popup": {
+        "background": "#252e39"
+      },
+      "button": {
+        "background": "#217dbb"
+      }
+    },
+    "theme": "classic",
+    "position": "bottom-right"
+  })});
 </script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Asignación masiva de parámetros en Rails 4</h1> <h3></h3> <div class=meta-data> <hr> posted Aug 12, 2013 on <a class=tag href="/blog/tags/code.html">code</a> <a class=tag href="/blog/tags/rails.html">rails</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <p><small style="font-style: italic;">Post originalmente escrito para el blog de <a href=" http://blog.diacode.com/asignacion-masiva-de-parametros-en-rails-4" target=_blank>Diacode</a>, que dice así:</small></p> <p>La semana pasada fue movidita en <strong>Diacode</strong>. Uno de nuestros clientes en San Francisco nos propuso que le desarrollasemos un <a href="//es.wikipedia.org/wiki/Producto_viable_m%C3%ADnimo" target=_blank>MVP</a> para una nueva idea de negocio que tenía en mente. Se trataba de un pequeño <strong>ecommerce</strong> donde iba a poner a la venta una serie de productos nuevos, y teníamos que hacer el diseño, logo, envío de notificaciones por correo, gestión de stock, pedidos, etc y todo esto tan solo en 3 días. Para desarrollar algo así de rápido, poder ofrecerle resultados visibles al cliente desde el primer momento sobre la evolución de nuestro trabajo, y permitirnos reaccionar de manera ágil y flexible a los cambios que nos sugería cada vez que recibíamos feedback suyo, optamos por usar <strong>Rails 4</strong>, ya que además nos vendría bien para poder probar alguna de las funcionalidades nuevas con respecto a la versión anterior.</p> <p>Una de las cosas que más me gusta controlar a la hora de programar es que un usuario no pueda enviar peticiones a la aplicación con datos que <strong>no deberían ir en esa petición</strong>, y justo en la nueva versión de Rails han añadido un mecanismo para poder controlar esto. Veamos un ejemplo muy sencillo:</p> <h3>El ejemplo más sencillo</h3> <p>Supongamos que tenemos este modelo <strong>Usuario</strong> en nuestra aplicación:</p> <pre><code class="ruby"># app/models/user.rb
 
 # == Schema Information

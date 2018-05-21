@@ -8,6 +8,20 @@
           var s = document.getElementsByTagName('script')[0];
           s.parentNode.insertBefore(sh, s);
   })();
+</script> <link href='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.js'></script> <script>
+  window.addEventListener("load", function(){
+  window.cookieconsent.initialise({
+    "palette": {
+      "popup": {
+        "background": "#252e39"
+      },
+      "button": {
+        "background": "#217dbb"
+      }
+    },
+    "theme": "classic",
+    "position": "bottom-right"
+  })});
 </script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Probando tus emails desde tu entorno de desarrollo en Ruby on Rails</h1> <h3></h3> <div class=meta-data> <hr> posted Jan 30, 2013 on <a class=tag href="/blog/tags/code.html">code</a> <a class=tag href="/blog/tags/rails.html">rails</a> <a class=tag href="/blog/tags/development.html">development</a> <a class=tag href="/blog/tags/mailer.html">mailer</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <p>Desde que me embarqué en el nuevo proyecto personal que estoy desarrollado en Ruby on Rails siempre he tenido en mente automatizar muchas acciones que los usuarios de la antigua versión de la aplicación tienen que hacer manualmente. Una de estas acciones es la de enviar por <strong>email</strong> a sus proveedores los detalles de los nuevos pedidos que reciben de sus compradores. Esto aunque parezca una cosa simple, les roba mucho tiempo de su día a día, así que en esta nueva versión de la aplicación le he dado máxima prioridad a esta funcionalidad. Para ello y gracias al uso de los <a href="//guides.rubyonrails.org/action_mailer_basics.html" target=_blank title="Action Mailers">Action Mailers</a> de Rails, he diseñado una serie de emails que se envían automáticamente después de ciertas acciones. Pero... ¿cómo podemos probar que estos emails se generan de manera correcta y se envian a sus destinatarios?</p> <p>Pues según lo que he podido encontrar y probar, se puede hacer de dos maneras:</p> <h3>Primera manera, previsualizarlos en tu navegador sin tener que enviarlos.</h3> <p>Buscando y buscando, encontré una gema muy útil y encima de los genios de <a href=37signals target=_blank title=37signals>37signals</a>, llamada <a href="" target=_blank title=mail_view>mail_view</a> que te genera un visualizador de todos tus emailers, a los que podrás acceder desde tu navegador. Su funcionamiento es muy simple:</p> <ul> <li><p>Instala la gema añadíendola a tu Gemfile</p> <pre><code>gem &#39;mail_view&#39;, :git =&gt; &#39;https://github.com/37signals/mail_view.git&#39;
 </code></pre></li> <li><p>Crea la clase que se encargará de crear los emails como si fueran tests, pero cuya salida será la representación gráfica de ellos</p></li> </ul> <pre><code class="ruby"># app/mailers/mail_preview.rb
 class MailPreview &lt; MailView

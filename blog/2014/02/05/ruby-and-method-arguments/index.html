@@ -8,6 +8,20 @@
           var s = document.getElementsByTagName('script')[0];
           s.parentNode.insertBefore(sh, s);
   })();
+</script> <link href='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.js'></script> <script>
+  window.addEventListener("load", function(){
+  window.cookieconsent.initialise({
+    "palette": {
+      "popup": {
+        "background": "#252e39"
+      },
+      "button": {
+        "background": "#217dbb"
+      }
+    },
+    "theme": "classic",
+    "position": "bottom-right"
+  })});
 </script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Ruby and method arguments</h1> <h3></h3> <div class=meta-data> <hr> posted Feb 5, 2014 on <a class=tag href="/blog/tags/ruby.html">ruby</a> <a class=tag href="/blog/tags/code.html">code</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <p>One thing I like most about <strong>Ruby</strong> is the flexibility it gives you to do the same thing in many different ways, so you can choose the way that suits you better. Deciding how you want your methods to receive arguments and therefore how those arguments are going to be passed is one of the things that you can perform in many different ways. This may sound simple, but as Ruby evolves the way arguments are passed to methods also do, so lets take a closer look to the most common approaches out there.</p> <h3>Positional arguments</h3> <p>The most common way of passing them is by using <strong>positional arguments</strong>. Every argument has it&#39;s own position, they must be passed in the same order as they are defined and all of them are required:</p> <pre><code class="ruby">def foo(a, b, c)
   puts [a, b, c]
 end

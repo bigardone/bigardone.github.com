@@ -8,6 +8,20 @@
           var s = document.getElementsByTagName('script')[0];
           s.parentNode.insertBefore(sh, s);
   })();
+</script> <link href='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.js'></script> <script>
+  window.addEventListener("load", function(){
+  window.cookieconsent.initialise({
+    "palette": {
+      "popup": {
+        "background": "#252e39"
+      },
+      "button": {
+        "background": "#217dbb"
+      }
+    },
+    "theme": "classic",
+    "position": "bottom-right"
+  })});
 </script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Migrando datos existentes a tu nueva aplicación Rails</h1> <h3></h3> <div class=meta-data> <hr> posted Sep 11, 2013 on <a class=tag href="/blog/tags/rails.html">rails</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <p><small style="font-style: italic;">Post originalmente escrito para el blog de <a href=" http://blog.diacode.com/migrando-datos-existentes-a-tu-nueva-aplicacion-rails" target=_blank>Diacode</a>, que dice así:</small></p> <p>Algo en lo que todo el equipo de <strong>Diacode</strong> coincidimos es que opinamos que el tener nuestros propios proyectos personales, o <strong>side projects</strong>, fuera de la propia empresa es muy importante. Estos proyectos, en los que solemos trabajar en nuestros ratos libres, son los que alimentan nuestra curiosidad, nos mueven a aprender nuevas tecnologías, mejorar en las que ya conocemos y como resultado, ser mejores profesionales. Esto es tan importante para nosotros que hasta es casi sagrado el dedicarle unas horas semanales a estos proyectos dentro de nuestra jornada laboral, siempre y cuando vayamos bien de tiempo en los proyectos de nuestros clientes (of course) y todos sepamos en qué trabaja cada uno, para poder aprender todos de todos.</p> <p>En mi caso ando rehaciendo, completamente en <strong>Rails</strong>, una aplicación de facturación un tanto peculiar que desarrollé hace unos años usando <strong>J2EE</strong>. Ya tengo el desarrollo bastante avanzado, así que hace unas semanas decidí que ya era hora de migrar todos los datos de la base de datos antigua, en <strong>MySQL</strong>, a la nueva en <strong>PostgreSQL</strong>. Debido a que no solo he cambiado de tecnologías, sino que también he creado nuevos modelos, modificado algunos existentes y por motivos funcionales necesito realizar algunas acciones especiales en determinados casos, el intentar importar la <strong>base de datos legacy</strong> usando un <strong>dump</strong> directamente no era una opción válida, por eso decidí realizar esta labor usando <strong>Rails</strong> y tareas <strong>Rake</strong>.</p> <h3>Conectando la base de datos <em>legacy</em></h3> <p>Lo primero que tenemos que hacer es crear una conexión a la base de datos legacy. Esto se hace de manera sencilla, como si fuera una conexión más de nuestra aplicación, pero con el adaptador que necesitemos (en mi caso MySQL) y sus datos de conexión:</p> <pre><code class="ruby"># config/database.yml
 
 development:

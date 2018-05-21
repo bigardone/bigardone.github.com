@@ -8,6 +8,20 @@
           var s = document.getElementsByTagName('script')[0];
           s.parentNode.insertBefore(sh, s);
   })();
+</script> <link href='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.js'></script> <script>
+  window.addEventListener("load", function(){
+  window.cookieconsent.initialise({
+    "palette": {
+      "popup": {
+        "background": "#252e39"
+      },
+      "button": {
+        "background": "#217dbb"
+      }
+    },
+    "theme": "classic",
+    "position": "bottom-right"
+  })});
 </script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Rails Composer, el generador de Rails con esteroides</h1> <h3></h3> <div class=meta-data> <hr> posted Dec 3, 2012 on </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <p>A la hora de crear una nueva aplicación, sea en el lenguaje que sea, antes de nada me pregunto que tecnologías voy a usar cómo que tipo de base de datos, qué framework css para los estilos, si usaré algún motor de plantillas para ayudarme en las vistas, y demás cosas que luego tendré que ir añadiendo a la aplicación y configurando para que todo funcione correctamente.</p> <p>Pués bien, a la hora de generar una nueva aplicación en Rails, se le puede pasar un parámetro para especificarle una plantilla a partir de la cual generar la nueva aplicación. Una plantilla no es más que un fichero que contiene una serie de gemas, inicializadores y demás que quieres que se incluyan de manera predeterminada en tu aplicación.</p> <pre><code>$ rails new blog -m http://example.com/template.rb
 </code></pre> <p>Investigando sobre esto para la nueva aplicación que estoy desarrollando, encontré <a title="Rails Composer" href="//railsapps.github.com/rails-composer/" target=_blank>Rails Composer</a>, un pedazo de plantilla que te genera el esqueleto de tu nueva aplicación a partir de una serie de preguntas que te va haciendo y así ahorrándote el tener que ir metiendo todas estas gemas y configurarlas una a una.</p> <h3>¿Cómo funciona?</h3> <p>Solo tenemos que lanzar la siguiente instrucción desde nuestra consola:</p> <pre><code>$ rails new myapp -m https://raw.github.com/RailsApps/rails-composer/master/composer.rb
 </code></pre> <p>Y a continuación ir contestando a las preguntas que nos va haciendo, seleccionando lo que prefiramos, para que la magia surta efecto :)</p> <h3>¿Qué nos aporta?</h3> <p>Para empezar, a parte de poder generar tu propia aplicación a la carta, tiene preestablecidas una serie de aplicaciones de ejemplo con diferentes tecnologías:</p> <pre><code>  question  Install an example application?

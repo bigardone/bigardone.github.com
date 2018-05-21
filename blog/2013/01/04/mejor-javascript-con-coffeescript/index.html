@@ -8,6 +8,20 @@
           var s = document.getElementsByTagName('script')[0];
           s.parentNode.insertBefore(sh, s);
   })();
+</script> <link href='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.js'></script> <script>
+  window.addEventListener("load", function(){
+  window.cookieconsent.initialise({
+    "palette": {
+      "popup": {
+        "background": "#252e39"
+      },
+      "button": {
+        "background": "#217dbb"
+      }
+    },
+    "theme": "classic",
+    "position": "bottom-right"
+  })});
 </script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Mejor JavaScript con CoffeeScript</h1> <h3></h3> <div class=meta-data> <hr> posted Jan 4, 2013 on <a class=tag href="/blog/tags/code.html">code</a> <a class=tag href="/blog/tags/coffeescript.html">coffeescript</a> <a class=tag href="/blog/tags/javascript.html">javascript</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <p>Siguiendo con mi último post acerca de como ser más productivo y escribir mejores hojas de estilo con <a title="Mejores hojas de estilo con Sass" href="//codeloveandboards.wordpress.com/2012/12/17/mejores-hojas-de-estilo-con-sass/">SASS</a>, este nuevo post no podría ir de otra cosa que no fuera acerca de <a title=CoffeeScript href="//coffeescript.org" target=_blank>CoffeeScript</a>, que viene a ser a JavaScript lo que es SASS a las hojas de estilo, es decir, un lenguaje sencillo que se compila en JavaScript usando una sintaxis muy sencilla y aportando nueva funcionalidad muy útil.</p> <h3>Sintaxis</h3> <p>Lo que más me ha gustado desde que llevo usándolo es su sintaxis abreviada. Es como escribir JavaScript, pero omitiendo llaves, puntos y coma, paréntesis, indentación para bloques de código, etc. Lo que hace que programar sea muy rápido y directo al grano. Si estáis acostumbrados a la sintaxis de Ruby, por ejemplo, encontrareis muchas similitudes entre ambos.</p> <pre><code class="coffeescript"># script.coffee
 a = [1..10]
 b = 2

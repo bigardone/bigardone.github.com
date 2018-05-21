@@ -8,6 +8,20 @@
           var s = document.getElementsByTagName('script')[0];
           s.parentNode.insertBefore(sh, s);
   })();
+</script> <link href='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.js'></script> <script>
+  window.addEventListener("load", function(){
+  window.cookieconsent.initialise({
+    "palette": {
+      "popup": {
+        "background": "#252e39"
+      },
+      "button": {
+        "background": "#217dbb"
+      }
+    },
+    "theme": "classic",
+    "position": "bottom-right"
+  })});
 </script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Phoenix and Elm, a real use case (pt. 6)</h1> <h3></h3> <div class=meta-data> <hr> posted Mar 19, 2017 on <a class=tag href="/blog/tags/elixir.html">elixir</a> <a class=tag href="/blog/tags/phoenix.html">phoenix</a> <a class=tag href="/blog/tags/elm.html">elm</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <div class=index> <p>This post belongs to the <strong>Phoenix and Elm, a real use case</strong> series.</p> <ol> <li><a href="/blog/2017/02/02/phoenix-and-elm-a-real-use-case-pt-1/">Introduction to creating a SPA with Phoenix and Elm</a></li> <li><a href="/blog/2017/02/08/phoenix-and-elm-a-real-use-case-pt-2/">Rendering the initial contact list</a></li> <li><a href="/blog/2017/02/14/phoenix-and-elm-a-real-use-case-pt-3/">Adding full text search and pagination navigation to the contact list</a></li> <li><a href="/blog/2017/02/23/phoenix-and-elm-a-real-use-case-pt-4/">Better state with union types, search resetting and keyed nodes.</a></li> <li><a href="/blog/2017/03/07/phoenix-and-elm-a-real-use-case-pt-5/">Implementing Elm routing</a></li> <li><a href="/blog/2017/03/19/phoenix-and-elm-a-real-use-case-pt-6/">Poenix and Elm communication through WebSockets</a></li> </ol> <a href="https://phoenix-and-elm.herokuapp.com/" target=_blank><i class="fa fa-cloud"></i> Live demo</a> | <a href="https://github.com/bigardone/phoenix-and-elm" target=_blank><i class="fa fa-github"></i> Source code</a> </div> <h2>Phoenix and Elm WebSockets support</h2> <p>In the <a href="/blog/2017/03/07/phoenix-and-elm-a-real-use-case-pt-5/">last part</a>, we refactored our application to add <strong>Elm</strong> routing and added the show contact route. These changes include adding a new API endpoint in the <code>ContactController</code> module to return a given contact&#39;s JSON representation. However, since I started using <strong>Phoenix</strong>, I have found myself using fewer controllers, and more <strong>WebSockets</strong> and <strong>Phoenix&#39;s</strong> channels. The main reasons for doing this are:</p> <ul> <li>They are much faster than Http requests.</li> <li>Once the connection is established, and the authentication is accomplished, you do not need to authenticate future requests and rely on cookies for it.</li> <li>Its <strong>PubSub</strong> system opens a new world of possibilities.</li> </ul> <p>That being said, today we are going to replace the current <strong>API</strong> controller we have with a new <strong>Phoenix</strong> <strong>channel</strong> and learn how to add support for this new channel in <strong>Elm</strong>. Let&#39;s do this!</p> <h3>Phoenix changes</h3> <p>First of all, let&#39;s get rid of what we are not going to need anymore. This includes deleting the <code>ContactContoller</code> file, located in <code>web/controllers/contact_controller.ex</code> and the <code>ContactView</code> in <code>web/views/contact_view.ex</code>. We also need to update the <code>router</code> file to remove the <strong>API</strong> pipeline:</p> <pre><code class="elixir"># web/router.ex
 
 defmodule PhoenixAndElm.Router do

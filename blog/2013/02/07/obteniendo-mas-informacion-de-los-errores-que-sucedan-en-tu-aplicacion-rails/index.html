@@ -8,6 +8,20 @@
           var s = document.getElementsByTagName('script')[0];
           s.parentNode.insertBefore(sh, s);
   })();
+</script> <link href='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.js'></script> <script>
+  window.addEventListener("load", function(){
+  window.cookieconsent.initialise({
+    "palette": {
+      "popup": {
+        "background": "#252e39"
+      },
+      "button": {
+        "background": "#217dbb"
+      }
+    },
+    "theme": "classic",
+    "position": "bottom-right"
+  })});
 </script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Obteniendo más información de los errores que suceden en tu aplicación Rails</h1> <h3></h3> <div class=meta-data> <hr> posted Feb 7, 2013 on <a class=tag href="/blog/tags/code.html">code</a> <a class=tag href="/blog/tags/rails.html">rails</a> <a class=tag href="/blog/tags/errors.html">errors</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <p>Por muchas pruebas que hagamos y creamos tener todo controlado, los errores ocurren. Por eso es importante poder conseguir la mayor información sobre ellos en cuanto aparezcan, para poder corregirlos lo antes posible. Así mismo, en producción es importante si algo que no esperamos ocurre, al usuario se le notifique de manera amigable, en vez de mostrar una página de error que provoque en él el reflejo de apagar directamente su ordenador por si &quot;ha roto algo&quot;. Por estos motivos quiero compartir con vosotros tres formas muy sencillas de hacer nuestras páginas de errores y la información que recibimos sobre ellos más amigable y entendible.</p> <h3>Mejores páginas de error en el entorno de desarrollo con better_errors</h3> <p>Aunque mientras desarrollamos, la página de error por defecto de Rails puede sernos de ayuda para entender que ha ido mal, con la gema <a href="https://github.com/charliesome/better_errors" target=_blank title="Better Errors">better_errors</a> la cosa cambia completamente. Esta joya (más que gema) reemplaza esa página de error sosa por una suya propia tuning, con el siguiente aspecto:</p> <p><img src="https://a248.e.akamai.net/camo.github.com/f05d967fb90cbe3e686ad794062c2151f7ee19a5/687474703a2f2f692e696d6775722e636f6d2f7a594f58462e706e67"/></p> <p>Ya no solo supera gráficamente a la original, sino que además nos aporta las siguientes mejoras a nivel funcional:</p> <ul> <li><strong>La traza de la pila completa</strong>, donde si pinchas en la clase por donde ha ido sucediendo el error, se actualizará en panel de la derecha de la pantalla con el código de esa clase para que puedas inspeccionarlo.</li> <li><strong>Inspección de variables locales y de instancia</strong>, donde podremos ver sus valores en todo momento.</li> <li>Y lo que más me ha flipado, <strong>REPL en vivo</strong>, es decir, nos proporciona una consola de Rails donde probar nuestro código y hacer lo que queramos como si se tratase del mismísimo FireBug o la consola de JavaScript de Chrome.</li> </ul> <p>No se para vosotros, pero para mi es una de las gemas más chulas y útiles que he visto últimamente, así que no dudéis en instalarla en vuestro aplicación. Para ello solo tenéis que añadir lo siguiente a vuestro <strong>Gemfile</strong></p> <pre><code class="ruby">group :development do
   gem &quot;better_errors&quot;
   gem &quot;binding_of_caller

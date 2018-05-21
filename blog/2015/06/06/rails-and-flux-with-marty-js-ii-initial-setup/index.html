@@ -8,6 +8,20 @@
           var s = document.getElementsByTagName('script')[0];
           s.parentNode.insertBefore(sh, s);
   })();
+</script> <link href='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.js'></script> <script>
+  window.addEventListener("load", function(){
+  window.cookieconsent.initialise({
+    "palette": {
+      "popup": {
+        "background": "#252e39"
+      },
+      "button": {
+        "background": "#217dbb"
+      }
+    },
+    "theme": "classic",
+    "position": "bottom-right"
+  })});
 </script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Rails and Flux with Marty.js II: Initial setup</h1> <h3></h3> <div class=meta-data> <hr> posted Jun 6, 2015 on <a class=tag href="/blog/tags/rails.html">rails</a> <a class=tag href="/blog/tags/reactjs.html">reactjs</a> <a class=tag href="/blog/tags/flux.html">flux</a> <a class=tag href="/blog/tags/webpack.html">webpack</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <p>It&#39;s been more than two months since I wrote the first post about this <a href="/blog/2015/03/21/rails-and-flux-with-marty-js/">Rails and Flux Marty.js</a> series, and many things have changed since then. I have started using <a href="//webpack.github.io/" target=_blank>webpack</a> as the module bundler for my front-end JavaScript. This is because each day I code more and more front-end functionality and I find it a better approach than <strong>Sprockets</strong> when you need to manage dependencies and split your code in shareable modules across different views. Regarding <strong>Marty.js</strong> it&#39;s <strong>v0.10</strong> version has been released some days ago with significant changes so I&#39;ve been refactoring the example application to implement them. </p> <p>I wasn&#39;t going to write this post at first, but as there are many differences involved in the process of creating the example application, I finally think it&#39;s worth it. So let&#39;s get started!</p> <h2>Rails Sprockets + webpack</h2> <p>For this initial version, of the example application, we are going to make <strong>webpack</strong> and <strong>Sprockets</strong> play nicely together as this post series is not intended to be a tutorial about replacing one for the other. There are really good tutorials about it out there like <a href="//clarkdave.net/2015/01/how-to-use-webpack-with-rails/" target=_blank>this</a> and <a href="https://www.reinteractive.net/posts/213-rails-with-webpack-why-and-how" target=_blank>this</a>. One of the reasons of why I like this approach of using both together is that there are some useful gems like <a href="https://github.com/railsware/js-routes" target=_blank>JsRoutes</a> (your Rails named routes in a JavaScript helper) and <a href="https://github.com/fnando/i18n-js" target=_blank>I18n.js</a> (your Rails translations accessible from your JavaScript) which I personally use quite a lot and I haven&#39;t tried a different way of using them without <strong>Sprockets</strong> (it&#39;s in my to-do list though).</p> <h3>Necessary modules</h3> <p>Apart from the required loaders <strong>webppack</strong> is going to use to process our source code, we also need the following modules to code the application:</p> <pre><code class="json">// package.json
 
 ...

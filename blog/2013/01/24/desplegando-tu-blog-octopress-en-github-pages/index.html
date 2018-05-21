@@ -8,6 +8,20 @@
           var s = document.getElementsByTagName('script')[0];
           s.parentNode.insertBefore(sh, s);
   })();
+</script> <link href='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.js'></script> <script>
+  window.addEventListener("load", function(){
+  window.cookieconsent.initialise({
+    "palette": {
+      "popup": {
+        "background": "#252e39"
+      },
+      "button": {
+        "background": "#217dbb"
+      }
+    },
+    "theme": "classic",
+    "position": "bottom-right"
+  })});
 </script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Desplegando tu blog Octopress en GitHub Pages</h1> <h3></h3> <div class=meta-data> <hr> posted Jan 24, 2013 on <a class=tag href="/blog/tags/code.html">code</a> <a class=tag href="/blog/tags/octopress.html">octopress</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <p>En mi <a href="/blog/2013-01-23-cambiando-de-wordpress-a-octopress">último post</a> vimos cómo crear un blog de páginas estáticas con <a title="A blogging framework for hackers" href="//octopress.org" target=_blank>Octopress</a>, configurarlo, crear posts y páginas y ver los cambios en local. Ya tienes montado tu blog, y ahora tienes que desplegarlo en algún sitio para que el mundo lo vea. Para esto, vamos a usar <a title="GitHub Pages" href="//pages.github.com" target=_blank>GitHub Pages</a>, con el que se integra al 100% y encima es completamente gratuito, sin mencionar la fiabilidad del servicio ;)</p> <h3>Configurando GitHub</h3> <p>Lo primero que tienes que hacer es acceder a tu cuenta de GitHub y crear un nuevo repositorio con el siguiente nombre:</p> <pre><code>    tu_nombre_de_usuario.github.com
 </code></pre> <p>La manera que tiene GitHub Pages de funcionar es la siguiente. Usa la <strong>master branch</strong> como directorio público de tu servidor web sirviendo los ficheros del repositiorio que creaste antes, y donde se encuentran el contenido estático generado. Tienes que trabajar desde la <strong>source branch</strong> y commitear el contenido generado a la <strong>master branch</strong>, para que los cambios puedan contemplarse. No te preocupes, hay una instrucción desde tu consola, que se encarga de configurar esto. Entra en ella, y desde el directorio raíz de tu blog ejecuta:</p> <pre><code>    $ rake setup_github_pages
 </code></pre> <p>A continuación deberás introducir otra vez el la url de tu repositorio, pero recuerda introducirla usando el siguiente formato:</p> <pre><code>    git@github.com:tu_nombre_de_usuario/tu_nombre_de_usuario.github.com.git

@@ -8,6 +8,20 @@
           var s = document.getElementsByTagName('script')[0];
           s.parentNode.insertBefore(sh, s);
   })();
+</script> <link href='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.js'></script> <script>
+  window.addEventListener("load", function(){
+  window.cookieconsent.initialise({
+    "palette": {
+      "popup": {
+        "background": "#252e39"
+      },
+      "button": {
+        "background": "#217dbb"
+      }
+    },
+    "theme": "classic",
+    "position": "bottom-right"
+  })});
 </script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Rails and React III: Parent-child communication</h1> <h3></h3> <div class=meta-data> <hr> posted Oct 6, 2014 on <a class=tag href="/blog/tags/rails.html">rails</a> <a class=tag href="/blog/tags/reactjs.html">reactjs</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <p><a href="/blog/2014/09/10/rails-and-react-ii-a-real-use-case">In the last post</a> we saw how to install <strong>React</strong> in a <strong>Ruby on Rails</strong> application and how to code our first components. The result is a simple application where we display a list of contacts and we can filter them thanks to a search form. Every contact&#39;s card and the search form are <strong>React components</strong>, all of them children of the same parent, the <em>PeopleSection</em>, which is responsible for:</p> <ul> <li>Requesting and providing the necessary data to the list of contacts.</li> <li>Handling the search form&#39;s submit event so it can request the data depending on the user&#39;s input.</li> </ul> <p>This two are the main points to keep in mind while coding <strong>React</strong> components. Data flows from the parent to it&#39;s children and events are handled from children, all the way up, to their parent. But there may be also situations where we are going to need communication between components that don&#39;t share this parent-child relationship and <strong>React</strong> gives us the freedom to set this up as we desire. So lets take a closer look to the first way of communication between components.</p> <h2>Parent-child communication</h2> <p><strong>React</strong>&#39;s documentation specifies that communication between parent-child components must be done using <strong>props</strong>. This means that a parent component passes to it&#39;s children the necessary properties for them to render and uses them also to handle events. So let&#39;s put this into practice and code some new components to enhance our application.</p> <h3>The paginator section</h3> <p>As there are going to be many contacts in our application we need to paginate them. On the back-end I have installed the <a href="https://github.com/amatsuda/kaminari" title="Kaminari gem" target=_blank>Kaminari gem</a> so in the <em>PeopleController</em> we just have to pass the page number received in the request and <strong>Kaminari</strong> will do the rest:</p> <pre><code class="ruby"># /app/controllers/people_controller.rb
 
 class PeopleController &lt; ApplicationController

@@ -8,6 +8,20 @@
           var s = document.getElementsByTagName('script')[0];
           s.parentNode.insertBefore(sh, s);
   })();
+</script> <link href='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.js'></script> <script>
+  window.addEventListener("load", function(){
+  window.cookieconsent.initialise({
+    "palette": {
+      "popup": {
+        "background": "#252e39"
+      },
+      "button": {
+        "background": "#217dbb"
+      }
+    },
+    "theme": "classic",
+    "position": "bottom-right"
+  })});
 </script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Desplegando Rails II: Heroku</h1> <h3></h3> <div class=meta-data> <hr> posted Sep 30, 2013 on <a class=tag href="/blog/tags/rails.html">rails</a> <a class=tag href="/blog/tags/deploying.html">deploying</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <p>Siguiendo con la temática de mi último post, acerca de las diferencias entre <em>PaaS</em> e <em>Iass</em>, esta semana he escrito un <a href=" http://blog.diacode.com/desplegando-rails-ii-heroku" target=_blank>nuevo post en el blog de Diacode</a> explicando las ventajas de <strong>Heroku</strong> y cómo desplegar una aplicación <strong>Rails</strong> usando este servicio <em>PaaS</em>, para poder tener nuestras aplicaciones accesibles a todo el mundo en pocos minutos.</p> <p>Espero que os guste y sea de ayuda.</p> <p>Love &amp; boards!</p> <div id=disqus_thread></div> <script>
   /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
   var disqus_shortname = 'codeloveandboards'; // required: replace example with your forum shortname

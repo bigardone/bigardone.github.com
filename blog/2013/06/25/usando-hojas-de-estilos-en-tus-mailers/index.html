@@ -8,6 +8,20 @@
           var s = document.getElementsByTagName('script')[0];
           s.parentNode.insertBefore(sh, s);
   })();
+</script> <link href='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.js'></script> <script>
+  window.addEventListener("load", function(){
+  window.cookieconsent.initialise({
+    "palette": {
+      "popup": {
+        "background": "#252e39"
+      },
+      "button": {
+        "background": "#217dbb"
+      }
+    },
+    "theme": "classic",
+    "position": "bottom-right"
+  })});
 </script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Usando hojas de estilos en tus mailers</h1> <h3></h3> <div class=meta-data> <hr> posted Jun 25, 2013 on <a class=tag href="/blog/tags/ruby.html">ruby</a> <a class=tag href="/blog/tags/rails.html">rails</a> <a class=tag href="/blog/tags/mailer.html">mailer</a> <a class=tag href="/blog/tags/gems.html">gems</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <p>En un post anterior vimos cómo <a href="/blog/2013/01/30/probando-tus-emails-desde-tu-entorno-de-desarrollo-en-ruby-on-rails">probar nuestros mailers</a> en nuestro entorno de desarrollo sin necesidad de tener que enviarlos de forma real. También conocimos una gema muy útil llamada <a href="https://github.com/37signals/mail_view" target=_blank title="Mail view">mail_view</a> que nos puede ayudar con el diseño de nuestros emails mostrándonos el resultado final desde nuestro navegador a medida que vamos desarrollando las vistas de los mismos. ¿Pero qué pasa cuando queremos diseñar una plantilla chula para nuestro emails?</p> <p>Debido a la gran variedad de clientes de correo que existen y sus <a href="//www.campaignmonitor.com/css/" target=_blank>múltiples incompatibilidades</a>, una buena práctica que se recomienda llevar a cabo para generar emails con contenido HTML es la de añadir todos los <strong>estilos en linea</strong>. Es decir, cada elemento de nuestro HTML al que queremos dar estilos, debe llevarlos en su propio atributo <code>style</code>. Con que queramos generar una plantilla un poco curiosa, esto va a significar que vamos a tener <strong>repetir muchos estilos</strong>, y lo que es peor aún, si queremos cambiar algo vamos a tener que cambiarlo en muchos sitios, lo que choca un poco con el principio <a href="//es.wikipedia.org/wiki/No_te_repitas" target=_blank title="Don't repear yourself">DRY</a> de <strong>Rails</strong>. Además, habiendo desarrollado ya unas hojas de estilos decentes para nuestra aplicación, que menos que poder reutilizar parte de estos estilos en nuestros emails. ¿Pero cómo podemos hacer esto?</p> <h3>Roadie al rescate</h3> <p><a href="https://github.com/Mange/roadie" target=_blank title=Roadie>Esta gema</a> nos ayuda en esta labor, cogiendo las hojas de estilos que especifiquemos en nuestra plantilla y reescribiendo todo el HTML del email para aplicarle los estilos en linea. Además de esto nos ayuda a sobrescribir todas las URLs de nuestras imágenes para que sean <strong>absolutas</strong>, y así visibles desde cualquiera de nuestro entornos.</p> <p>Para instalarla solo la tenemos que añadir a nuestro <code>Gemfile</code>:</p> <pre><code>gem &#39;roadie&#39;
 </code></pre> <p>Una vez ejecutamos el consiguiente <code>bundle install</code>, ya la tendremos lista para funcionar. Para que coja cualquier hoja de estilos y haga su magia, podemos elegir varia formas de hacerlo:</p> <p>La primera sería añadiendo un tag haciendo referencia a la hoja de estilos que queramos usar:</p> <pre><code>&lt;link rel=&quot;stylesheet&quot; href=&quot;nombre_de_tu_hoja_de_estilos.css&quot;/&gt;
 </code></pre> <p>También podemos incrustar en nuestra plantilla sus estilos en su correspondiente <code>style</code> tag:</p> <pre><code>&lt;style type=&quot;text/css&quot;&gt;

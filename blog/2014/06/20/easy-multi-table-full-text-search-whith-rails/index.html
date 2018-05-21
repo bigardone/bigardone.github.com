@@ -8,6 +8,20 @@
           var s = document.getElementsByTagName('script')[0];
           s.parentNode.insertBefore(sh, s);
   })();
+</script> <link href='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.js'></script> <script>
+  window.addEventListener("load", function(){
+  window.cookieconsent.initialise({
+    "palette": {
+      "popup": {
+        "background": "#252e39"
+      },
+      "button": {
+        "background": "#217dbb"
+      }
+    },
+    "theme": "classic",
+    "position": "bottom-right"
+  })});
 </script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Easy multi-table full-text search with Rails</h1> <h3></h3> <div class=meta-data> <hr> posted Jun 20, 2014 on <a class=tag href="/blog/tags/rails.html">rails</a> <a class=tag href="/blog/tags/activerecord.html">activerecord</a> <a class=tag href="/blog/tags/postgresql.html">postgresql</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <p>In my new personal project I&#39;ve been working for the past months I wanted the user to have the ability to search for certain records of a given model across multiple of it&#39;s fields and relations using a simple form with just one text field. This is known as <a href="https://en.wikipedia.org/wiki/Full_text_search" target=_blank>full-text search</a> and there are many standalone services you can use to handle it such as <a href="//www.elasticsearch.org/" target=_blank>Elasticsearch</a>, <a href="//sphinxsearch.com/" target=_blank>Sphinx</a> or <a href="https://lucene.apache.org/solr/" target=_blank>Solr</a>, but I didn&#39;t wanted to add and additional complexity layer to the project so I decided to choose <strong>PostgreSQL</strong> as my database of choice and take advantage of it&#39;s power.</p> <h3>The goal</h3> <p>So imagine we have a model named <strong>Person</strong> which looks like this:</p> <pre><code class="ruby"># == Schema Information
 #
 # Table name: people

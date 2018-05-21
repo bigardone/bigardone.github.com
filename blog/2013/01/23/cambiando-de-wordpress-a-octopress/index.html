@@ -8,6 +8,20 @@
           var s = document.getElementsByTagName('script')[0];
           s.parentNode.insertBefore(sh, s);
   })();
+</script> <link href='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.js'></script> <script>
+  window.addEventListener("load", function(){
+  window.cookieconsent.initialise({
+    "palette": {
+      "popup": {
+        "background": "#252e39"
+      },
+      "button": {
+        "background": "#217dbb"
+      }
+    },
+    "theme": "classic",
+    "position": "bottom-right"
+  })});
 </script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Cambiando de Wordpress a Octopress</h1> <h3></h3> <div class=meta-data> <hr> posted Jan 23, 2013 on <a class=tag href="/blog/tags/code.html">code</a> <a class=tag href="/blog/tags/octopress.html">octopress</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <p>Hace poco he descubierto <a title="A blogging framework for hackers" href="//octopress.org" target=_blank>Octopress</a>, un framework de Jekyll para generar sitios web estáticos a partir de Ruby, SASS, plantillas HTML y ficheros escritos con markdown. En resumidas cuentas, creas un nuevo artículo en un archivo escrito con tu editor de texto favorito, y con un par de instrucciones en tu consola, te genera el post y te lo despliega en tu servidor. No he podido resistirme a dar el salto por los siguientes motivos:</p> <ul> <li><span style="line-height: 13px;">Está hecho en Ruby, y así puedo practicar y aprender más.</span></li> <li>Tiene los plugins justos, para Twitter, Google Analytics, etc. No hay que volverse loco optimizándolo, añadiendo plugins, actualizándolos, etc.</li> <li>Al tratarse de páginas estáticas, no se requiere ningún procesamiento en el servidor, así que la velocidad con la que se sirven es mucho mayor que si se tratase de otro sistema como WordPress.</li> <li>No dependes de una base de datos, puedes tener todos tus artículos guardados donde quieras.</li> <li>El theme por defecto que viene es muy chulo y responsivo. Puedes instalar otros themes si quieres, pero ya estoy pensando en crear el mio propio usando Haml y Sass.</li> <li>Completamente compatible con <a title="GitHub Pages" href="//pages.github.com" target=_blank>GitHub Pages</a>, con lo que te ahorras tener que pagar un hosting.</li> <li>Los comentarios  están implementados usando <a title="Disqus, elevating the discussion, anywhere on the web." href="//disqus.com" target=_blank>Disqus</a>, con lo que es también independiente de tu blog.</li> </ul> <h3>¿Cómo lo instalo?</h3> <p>Lo primero de todo es preparar tu entorno, yo ya tenía instaladas todas las dependencias al estar programando en Ruby, pero <a title="Octopress setup" href="//octopress.org/docs/setup/" target=_blank>aquí</a> puedes ver las instrucciones que tienes que seguir en caso contrario. Una vez hecho esto, vayamos al grano: <ol> <li><span style="line-height: 13px;"><span style="line-height: 13px;">Clona Octopress en tu equipo:</span></span></p> <pre><code>$ git clone git://github.com/imathis/octopress.git nombre_de_tu_blog
 </code></pre> <p></li> <li>Entra en la carpeta nombre<em>de</em>tu_blog e instala el tema por defecto:</p> <pre><code>$ cd octopress
 $ rake install

@@ -8,6 +8,20 @@
           var s = document.getElementsByTagName('script')[0];
           s.parentNode.insertBefore(sh, s);
   })();
+</script> <link href='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.js'></script> <script>
+  window.addEventListener("load", function(){
+  window.cookieconsent.initialise({
+    "palette": {
+      "popup": {
+        "background": "#252e39"
+      },
+      "button": {
+        "background": "#217dbb"
+      }
+    },
+    "theme": "classic",
+    "position": "bottom-right"
+  })});
 </script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Creando un nuevo proyecto web con Yeoman</h1> <h3></h3> <div class=meta-data> <hr> posted Mar 14, 2013 on <a class=tag href="/blog/tags/code.html">code</a> <a class=tag href="/blog/tags/yeoman.html">yeoman</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <p>En el pasado post <a href="/blog/2013/02/27/desarrollo-web-moderno-con-yeoman">conocimos a Yeoman</a>, un nuevo amigo que nos ayuda a desarrollar proyectos web de manera moderna y dinámica, poniendo a nuestra disposición una serie de de flujos de trabajo y buenas prácticas orientados no solo a optimizar el resultado final de nuestro desarrollo, sino también generando por nosotros el esqueleto del mismo, manejo de dependencias y un largo etcétera. También vimos como instalar la versión 1.0 (junto con sus dos dependencias <strong>Bower</strong> y <strong>Grunt</strong>), con una sola linea desde nuestra consola:</p> <pre><code>$ npm install -g yo grunt-cli bower
 </code></pre> <p>Teniendo ya todo instalado vamos a generar nuestro primer proyecto y para ello vamos a usar uno de los generadores de Yeoman, para que genere para nosotros todo lo que en un principio necesitaremos. Para ver la lista de generadores por defecto, solo tenemos que ejecutar lo siguiente:</p> <pre><code>$ yo
 

@@ -8,6 +8,20 @@
           var s = document.getElementsByTagName('script')[0];
           s.parentNode.insertBefore(sh, s);
   })();
+</script> <link href='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.js'></script> <script>
+  window.addEventListener("load", function(){
+  window.cookieconsent.initialise({
+    "palette": {
+      "popup": {
+        "background": "#252e39"
+      },
+      "button": {
+        "background": "#217dbb"
+      }
+    },
+    "theme": "classic",
+    "position": "bottom-right"
+  })});
 </script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Elm and the outer world</h1> <h3></h3> <div class=meta-data> <hr> posted May 15, 2017 on <a class=tag href="/blog/tags/elm.html">elm</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <p><em>Huge thanks to my teammate <a href="https://github.com/alvivi" target=_blank>Alvaro</a> for the Elm masterclasses and his endless patience :)</em></p> <p>These have been very exciting weeks of development at <a href="https://thebookofeveryone.com">The Book of Everyone</a>. We have been migrating a crucial part of our core functionality to Elm. This hard work includes not only front-end stuff, but also other cool features like static assets downloading and caching, running server-side <strong>Elm</strong> applications through <strong>Elixir</strong> ports and <strong>Node</strong>, and creating our <strong>Elm Native modules</strong> for the not supported stuff. Before these weeks, <strong>Native modules</strong> were something that I have not used before, so I would like to give you a small introduction to them, just in case you might find it useful in the future. But before, let&#39;s start by understanding how <strong>Elm</strong> communicates with external code.</p> <h2>Elm ports</h2> <p>If you are into <strong>Elm</strong>, then you should probably know that an <strong>Elm</strong> application is like a bulletproof box, where any interaction with the outside world needs to be done through a very specific API. If you want to communicate with external <strong>JavaScript</strong> code from your application, you need to use <strong>Ports</strong> to handle the incoming and outgoing messages. These ports have to be defined correctly as any other function in <strong>Elm</strong>, so nothing weird happens to break the application. The problem with this is that your project is going to be tightly coupled to external code, which makes it difficult to share or reuse, especially when building libraries that might be included in other projects.</p> <p>To understand it better let&#39;s build a very simple application which has an HTML file input, and that renders a preview of any selected image with it.</p> <h3>The setup</h3> <p>Let&#39;s start by creating a new <strong>Elm</strong> project by running the following command from your terminal:</p> <pre><code>$ elm package install elm-lang/html -y
 </code></pre> <p>The output is something like this:</p> <pre><code>Starting downloads...
 

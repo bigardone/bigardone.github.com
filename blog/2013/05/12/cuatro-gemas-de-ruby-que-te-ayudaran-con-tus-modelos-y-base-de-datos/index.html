@@ -8,6 +8,20 @@
           var s = document.getElementsByTagName('script')[0];
           s.parentNode.insertBefore(sh, s);
   })();
+</script> <link href='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.js'></script> <script>
+  window.addEventListener("load", function(){
+  window.cookieconsent.initialise({
+    "palette": {
+      "popup": {
+        "background": "#252e39"
+      },
+      "button": {
+        "background": "#217dbb"
+      }
+    },
+    "theme": "classic",
+    "position": "bottom-right"
+  })});
 </script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Cuatro gemas de Ruby que te ayudarán con tus modelos y base de datos.</h1> <h3></h3> <div class=meta-data> <hr> posted May 12, 2013 on <a class=tag href="/blog/tags/ruby.html">ruby</a> <a class=tag href="/blog/tags/rails.html">rails</a> <a class=tag href="/blog/tags/gems.html">gems</a> <a class=tag href="/blog/tags/data-base.html">data base</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <p>Últimamente he estado usando estas gemas para ayudarme a tener una mejor visión global de la estructura de los datos en los proyectos nuevos en los que estoy participando, o para ayudarme a optimizar las base de datos y las consultas con las que las aplicaciones acceden a estos.</p> <h3>Annotate (aka AnnotateModels)</h3> <p><a href="https://github.com/ctran/annotate_models" target=_blank>Esta gema</a> hace una cosa muy sencilla, pero muy útil. Crea una serie de anotaciones en tus modelos, tests, fixtures y factorias acerca del esquema de la tabla que usan.</p> <pre><code class="ruby"># == Schema Info
 #
 # Table name: line_items

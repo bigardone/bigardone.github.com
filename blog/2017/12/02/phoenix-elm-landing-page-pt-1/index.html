@@ -8,6 +8,20 @@
           var s = document.getElementsByTagName('script')[0];
           s.parentNode.insertBefore(sh, s);
   })();
+</script> <link href='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.js'></script> <script>
+  window.addEventListener("load", function(){
+  window.cookieconsent.initialise({
+    "palette": {
+      "popup": {
+        "background": "#252e39"
+      },
+      "button": {
+        "background": "#217dbb"
+      }
+    },
+    "theme": "classic",
+    "position": "bottom-right"
+  })});
 </script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Phoenix & Elm landing page (pt.1)</h1> <h3></h3> <div class=meta-data> <hr> posted Dec 2, 2017 on <a class=tag href="/blog/tags/elixir.html">elixir</a> <a class=tag href="/blog/tags/phoenix.html">phoenix</a> <a class=tag href="/blog/tags/elm.html">elm</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <div class=index> <p>This post belongs to the <strong>Phoenix & Elm landing page</strong> series.</p> <ol> <li><a href="/blog/2017/12/02/phoenix-elm-landing-page-pt-1/">Bootstrapping the project and the basic API functionality to save our first leads</a></li> <li><a href="/blog/2017/12/23/phoenix-elm-landing-page-pt-2/">Building the landing page UI and the basic Elm subscription form</a></li> <li><a href="/blog/2018/01/06/phoenix-elm-landing-page-pt-3/">Adding Google reCAPTCHA support to avoid spambots</a></li> </ol> <a href="https://github.com/bigardone/phoenix-and-elm-landing-page" target=_blank><i class="fa fa-github"></i> Source code</a> </div> <p>In these series, we are going to cover some common patterns and best practices related to using <strong>Phoenix</strong> and <strong>Elm</strong> to build a simple landing page with a subscription form. The primary goal is to achieve the following list of tasks:</p> <ul> <li>Create a new <strong>Phoenix</strong> project.</li> <li>Add a new <strong>Phoenix</strong> context for marketing leads.</li> <li>Add an <strong>API</strong> endpoint to insert a lead&#39;s data into the database.</li> <li>Build the landing page template using <strong>Phoenix</strong> and <a href="https://bulma.io/">Bulma</a> as our CSS framework of choice.</li> <li>Add <strong>Elm</strong> to the project and build a subscription form that points to the API endpoint described previously.</li> <li>Add <a href="https://developers.google.com/recaptcha/">Google&#39;s reCAPTCHA</a> widget to the <strong>Elm</strong> subscription form, and how to render it and how to handle a visitor&#39;s <strong>reCAPTCHA</strong> response.</li> <li>Build an HTTP client using <a href="https://github.com/edgurgel/httpoison">HTTPoison</a> to verify the token received by the <strong>reCAPTCHA</strong> widget against <strong>Google&#39;s reCAPTCHA API</strong> from our backend.</li> <li>Add tests covering the subscription process using <strong>mocks</strong> for the HTTP clients.</li> </ul> <p>Now that we have detailed what we need let&#39;s get cracking!</p> <p><img src="/images/blog/phoenix-elm-landing-page/landing-page-9e2448ef.jpg" alt="Landing page" style="background: #fff;"/></p> <h3>Creating the Phoenix project</h3> <p>Let&#39;s start by bootstrapping a new <strong>Phoenix</strong> project as we usually do:</p> <pre><code>$ mix phx.new landing_page
 * creating landing_page/config/config.exs
 * creating landing_page/config/dev.exs

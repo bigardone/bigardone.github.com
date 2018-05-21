@@ -8,6 +8,20 @@
           var s = document.getElementsByTagName('script')[0];
           s.parentNode.insertBefore(sh, s);
   })();
+</script> <link href='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.js'></script> <script>
+  window.addEventListener("load", function(){
+  window.cookieconsent.initialise({
+    "palette": {
+      "popup": {
+        "background": "#252e39"
+      },
+      "button": {
+        "background": "#217dbb"
+      }
+    },
+    "theme": "classic",
+    "position": "bottom-right"
+  })});
 </script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Building Phoenix Battleship (pt. 4)</h1> <h3></h3> <div class=meta-data> <hr> posted Jul 28, 2016 on <a class=tag href="/blog/tags/elixir.html">elixir</a> <a class=tag href="/blog/tags/phoenix.html">phoenix</a> <a class=tag href="/blog/tags/otp.html">otp</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <div class=index> <p>This post belongs to the <strong>Building Phoenix Battleship</strong> series.</p> <ol> <li><a href="/blog/2016/04/29/building-phoenix-battleship-pt-1">Designing the game mechanics</a></li> <li><a href="/blog/2016/05/03/building-phoenix-battleship-pt-2/">The lobby channel and game supervision</a></li> <li><a href="/blog/2016/05/21/building-phoenix-battleship-pt-3/">The game setup</a></li> <li><a href="/blog/2016/07/28/building-phoenix-battleship-pt-4/">Placing ships on the board's grid</a></li> <li><a href="/blog/2016/08/08/building-phoenix-battleship-pt-5/">Let the battle begin!</a></li> <li>Coming soon...</li> </ol> </div> <h2>Placing ships on the board&#39;s grid</h2> <p>In the <a href="/blog/2016/05/21/building-phoenix-battleship-pt-3">last part</a> of these series, we covered everything related to the game setup, joining an existing game, creating players boards and returning the game state to the players. Now it is time to start with the fun part, and let the players place their corresponding so they can begin the battle.</p> <p><img class=center src="/images/blog/building_phoenix_battleship/diagram-3-0021c216.jpg"/></p> <h3>The BoardChannel</h3> <p>When a player joins an existing game, and his board <code>Agent</code> process is created and ready, the player can start placing his ships. Any ship can be selected by clicking on it in the ship selector. Clicking it twice will change its orientation from horizontal to vertical. Once selected, the player has to click on a cell from his game board to place it. Once a cell is clicked (selecting it as the starting position of the ship), a new message is sent to the <code>GameChannel</code> to place it in the player&#39;s <code>Board</code> process.</p> <pre><code class="elixir"># web/channels/game_channel.ex
 
 defmodule Battleship.GameChannel do

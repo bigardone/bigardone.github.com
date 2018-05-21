@@ -8,6 +8,20 @@
           var s = document.getElementsByTagName('script')[0];
           s.parentNode.insertBefore(sh, s);
   })();
+</script> <link href='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.js'></script> <script>
+  window.addEventListener("load", function(){
+  window.cookieconsent.initialise({
+    "palette": {
+      "popup": {
+        "background": "#252e39"
+      },
+      "button": {
+        "background": "#217dbb"
+      }
+    },
+    "theme": "classic",
+    "position": "bottom-right"
+  })});
 </script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Building Phoenix Battleship (pt. 3)</h1> <h3></h3> <div class=meta-data> <hr> posted May 21, 2016 on <a class=tag href="/blog/tags/elixir.html">elixir</a> <a class=tag href="/blog/tags/phoenix.html">phoenix</a> <a class=tag href="/blog/tags/otp.html">otp</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <div class=index> <p>This post belongs to the <strong>Building Phoenix Battleship</strong> series.</p> <ol> <li><a href="/blog/2016/04/29/building-phoenix-battleship-pt-1">Designing the game mechanics</a></li> <li><a href="/blog/2016/05/03/building-phoenix-battleship-pt-2/">The lobby channel and game supervision</a></li> <li><a href="/blog/2016/05/21/building-phoenix-battleship-pt-3/">The game setup</a></li> <li><a href="/blog/2016/07/28/building-phoenix-battleship-pt-4/">Placing ships on the board's grid</a></li> <li><a href="/blog/2016/08/08/building-phoenix-battleship-pt-5/">Let the battle begin!</a></li> <li>Coming soon...</li> </ol> </div> <h2>The game setup</h2> <p>In the <a title="Building Phoenix Battleship (pt. 2)" href="/blog/2016/05/03/building-phoenix-battleship-pt-2/">previous part</a> of the series, we described both the <strong>LobbyChannel</strong> and the <strong>Battleship.Game.Supervisor</strong> modules and their responsibilities within the application. These responsibilities include creating new <strong>Battleship.Game</strong> processes, supervising them and making their current state available for any visitor. After having this clear, now we can move on to the following elements of the diagram:</p> <p><img class=center src="/images/blog/building_phoenix_battleship/diagram-3-0021c216.jpg"/></p> <p>Recalling the last post, the player joins the <strong>LobbyChannel</strong> when visiting the game&#39;s lobby page. When he clicks the <em>Start new battle</em> button, a new message is pushed through the socket to the channel and a new <strong>Battleship.Game</strong> supervised process is created by the <strong>Battleship.Game.Supervisor</strong>, returning the game&#39;s id. Finally, the player gets redirected to the battle screen, where the setup phase starts.</p> <p><img class=center src="/images/blog/building_phoenix_battleship/game-setup-e37db800.jpg"/></p> <h3>Joining a game</h3> <p>To add this new channel to the project, we need to update the <code>player_socket.exs</code> file again in to add the channel&#39;s module and its topic:</p> <pre><code class="elixir"># web/channels/player_socket.ex
 
 defmodule Battleship.PlayerSocket do

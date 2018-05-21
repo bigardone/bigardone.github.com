@@ -8,6 +8,20 @@
           var s = document.getElementsByTagName('script')[0];
           s.parentNode.insertBefore(sh, s);
   })();
+</script> <link href='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.js'></script> <script>
+  window.addEventListener("load", function(){
+  window.cookieconsent.initialise({
+    "palette": {
+      "popup": {
+        "background": "#252e39"
+      },
+      "button": {
+        "background": "#217dbb"
+      }
+    },
+    "theme": "classic",
+    "position": "bottom-right"
+  })});
 </script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Simulando enumeradores en nuestros modelos</h1> <h3></h3> <div class=meta-data> <hr> posted May 19, 2013 on <a class=tag href="/blog/tags/rails.html">rails</a> <a class=tag href="/blog/tags/models.html">models</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <p>Es muy común que en nuestros modelos hagamos el uso de <strong>enumeradores</strong> para posteriormente usarlos para asignarle un valor a alguno de sus atributos como su tipo, estado, ó similar. Hace poco he visto una manera <a href="//rails-bestpractices.com/posts/708-clever-enums-in-rails" target=_blank>muy sencilla</a> de implementar esto y me gustaría compartirla con los que no la conozcáis :)</p> <p>Supongamos que tenemos en nuestra aplicación tenemos el siguiente modelo:</p> <pre><code class="ruby">class SurfBoard &lt; ActiveRecord::Base
 
   attr_accessible :tipo

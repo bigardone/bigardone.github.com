@@ -8,6 +8,20 @@
           var s = document.getElementsByTagName('script')[0];
           s.parentNode.insertBefore(sh, s);
   })();
+</script> <link href='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.js'></script> <script>
+  window.addEventListener("load", function(){
+  window.cookieconsent.initialise({
+    "palette": {
+      "popup": {
+        "background": "#252e39"
+      },
+      "button": {
+        "background": "#217dbb"
+      }
+    },
+    "theme": "classic",
+    "position": "bottom-right"
+  })});
 </script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Introducing the MultInput jQuery plugin</h1> <h3></h3> <div class=meta-data> <hr> posted Jan 12, 2014 on <a class=tag href="/blog/tags/jquery.html">jquery</a> <a class=tag href="/blog/tags/coffeescript.html">coffeescript</a> <a class=tag href="/blog/tags/sass.html">sass</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <p>Last month I discovered <a target=_blank href="//www.bucketlistly.com/">BucketListly</a>, a web application that lets you create a bucket list of real life goals, earn points and badges completing them, share your progress with your family and friends and some more nice features which gives you an extra motivation to improve oneself. As the new year was around the corner, I decided to give it a try and create my new year&#39;s resolution list adding some of the goals I want to achieve in 2014. </p> <p>One of this goals is to start sharing into <strong>GitHub</strong> some of the stuff I like to create, like a small <strong>jQuery</strong> plugin I&#39;ve been working on recently, using <strong>CoffeeScript</strong> and <strong>Sass</strong>.</p> <h3>Enter the MultInput</h3> <p>The <a href="//codeloveandboards.com/multinput/" target=_blank>MultInput</a> is a simple <strong>jQuery</strong> plugin which lets you split automatically any form text input into multiple smaller inputs by specifying a pattern of your choice. The initial idea came from helping the user to introduce any kind of account number, serial number or whatever combination between letters and numbers following a pattern in an easier way. So if the user has to introduce a value in a field following a pattern like <em>AZ-9999-9999-9999</em>, you can apply the plugin to that field by just adding two <code>data</code> attributes to the field:</p> <pre><code>&lt;input type=&quot;text&quot; data-multinput data-pattern=&quot;AZ-9999-9999-9999&quot;&gt;
 </code></pre> <p>And the plugin will do the following:</p> <ol> <li>Check if the pattern is correct.</li> <li>Hide your original input.</li> <li>Create 4 new inputs, one with a <code>maxlength</code> of 2 chars and three with a <code>maxlength</code> of 4.</li> <li>When the user starts typing on them it will ignore wrong characters. This means that only letters will be allowed on fields with the <em>AZ</em> part of the pattern and only numbers on the <em>9999</em> ones.</li> <li>As the user keeps entering valid characters it will auto focus the next field to give the user the feeling of filling a single text input.</li> <li>On every keystroke, the original text input (now hidden, remember) will have automatically updated its own value.</li> </ol> <p>If you want to skip the <em>data attributes</em> initialization you can also use the plain old jQuery way:</p> <pre><code class="javascript">$(function() {
   $(&#39;#your_input_id&#39;).multinput();

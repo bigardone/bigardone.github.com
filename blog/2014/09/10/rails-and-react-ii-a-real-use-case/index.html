@@ -8,6 +8,20 @@
           var s = document.getElementsByTagName('script')[0];
           s.parentNode.insertBefore(sh, s);
   })();
+</script> <link href='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.js'></script> <script>
+  window.addEventListener("load", function(){
+  window.cookieconsent.initialise({
+    "palette": {
+      "popup": {
+        "background": "#252e39"
+      },
+      "button": {
+        "background": "#217dbb"
+      }
+    },
+    "theme": "classic",
+    "position": "bottom-right"
+  })});
 </script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Rails and React II: A real use case</h1> <h3></h3> <div class=meta-data> <hr> posted Sep 10, 2014 on <a class=tag href="/blog/tags/rails.html">rails</a> <a class=tag href="/blog/tags/reactjs.html">reactjs</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <p><a href="/blog/2014/08/24/rails-and-react-i-a-happy-medium">In my last post</a> I did a small introduction on <strong>React</strong>, Facebook&#39;s latest JavaScript library for building user interfaces, and it&#39;s main differences with more complex <strong>MV</strong>* frameworks. Now it&#39;s time to use some <strong>React</strong> components inside a <strong>Rails</strong> application.</p> <h2>The final result</h2> <p>Before continuing, I will like to share a very simple application I have created as the result of what we are going to achieve after finishing this post. It consists of:</p> <ul> <li>A <strong>Person</strong> model.</li> <li>A <strong>HomeController</strong> with just one index action, the root route of the application and where the React components render and are in charge of creating search requests and displaying the results to the user.</li> <li>A <strong>PeopleController</strong> which just renders the <strong>JSON</strong> result of the requested searches.</li> </ul> <p>It&#39;s built using <strong>Rails 4.2.0beta</strong> and <strong>PostgreSQL</strong> to take advantage of it&#39;s <strong>full-text search</strong> capabilities as described in another of my <a href="/blog/2014/06/20/easy-multi-table-full-text-search-whith-rails">latests posts</a>.</p> <p>This is how it looks like:</p> <p><img src="/images/blog/rails_and_react_ii/final_result-5782592a.jpg" alt=Heroku style="background: #fff;"/></p> <div class=btn-wrapper> <a href="//rails-and-react-ii.herokuapp.com/" target=_blank class=btn><i class="fa fa-cloud"></i> Live demo</a> <a href="https://github.com/bigardone/rails_and_react/tree/feature/part_two" target=_blank class=btn><i class="fa fa-github"></i> Source code</a> </div> <h2>Installing React</h2> <p>The easiest way to add <strong>React</strong> to a <strong>Rails</strong> project is adding this two gems to your <code>Gemfile</code>:</p> <pre><code class="ruby">gem &#39;react-rails&#39;, github: &#39;reactjs/react-rails&#39;
 gem &#39;sprockets-coffee-react&#39;
 </code></pre> <ul> <li><a href="https://github.com/reactjs/react-rails" target=_blank>react-rails</a> is React&#39;s official gem for <strong>Ruby</strong>. It adds the necessary assets to your project in order to use <strong>React</strong> and automatically transform your <strong>JSX</strong> into plain <strong>JavaScript</strong>.</li> <li><a href="https://github.com/jsdf/sprockets-coffee-react" target=_blank>sprockets-coffee-react</a> is a sprockets preprocessor which lets you write your components using <strong>CJSX</strong> (<strong>CoffeeScript</strong> with <strong>JSX</strong> markup).</li> </ul> <p>To use <strong>React</strong> in an unobtrusive way, just add the following to your <code>application.js.coffee</code>:</p> <pre><code class="coffeescript">...

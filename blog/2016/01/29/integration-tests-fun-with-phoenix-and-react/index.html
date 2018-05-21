@@ -8,6 +8,20 @@
           var s = document.getElementsByTagName('script')[0];
           s.parentNode.insertBefore(sh, s);
   })();
+</script> <link href='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.js'></script> <script>
+  window.addEventListener("load", function(){
+  window.cookieconsent.initialise({
+    "palette": {
+      "popup": {
+        "background": "#252e39"
+      },
+      "button": {
+        "background": "#217dbb"
+      }
+    },
+    "theme": "classic",
+    "position": "bottom-right"
+  })});
 </script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Integration tests fun with Phoenix and React</h1> <h3></h3> <div class=meta-data> <hr> posted Jan 29, 2016 on <a class=tag href="/blog/tags/elixir.html">elixir</a> <a class=tag href="/blog/tags/phoenix.html">phoenix</a> <a class=tag href="/blog/tags/react.html">react</a> <a class=tag href="/blog/tags/redux.html">redux</a> <a class=tag href="/blog/tags/tests.html">tests</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <p>Testing complex <strong>React</strong> applications can be very tricky, so while coding my <a title="Phoenix Trello repository" href="https://github.com/bigardone/phoenix-trello">Phoenix Trello</a> tribute I needed an easy and fast way to test the critical interactions a user could have with the application like registering or adding new stuff like boards and cards.</p> <h2>Hound to the rescue</h2> <p><a title="Hound repository" href="https://github.com/HashNuke/hound">Hound</a> is an <strong>Elixir</strong> library for writing integration tests which is very easy to setup and works really great. To add it to a project we have to add the dependency:</p> <pre><code class="elixir"># mix.exs
 
 defmodule PhoenixTrello.Mixfile do

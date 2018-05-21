@@ -8,6 +8,20 @@
           var s = document.getElementsByTagName('script')[0];
           s.parentNode.insertBefore(sh, s);
   })();
+</script> <link href='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.js'></script> <script>
+  window.addEventListener("load", function(){
+  window.cookieconsent.initialise({
+    "palette": {
+      "popup": {
+        "background": "#252e39"
+      },
+      "button": {
+        "background": "#217dbb"
+      }
+    },
+    "theme": "classic",
+    "position": "bottom-right"
+  })});
 </script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Crea tu framework css con Bourbon y Neat</h1> <h3></h3> <div class=meta-data> <hr> posted Sep 17, 2013 on <a class=tag href="/blog/tags/rails.html">rails</a> <a class=tag href="/blog/tags/sass.html">sass</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <p><small style="font-style: italic;">Post originalmente escrito para el blog de <a href=" http://blog.diacode.com/crea-tu-framework-css-con-bourbon-y-neat" target=_blank>Diacode</a>, que dice así:</small></p> <p>Hace unos meses escribí un post <a href="/blog/2013-01-19-mejores-hojas-de-estilo-con-sass.markdown">acerca de Sass</a> y de cómo nos podía ayudar para agilizar y simplificar el desarrollo de nuestras hojas de estilos gracias al uso de <em>mixins</em>.</p> <p>Desde entonces no he parado de usar <strong>Sass</strong> para generar mis hojas de estilos, al principio usando algún framework css como <a href="//getbootstrap.com/" target=_blank title=Bootstrap>Bootstrap</a> en su versión <a href="https://github.com/thomas-mcdonald/bootstrap-sass">Sass</a>, luego a medida que me iba sintiendo más cómodo sobrescribiendo estilos de estos frameworks con los mios propios usando mis propios <em>mixins</em> y al final he terminado evitando usar estos frameworks y generando los mios propios desde cero, para poder reutilizarlos en distintos proyectos, pudiendo variar la apariencia de las aplicaciones cambiando simplemente unas cuantas <strong>variables</strong> que usan mis <em>mixins</em>.</p> <p>A la hora de desarrollar el interfaz de una aplicación, intento por todos los medios que mis vistas sean lo más independientes posibles de los estilos. Es decir, que los componentes de mi <em>html</em> <strong>no estén llenos de clases</strong> que sirvan exclusivamente para dotarles de estilos, sino al revés, que mis hojas de estilos sean las encargadas de esta labor usando los selectores apropiados, o lo que viene a llamarse <strong>diseño semántico</strong>, para los que Sass me viene como anillo al dedo.</p> <p>La base que todo conjunto de estilos que una aplicación o sitio web debería tener es un buen sistema de grid, y un conjunto de reglas que sean lo más compatibles posible con todos los navegadores, para evitar que los elementos se descoloquen o no se muestren como esperábamos, pero tampoco hace falta reinventar la rueda y hacer esto desde cero, ya que disponemos de un par de herramientas que nos pueden ayudar a proporcionarnos esta base y así centrarnos en el diseño en sí.</p> <p><a href="//bourbon.io/" title="Bourbon - A Sass Mixin Library" target=_blank><img src="https://github-camo.global.ssl.fastly.net/69ff6aca7073ff74a052d728e1b431c58bb9aa3f/687474703a2f2f626f7572626f6e2e696f2f696d616765732f7368617265642f626f7572626f6e2d6c6f676f2e706e67" style="background: #fff;" alt=Bourbon /></a></p> <p><strong>Bourbon</strong> es una librería Sass creada por <a href="//www.thoughtbot.com/">thoughtbot</a> que nos aporta un conjunto de <em>mixins</em> <strong>fáciles de usar</strong> y cuyo css generado es <strong>soportado por la mayoría de los navegadores modernos</strong>.</p> <p>Vamos a ver un ejemplo verlo mejor. Teniendo este estilo escrito en Sass para las secciones de nuestra aplicación:</p> <pre><code class="sass">// .sass
 section
   +linear-gradient(to top, red, orange)
