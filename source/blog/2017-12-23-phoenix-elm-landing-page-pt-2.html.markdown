@@ -52,7 +52,7 @@ the main layout template and remove all the default **Phoenix** HTML elements:
     <link rel="stylesheet" href="<%= static_path(@conn, "/css/app.css") %>">
   </head>
 
-  <body>
+  <body class="landing-page">
     <%= render(@view_module, @view_template, assigns) %>
     <script src="<%= static_path(@conn, "/js/app.js") %>"></script>
   </body>

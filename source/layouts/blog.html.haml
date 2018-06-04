@@ -49,6 +49,23 @@
     - if current_page.data.canonical
       %link{rel: "canonical", href: current_page.data.canonical}/
 
+    %link{:href => "//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.css", :rel => "stylesheet", :type => "text/css"}/
+    %script{:src => "//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.js"}
+    :javascript
+      window.addEventListener("load", function(){
+      window.cookieconsent.initialise({
+        "palette": {
+          "popup": {
+            "background": "#252e39"
+          },
+          "button": {
+            "background": "#217dbb"
+          }
+        },
+        "theme": "classic",
+        "position": "bottom-right"
+      })});
+
   %body{class: 'blog'}
     %header#main_header
       .main-logo
