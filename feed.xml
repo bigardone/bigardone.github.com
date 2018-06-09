@@ -5,10 +5,694 @@
   <id>http://codeloveandboards.com/blog</id>
   <link href="http://codeloveandboards.com/blog"/>
   <link href="http://codeloveandboards.com/feed.xml" rel="self"/>
-  <updated>2018-01-07T07:06:00Z</updated>
+  <updated>2018-06-09T07:00:00Z</updated>
   <author>
     <name>Blog Author</name>
   </author>
+  <entry>
+    <title>Elixir and Phoenix basic passwordless and databaseless authentication (pt.1)</title>
+    <link rel="alternate" href="http://codeloveandboards.com/blog/2018/06/09/elixir-and-phoenix-basic-passwordless-and-databaseless-authentication-pt-1/"/>
+    <id>http://codeloveandboards.com/blog/2018/06/09/elixir-and-phoenix-basic-passwordless-and-databaseless-authentication-pt-1/</id>
+    <published>2018-06-09T07:00:00Z</published>
+    <updated>2018-06-09T09:52:29+02:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;Have you found yourself working on a small project where, at some point,
+you are asked to give access to some users to a private part of the
+application or a small admin panel of some sort? Depending on the
+project&amp;#39;s constraints, we can resolve this situation in many different
+ways. For instance, if having administrator profiles and roles forms part
+of the business logic and the scope of the project, having a standard
+authorization and authentication system is probably the way to go. On the
+other hand, if we only need administrator users to authenticate and let
+them have access to a private part, we can rely on other simple
+alternatives like HTTP basic authentication, which might not be as
+flexible and secure as we might need them to be.&lt;/p&gt;
+
+&lt;h3&gt;Passwordless authentication&lt;/h3&gt;
+
+&lt;p&gt;A couple of years ago I read &lt;a href="https://www.smashingmagazine.com/2016/06/the-current-state-of-authentication-we-have-a-password-problem/"&gt;this excellent article&lt;/a&gt; about the current
+state of authentication where it showcases the most common ways of
+authenticating users, describing their strengths and weaknesses.
+Between all of them, passwordless authentication is the one that I liked
+the most, as the perfect balance between ease of implementation and security
+strength, using this approach in many different projects since then.
+If you are not familiar with this technique, it mainly
+consists of asking the user for an email address and sending a link
+which will automatically authenticate them into the application, just like
+Slack does. I&amp;#39;m very pleased with the result so far, as my users
+don&amp;#39;t need to remember passwords anymore (which tend to be frequently
+forgotten), and I don&amp;#39;t have to deal with credentials storage, validation and
+recovery any longer.&lt;/p&gt;
+
+&lt;h3&gt;Databaseless authentication&lt;/h3&gt;
+
+&lt;p&gt;As I said before, sometimes we don&amp;#39;t need a complex authentication system
+which involves modifying the database schema or altering the existing
+business logic to let a few users access a particular part of the
+application. Therefore, I want to experiment alternative ways of storing
+credentials, and Elixir is perfect for this particular use case.&lt;/p&gt;
+
+&lt;h3&gt;What are we building&lt;/h3&gt;
+
+&lt;p&gt;For this experiment, we are building a small &lt;a href="https://elixir-lang.org/getting-started/mix-otp/dependencies-and-umbrella-projects.html#umbrella-projects"&gt;Elixir umbrella project&lt;/a&gt;
+which consists of two applications:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;passwordless_auth&lt;/strong&gt;: Responsible for token generation, storage and
+authentication logic.&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;passwordless_auth_web&lt;/strong&gt;: Responsible for sending authentication emails and serving the Elm SPA to test out our auth experiment against a Phoenix socket.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The final result looks something like this:&lt;/p&gt;
+
+&lt;p&gt;&lt;img alt="Final result" src="https://monosnap.com/image/5VUT424b4Hu9ITi8r1SGae7HQleCPT.png" /&gt;&lt;/p&gt;
+
+&lt;p&gt;We are going to have three screens:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;The last screen in the image corresponds to the root path of the admin panel, which is only displayed to authenticated users.&lt;/li&gt;
+&lt;li&gt;The first screen corresponds to &amp;#39;/sign-in&amp;#39;, displayed to any user trying to access &amp;#39;/&amp;#39; while not authenticated.&lt;/li&gt;
+&lt;li&gt;The second screen corresponds to the success message showed to the user after requesting the magic link.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Bear in mind that these screens might change while we are going through the tutorial, as I keep making changes and refactoring things. Without further ado, let&amp;#39;s do this!&lt;/p&gt;
+
+&lt;h3&gt;Project setup&lt;/h3&gt;
+
+&lt;p&gt;First things first. Let&amp;#39;s build a new Phoenix project with the following options:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="bash"&gt;$ mix phx.new passwordless_auth --umbrella --no-ecto --no-brunch
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;--umbrella&lt;/code&gt; tells the mix task to generate an umbrella project instead of a regular one. As we don&amp;#39;t need to handle any database connections, we use the &lt;code&gt;--no-ecto&lt;/code&gt; option to prevent having &lt;code&gt;Ecto&lt;/code&gt; installed, and a default repository created. Finally, I&amp;#39;ve been having some issues related to assets building with Brunch, so let&amp;#39;s remove it with the &lt;code&gt;--no-brunch&lt;/code&gt; option for the moment as we are going to be using a customized Webpack build when we get to that point.&lt;/p&gt;
+
+&lt;p&gt;After running the mix task, we can see that we have our new umbrella project with the two applications inside the &lt;code&gt;/apps&lt;/code&gt; folder:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;passwordless-auth
+├── README.md
+├── apps
+│   ├── passwordless_auth
+│   └── passwordless_auth_web
+├── config
+│   ├── config.exs
+│   ├── dev.exs
+│   ├── prod.exs
+│   └── test.exs
+├── mix.exs
+└── mix.lock
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3&gt;The authentication repository&lt;/h3&gt;
+
+&lt;p&gt;We are not relying on a database to store admitted user emails and their corresponding authentication tokens, but we have to store them somewhere else. Erlang/Elixir offer a simple and straightforward solution for in-memory storage, the &lt;a href="https://hexdocs.pm/elixir/GenServer.html"&gt;GenServer&lt;/a&gt; behaviour, which seems to fit perfectly for our needs. Let&amp;#39;s go ahead and create the &lt;code&gt;Repo&lt;/code&gt; module:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# apps/passwordless_auth/lib/passwordless_auth/repo.ex
+
+defmodule PasswordlessAuth.Repo do
+  use GenServer
+  @name __MODULE__
+
+  def start_link(opts) do
+    opts = Keyword.put_new(opts, :name, @name)
+    {:ok, emails} = Keyword.fetch(opts, :emails)
+
+    GenServer.start_link(__MODULE__, emails, opts)
+  end
+
+  @impl true
+  def init(emails) when is_list(emails) and length(emails) &amp;gt; 0 do
+    state = Enum.reduce(emails, %{}, &amp;amp;Map.put(&amp;amp;2, &amp;amp;1, nil))
+
+    {:ok, state}
+  end
+
+  def init(_), do: {:stop, &amp;quot;Invalid list of emails&amp;quot;}
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;start_link&lt;/code&gt; function receives the options to spawn the &lt;code&gt;GenServer&lt;/code&gt; process of the repository. These options consist of:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;:name&lt;/code&gt; which is optional and used for registering the process.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;:emails&lt;/code&gt; which is mandatory, represents the list of admitted emails, and which we are using in the &lt;code&gt;init&lt;/code&gt; function to build the initial state of the process.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The &lt;code&gt;init&lt;/code&gt; function receives a list of emails and creates a &lt;code&gt;Map&lt;/code&gt; where keys are the emails, and the values will store the authentication tokens, but at the moment we are setting them to &lt;code&gt;nil&lt;/code&gt;. On the contrary, if what receives is not a list, we want it to return &lt;code&gt;{:stop, &amp;quot;Invalid list of emails&amp;quot;}&lt;/code&gt;, exiting the process and not letting the application to start.&lt;/p&gt;
+
+&lt;p&gt;Let&amp;#39;s create a test module to test this out:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# apps/passwordless_auth/test/passwordless_auth/repo_test.exs
+
+defmodule PasswordlessAuth.RepoTest do
+  use ExUnit.Case, async: true
+
+  alias PasswordlessAuth.Repo
+
+  describe &amp;quot;.init/1&amp;quot; do
+    test &amp;quot;returns error when emails are wrong&amp;quot; do
+      Process.flag(:trap_exit, true)
+
+      name = :repo_test_1
+      Repo.start_link(name: name, emails: &amp;quot;&amp;quot;)
+
+      assert_receive {:EXIT, _, &amp;quot;Invalid list of emails&amp;quot;}
+    end
+
+    test &amp;quot;starts the repo when emails is a list&amp;quot; do
+      name = :repo_test_1
+      assert {:ok, _pid} = Repo.start_link(name: name, emails: [&amp;quot;foo@email.com&amp;quot;])
+    end
+  end
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Running the test shows that everything works as we expect:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="bash"&gt;$ mix test test/passwordless_auth/repo_test.exs
+==&amp;gt; passwordless_auth
+..
+
+Finished in 0.1 seconds
+2 tests, 0 failures
+
+Randomized with seed 407876
+==&amp;gt; passwordless_auth_web
+Test patterns did not match any file: test/passwordless_auth/repo_test.exs
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Cool! Now we need to spawn the &lt;code&gt;Repo&lt;/code&gt; process once the application starts, so let&amp;#39;s add it to the main supervision tree:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# apps/passwordless_auth/lib/passwordless_auth/application.ex
+
+defmodule PasswordlessAuth.Application do
+  use Application
+
+  def start(_type, _args) do
+    import Supervisor.Spec, warn: false
+
+    children = [
+      worker(
+        PasswordlessAuth.Repo,
+        [[emails: emails()]]
+      )
+    ]
+
+    Supervisor.start_link(children, strategy: :one_for_one, name: PasswordlessAuth.Supervisor)
+  end
+
+  defp emails, do: Application.get_env(:passwordless_auth, :repo)[:emails]
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If we try to start the application at this point, it will not do it, due to we have not set the emails in the configuration yet, just like we have asserted in the previous test:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ iex -S mix
+Erlang/OTP 21 [RELEASE CANDIDATE 1] [erts-10.0] [source] [64-bit] [smp:8:8] [ds:8:8:10] [async-threads:1] [hipe]
+
+[info] Application passwordless_auth exited: PasswordlessAuth.Application.start(:normal, []) returned an error: shutdown: failed to start child: PasswordlessAuth.Repo
+    ** (EXIT) &amp;quot;Invalid list of emails&amp;quot;
+** (Mix) Could not start application passwordless_auth: PasswordlessAuth.Application.start(:normal, []) returned an error: shutdown: failed to start child: PasswordlessAuth.Repo
+    ** (EXIT) &amp;quot;Invalid list of emails&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Let&amp;#39;s add a list of emails to the configuration:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# apps/passwordless_auth/config/config.exs
+
+use Mix.Config
+
+config :passwordless_auth,
+       :repo,
+       emails: ~w(foo@email.com bar@email.com baz@email.com)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And try to start it again:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ iex -S mix
+Erlang/OTP 21 [RELEASE CANDIDATE 1] [erts-10.0] [source] [64-bit] [smp:8:8] [ds:8:8:10] [async-threads:1] [hipe]
+
+Interactive Elixir (1.6.5) - press Ctrl+C to exit (type h() ENTER for help)
+iex(1)&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It works as expected, so let&amp;#39;s move on to adding some logic to the &lt;code&gt;Repo&lt;/code&gt; module.&lt;/p&gt;
+
+&lt;h3&gt;Repo logic&lt;/h3&gt;
+
+&lt;p&gt;Before continuing, let&amp;#39;s start the application and check how the current state of the &lt;code&gt;Repo&lt;/code&gt; process looks like:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ iex -S mix
+...
+iex(1)&amp;gt; :sys.get_state PasswordlessAuth.Repo
+%{&amp;quot;bar@email.com&amp;quot; =&amp;gt; nil, &amp;quot;baz@email.com&amp;quot; =&amp;gt; nil, &amp;quot;foo@email.com&amp;quot; =&amp;gt; nil}
+iex(2)&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There is the map where we are going to store the authentication tokens. Let&amp;#39;s continue by adding some functionality to validate if an email is valid, save and fetch token values:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# apps/passwordless_auth/lib/passwordless_auth/application.ex
+
+defmodule PasswordlessAuth.Application do
+  use Application
+
+  #...
+
+  def exists?(pid \\ @name, email),
+    do: GenServer.call(pid, {:exists, email})
+
+  def save(pid \\ @name, email, token),
+    do: GenServer.call(pid, {:save, email, token})
+
+  def fetch(pid \\ @name, email),
+    do: GenServer.call(pid, {:fetch, email})
+
+  # ...
+
+  @impl true
+  def handle_call({:exists, email}, _from, state) do
+    {:reply, Map.has_key?(state, email), state}
+  end
+
+  def handle_call({:save, email, token}, _from, state) do
+    if Map.has_key?(state, email) do
+      {:reply, :ok, Map.put(state, email, token)}
+    else
+      {:reply, {:error, :invalid_email}, state}
+    end
+  end
+
+  def handle_call({:fetch, email}, _from, state) do
+    {:reply, Map.fetch(state, email), state}
+  end
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;exists?/2&lt;/code&gt; takes an email and checks if it belongs to the state&amp;#39;s keys.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;save/3&lt;/code&gt; takes an email and a token, and tries to store it into the state, returning &lt;code&gt;:ok&lt;/code&gt; if the email exists or &lt;code&gt;{:error, :invalid_email}&lt;/code&gt; if it does not.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;fetch/2&lt;/code&gt; takes an email and fetches the state for its token value.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Let&amp;#39;s add some tests for the new functionality:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# apps/passwordless_auth/test/passwordless_auth/repo_test.exs
+
+defmodule PasswordlessAuth.RepoTest do
+  use ExUnit.Case, async: true
+
+  alias PasswordlessAuth.Repo
+
+  # ...
+
+    describe &amp;quot;.exists?/2&amp;quot; do
+    test &amp;quot;returns true when passed email is in the repo&amp;#39;s state&amp;quot; do
+      name = :repo_test_2
+      email = &amp;quot;foo@test.com&amp;quot;
+      {:ok, _pid} = Repo.start_link(name: name, emails: [email])
+
+      assert Repo.exists?(name, email)
+    end
+
+    test &amp;quot;returns false when passed email no it repo&amp;#39;s state&amp;quot; do
+      name = :repo_test_3
+      email = &amp;quot;foo@test.com&amp;quot;
+      {:ok, _pid} = Repo.start_link(name: name, emails: [email])
+
+      refute Repo.exists?(name, &amp;quot;not_found@test.com&amp;quot;)
+    end
+  end
+
+  describe &amp;quot;.save/3&amp;quot; do
+    test &amp;quot;returns :ok and sets token value in state when email exists&amp;quot; do
+      name = :repo_test_4
+      email = &amp;quot;foo@test.com&amp;quot;
+      token = &amp;quot;token-value&amp;quot;
+      {:ok, _pid} = Repo.start_link(name: name, emails: [email])
+
+      assert :ok = Repo.save(name, email, token)
+      assert %{&amp;quot;foo@test.com&amp;quot; =&amp;gt; ^token} = :sys.get_state(name)
+    end
+
+    test &amp;quot;returns {:error, :invalid_email} when email does not exist&amp;quot; do
+      name = :repo_test_5
+      email = &amp;quot;foo@test.com&amp;quot;
+      token = &amp;quot;token-value&amp;quot;
+      {:ok, _pid} = Repo.start_link(name: name, emails: [email])
+
+      assert {:error, :invalid_email} = Repo.save(name, &amp;quot;bar@test.com&amp;quot;, token)
+    end
+  end
+
+  describe &amp;quot;.fetch/2&amp;quot; do
+    test &amp;quot;returns {:ok, token} for passed email&amp;quot; do
+      name = :repo_test_6
+      email = &amp;quot;foo@test.com&amp;quot;
+      token = &amp;quot;token-value&amp;quot;
+      {:ok, _pid} = Repo.start_link(name: name, emails: [email])
+      :ok = Repo.save(name, email, token)
+
+      assert {:ok, ^token} = Repo.fetch(name, email)
+    end
+
+    test &amp;quot;returns :error when token not found&amp;quot; do
+      name = :repo_test_7
+      email = &amp;quot;foo@test.com&amp;quot;
+      token = &amp;quot;token-value&amp;quot;
+      {:ok, _pid} = Repo.start_link(name: name, emails: [email])
+      :ok = Repo.save(name, email, token)
+
+      assert :error = Repo.fetch(name, &amp;quot;not_found@test.com&amp;quot;)
+    end
+  end
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And check that they all pass:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="bash"&gt;$ mix test test/passwordless_auth/repo_test.exs
+==&amp;gt; passwordless_auth
+........
+
+Finished in 0.1 seconds
+8 tests, 0 failures
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3&gt;Token logic&lt;/h3&gt;
+
+&lt;p&gt;It looks like we have the basic stuff covered, for now, so let&amp;#39;s create the &lt;code&gt;Token&lt;/code&gt; module to handle token generation and verification. Phoenix has a convenient module for these purposes, &lt;a href="https://hexdocs.pm/phoenix/Phoenix.Token.html"&gt;Phoenix.Token&lt;/a&gt;, and we can build our module wrapping it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# apps/passwordless_auth/lib/passwordless_auth/token.ex
+
+defmodule PasswordlessAuth.Token do
+  alias Phoenix.Token, as: PhoenixToken
+
+  @salt &amp;quot;token salt&amp;quot;
+  @max_age :timer.minutes(5) / 1000
+  @secret Application.get_env(:passwordless_auth, __MODULE__)[:secret_key_base]
+
+  def generate(data) when data in [nil, &amp;quot;&amp;quot;], do: {:error, :invalid}
+
+  def generate(data) do
+    {:ok, PhoenixToken.sign(@secret, @salt, data)}
+  end
+
+  def verify(token, data, max_age \\ @max_age) do
+    case PhoenixToken.verify(
+           @secret,
+           @salt,
+           token,
+           max_age: max_age
+         ) do
+      {:ok, ^data} -&amp;gt;
+        {:ok, data}
+
+      {:ok, _other} -&amp;gt;
+        {:error, :invalid}
+
+      {:error, reason} -&amp;gt;
+        {:error, reason}
+    end
+  end
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;generate/1&lt;/code&gt; takes some &lt;code&gt;data&lt;/code&gt; and returns &lt;code&gt;{:ok, token}&lt;/code&gt; with the token generated using &lt;code&gt;Phoenix.Token.sign/4&lt;/code&gt; unless the &lt;code&gt;data&lt;/code&gt; it is receiving is either &lt;code&gt;nil&lt;/code&gt; or and empty string, in which case it returns the corresponding &lt;code&gt;{:error, :invalid}&lt;/code&gt; tuple.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;verify/3&lt;/code&gt; takes a &lt;code&gt;token&lt;/code&gt;, &lt;code&gt;data&lt;/code&gt; and a &lt;code&gt;max_age&lt;/code&gt; and uses &lt;code&gt;Phoenix.Token.verify/4&lt;/code&gt; to check id the &lt;code&gt;token&lt;/code&gt; corresponds to &lt;code&gt;data&lt;/code&gt;, and it has not expired yet.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Let&amp;#39;s add a test module to check that everything works as it should:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# apps/passwordless_auth/test/passwordless_auth/token_test.exs
+
+defmodule PasswordlessAuth.TokenTest do
+  use ExUnit.Case, async: true
+
+  alias PasswordlessAuth.Token
+
+  describe &amp;quot;.generate/1&amp;quot; do
+    test &amp;quot;returns {:error, :invalid} when value is nil&amp;quot; do
+      assert {:error, :invalid} = Token.generate(nil)
+      assert {:error, :invalid} = Token.generate(&amp;quot;&amp;quot;)
+    end
+
+    test &amp;quot;returns {:ok, token}&amp;quot; do
+      assert {:ok, _token} = Token.generate(&amp;quot;foo&amp;quot;)
+    end
+  end
+
+  describe &amp;quot;.verify/3&amp;quot; do
+    test &amp;quot;returns {:ok, data} when token is valid&amp;quot; do
+      {:ok, token} = Token.generate(&amp;quot;foo&amp;quot;)
+
+      assert {:ok, &amp;quot;foo&amp;quot;} = Token.verify(token, &amp;quot;foo&amp;quot;)
+    end
+
+    test &amp;quot;returns {:error, :invalid} when token is not valid&amp;quot; do
+      {:ok, token} = Token.generate(&amp;quot;foo&amp;quot;)
+
+      assert {:error, :invalid} = Token.verify(token, &amp;quot;bar&amp;quot;)
+    end
+
+    test &amp;quot;returns {:error, reason} when token expires&amp;quot; do
+      {:ok, token} = Token.generate(&amp;quot;foo&amp;quot;)
+
+      Process.sleep(150)
+      assert {:error, :expired} = Token.verify(token, &amp;quot;foo&amp;quot;, 0.1)
+    end
+  end
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now we can run the tests and see the result:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ mix test test/passwordless_auth/token_test.exs
+==&amp;gt; passwordless_auth
+
+
+  1) test .verify/3 returns {:error, reason} when token expires (PasswordlessAuth.TokenTest)
+     test/passwordless_auth/token_test.exs:30
+     ** (UndefinedFunctionError) function nil.config/1 is undefined or private
+     code: {:ok, token} = Token.generate(&amp;quot;foo&amp;quot;)
+     stacktrace:
+       nil.config(:secret_key_base)
+       (phoenix) lib/phoenix/token.ex:202: Phoenix.Token.get_endpoint_key_base/1
+       (phoenix) lib/phoenix/token.ex:111: Phoenix.Token.sign/4
+       (passwordless_auth) lib/passwordless_auth/token.ex:25: PasswordlessAuth.Token.generate/1
+       test/passwordless_auth/token_test.exs:31: (test)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It looks like we forgot adding the &lt;code&gt;:secret&lt;/code&gt; value in the configuration, so let&amp;#39;s go ahead and set it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# apps/passwordless_auth/config/config.exs
+
+# ...
+
+config :passwordless_auth,
+       PasswordlessAuth.Token,
+       secret_key_base: &amp;quot;your_secret_key_base&amp;quot;
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To generate the &lt;code&gt;secret_key_base&lt;/code&gt; value, you can use the &lt;code&gt;phx.gen.secret&lt;/code&gt; mix task. After setting the value and running once more the tests, everything should be working fine now:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="bash"&gt;$ mix test test/passwordless_auth/token_test.exs
+==&amp;gt; passwordless_auth
+.....
+
+Finished in 0.2 seconds
+5 tests, 0 failures
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3&gt;Providing and verifying tokens&lt;/h3&gt;
+
+&lt;p&gt;Let&amp;#39;s edit the main &lt;code&gt;PasswordlessAuth&lt;/code&gt; module and add a new function to provide new tokens by using what we have done so far:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# apps/passwordless_auth/lib/passwordless_auth.ex
+
+defmodule PasswordlessAuth do
+  alias PasswordlessAuth.{Repo, Token}
+
+  def provide_token_for(repo \\ Repo, email)
+  def provide_token_for(_, email) when email in [nil, &amp;quot;&amp;quot;], do: {:error, :invalid_email}
+
+  def provide_token_for(repo, email) do
+    with true &amp;lt;- Repo.exists?(repo, email),
+         {:ok, token} &amp;lt;- Token.generate(email),
+         :ok &amp;lt;- Repo.save(repo, email, token) do
+      {:ok, token}
+    else
+      false -&amp;gt;
+        {:error, :not_found}
+
+      other -&amp;gt;
+        {:error, :internal_error, other}
+    end
+  end
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Before moving on to adding the verification logic, let&amp;#39;s stop for a second and think about what we need. The function will receive a token, and we want to check not only it corresponds to any of the stored ones in the &lt;code&gt;Repo&lt;/code&gt;, but also that the token&amp;#39;s signed value corresponds to the email key under which is stored. Therefore, let&amp;#39;s add a new function to return an email by its token from the &lt;code&gt;Repo&lt;/code&gt; module:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# apps/passwordless_auth/lib/passwordless_auth/repo.ex
+
+defmodule PasswordlessAuth.Repo do
+  # ...
+
+  def find_by_token(pid \\ @name, token),
+    do: GenServer.call(pid, {:find_by_token, token})
+
+  # ...
+
+  def handle_call({:find_by_token, token}, _from, state) do
+    {:reply, Enum.find(state, &amp;amp;(elem(&amp;amp;1, 1) == token)), state}
+  end
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;find_by_token/2&lt;/code&gt; checks if there is an element it the state with the value, returning the tuple of &lt;code&gt;{email, token}&lt;/code&gt; or nil if not found. This might not be the most performant way of doing it, but as we have already agreed on that the repo is only going to store a few emails, let&amp;#39;s keep it like this for simplicity&amp;#39;s sake. Let&amp;#39;s test it out:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# apps/passwordless_auth/test/passwordless_auth/repo_test.exs
+
+defmodule PasswordlessAuth.RepoTest do
+  use ExUnit.Case, async: true
+
+  alias PasswordlessAuth.Repo
+
+  # ...
+
+  describe &amp;quot;.find_by_token/2&amp;quot; do
+    test &amp;quot;returns {email, token} when token exists&amp;quot; do
+      name = :repo_test_8
+      email = &amp;quot;foo@test.com&amp;quot;
+      token = &amp;quot;token-value&amp;quot;
+      {:ok, _pid} = Repo.start_link(name: name, emails: [email])
+      :ok = Repo.save(name, email, token)
+
+      assert {^email, ^token} = Repo.find_by_token(name, token)
+    end
+
+    test &amp;quot;returns nil when token not found&amp;quot; do
+      name = :repo_test_9
+      email = &amp;quot;foo@test.com&amp;quot;
+      token = &amp;quot;token-value&amp;quot;
+      {:ok, _pid} = Repo.start_link(name: name, emails: [email])
+      :ok = Repo.save(name, email, token)
+
+      assert nil == Repo.find_by_token(name, &amp;quot;other-token&amp;quot;)
+    end
+  end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class="bash"&gt;$ mix test test/passwordless_auth/repo_test.exs
+==&amp;gt; passwordless_auth
+..........
+
+Finished in 0.1 seconds
+10 tests, 0 failures
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now we are ready to continue where we left it, so let&amp;#39;s go ahead and add the verification functionality to the &lt;code&gt;PasswordlessAuth&lt;/code&gt; module:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# apps/passwordless_auth/lib/passwordless_auth.ex
+
+defmodule PasswordlessAuth do
+  alias PasswordlessAuth.{Repo, Token}
+
+  # ...
+
+  def verify_token(repo \\ Repo, token) do
+    repo
+    |&amp;gt; Repo.find_by_token(token)
+    |&amp;gt; do_verify()
+  end
+
+  # ...
+
+  defp do_verify(nil), do: {:error, :not_found}
+  defp do_verify({email, token}), do: Token.verify(token, email)
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As we&amp;#39;ve been doing so far, let&amp;#39;s create a test module for the &lt;code&gt;PasswordlessAuth&lt;/code&gt; module:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# apps/passwordless_auth/test/passwordless_auth_test.exs
+
+defmodule PasswordlessAuthTest do
+  use ExUnit.Case, async: true
+
+  alias PasswordlessAuth.Repo
+
+  describe &amp;quot;provide_token_for/2&amp;quot; do
+    test &amp;quot;returns error when email is blank&amp;quot; do
+      assert {:error, :invalid_email} = PasswordlessAuth.provide_token_for(nil)
+      assert {:error, :invalid_email} = PasswordlessAuth.provide_token_for(&amp;quot;&amp;quot;)
+    end
+
+    test &amp;quot;returns error when email does not exist&amp;quot; do
+      repo = :&amp;quot;repo_test_#{__MODULE__}_1&amp;quot;
+      email = &amp;quot;foo@test.com&amp;quot;
+      {:ok, _pid} = Repo.start_link(name: repo, emails: [email])
+
+      assert {:error, :not_found} =
+               PasswordlessAuth.provide_token_for(repo, &amp;quot;not-found-email@test.com&amp;quot;)
+    end
+
+    test &amp;quot;returns token when valid email&amp;quot; do
+      repo = :&amp;quot;repo_test_#{__MODULE__}_2&amp;quot;
+      email = &amp;quot;foo@test.com&amp;quot;
+      {:ok, _pid} = Repo.start_link(name: repo, emails: [email])
+
+      assert {:ok, token} = PasswordlessAuth.provide_token_for(repo, email)
+      assert byte_size(token) &amp;gt; 0
+    end
+  end
+
+  describe &amp;quot;verify_token/2&amp;quot; do
+    test &amp;quot;returns error when token not found&amp;quot; do
+      repo = :&amp;quot;repo_test_#{__MODULE__}_3&amp;quot;
+      email = &amp;quot;foo@test.com&amp;quot;
+      {:ok, _pid} = Repo.start_link(name: repo, emails: [email])
+      {:ok, _token} = PasswordlessAuth.provide_token_for(repo, email)
+
+      assert {:error, :not_found} = PasswordlessAuth.verify_token(repo, &amp;quot;not-found-token&amp;quot;)
+    end
+
+    test &amp;quot;returns value when token valid&amp;quot; do
+      repo = :&amp;quot;repo_test_#{__MODULE__}_4&amp;quot;
+      email = &amp;quot;foo@test.com&amp;quot;
+      {:ok, _pid} = Repo.start_link(name: repo, emails: [email])
+      {:ok, token} = PasswordlessAuth.provide_token_for(repo, email)
+
+      assert {:ok, ^email} = PasswordlessAuth.verify_token(repo, token)
+    end
+  end
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And finally run it to confirm that everything is working as it should:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="bash"&gt;$ mix test test/passwordless_auth_test.exs
+==&amp;gt; passwordless_auth
+.....
+
+Finished in 0.07 seconds
+5 tests, 0 failures
+
+Randomized with seed 291795
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Yay! Let&amp;#39;s leave it here for now. In the next part of the series, we will take care of sending the authentication link via email to the user, and use this link to verify the token and authenticate a Phoenix Socket connection. In the meantime, don&amp;#39;t forget  to check out the source code with the final result of our small experiment:&lt;/p&gt;
+
+&lt;div class="btn-wrapper"&gt;
+  &lt;a href="https://github.com/bigardone/passwordless-auth" target="_blank" class="btn"&gt;&lt;i class="fa fa-github"&gt;&lt;/i&gt; Source code&lt;/a&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Happy coding!&lt;/p&gt;
+</content>
+  </entry>
   <entry>
     <title>Phoenix &amp; Elm landing page (pt.3)</title>
     <link rel="alternate" href="http://codeloveandboards.com/blog/2018/01/06/phoenix-elm-landing-page-pt-3/"/>
@@ -3236,579 +3920,6 @@ type Msg
 &lt;div class="btn-wrapper"&gt;
   &lt;a class="btn" href="https://github.com/bigardone/elm-file-reader" target="_blank"&gt;&lt;i class="fa fa-github"&gt;&lt;/i&gt; Source code&lt;/a&gt;
   &lt;a class="btn" href="https://github.com/bigardone/elm-file-reader/ports" target="_blank"&gt;&lt;i class="fa fa-github"&gt;&lt;/i&gt; Ports version source code&lt;/a&gt;
-&lt;/div&gt;
-</content>
-  </entry>
-  <entry>
-    <title>Phoenix and Elm, a real use case (pt. 6)</title>
-    <link rel="alternate" href="http://codeloveandboards.com/blog/2017/03/19/phoenix-and-elm-a-real-use-case-pt-6/"/>
-    <id>http://codeloveandboards.com/blog/2017/03/19/phoenix-and-elm-a-real-use-case-pt-6/</id>
-    <published>2017-03-20T06:30:00Z</published>
-    <updated>2017-05-02T09:59:24+02:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;div class="index"&gt;
-  &lt;p&gt;This post belongs to the &lt;strong&gt;Phoenix and Elm, a real use case&lt;/strong&gt; series.&lt;/p&gt;
-  &lt;ol&gt;
-    &lt;li&gt;&lt;a href="/blog/2017/02/02/phoenix-and-elm-a-real-use-case-pt-1/"&gt;Introduction to creating a SPA with Phoenix and Elm&lt;/a&gt;&lt;/li&gt;
-    &lt;li&gt;&lt;a href="/blog/2017/02/08/phoenix-and-elm-a-real-use-case-pt-2/"&gt;Rendering the initial contact list&lt;/a&gt;&lt;/li&gt;
-    &lt;li&gt;&lt;a href="/blog/2017/02/14/phoenix-and-elm-a-real-use-case-pt-3/"&gt;Adding full text search and pagination navigation to the contact list&lt;/a&gt;&lt;/li&gt;
-    &lt;li&gt;&lt;a href="/blog/2017/02/23/phoenix-and-elm-a-real-use-case-pt-4/"&gt;Better state with union types, search resetting and keyed nodes.&lt;/a&gt;&lt;/li&gt;
-    &lt;li&gt;&lt;a href="/blog/2017/03/07/phoenix-and-elm-a-real-use-case-pt-5/"&gt;Implementing Elm routing&lt;/a&gt;&lt;/li&gt;
-    &lt;li&gt;&lt;a href="/blog/2017/03/19/phoenix-and-elm-a-real-use-case-pt-6/"&gt;Poenix and Elm communication through WebSockets&lt;/a&gt;&lt;/li&gt;
-  &lt;/ol&gt;
-
-  &lt;a href="https://phoenix-and-elm.herokuapp.com/" target="_blank"&gt;&lt;i class="fa fa-cloud"&gt;&lt;/i&gt; Live demo&lt;/a&gt; |
-  &lt;a href="https://github.com/bigardone/phoenix-and-elm" target="_blank"&gt;&lt;i class="fa fa-github"&gt;&lt;/i&gt; Source code&lt;/a&gt;
-&lt;/div&gt;
-
-&lt;h2&gt;Phoenix and Elm WebSockets support&lt;/h2&gt;
-
-&lt;p&gt;In the &lt;a href="/blog/2017/03/07/phoenix-and-elm-a-real-use-case-pt-5/"&gt;last part&lt;/a&gt;, we refactored our application to add &lt;strong&gt;Elm&lt;/strong&gt; routing and added the show contact route.
-These changes include adding a new API endpoint in the &lt;code&gt;ContactController&lt;/code&gt; module to return a given contact&amp;#39;s JSON representation.
-However, since I started using &lt;strong&gt;Phoenix&lt;/strong&gt;, I have found myself using fewer controllers, and more
-&lt;strong&gt;WebSockets&lt;/strong&gt; and &lt;strong&gt;Phoenix&amp;#39;s&lt;/strong&gt; channels. The main reasons for doing this are:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;They are much faster than Http requests.&lt;/li&gt;
-&lt;li&gt;Once the connection is established, and the authentication is accomplished, you do not need to authenticate future requests and rely on cookies for it.&lt;/li&gt;
-&lt;li&gt;Its &lt;strong&gt;PubSub&lt;/strong&gt; system opens a new world of possibilities.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;That being said, today we are going to replace the current &lt;strong&gt;API&lt;/strong&gt; controller we have with a new
-&lt;strong&gt;Phoenix&lt;/strong&gt; &lt;strong&gt;channel&lt;/strong&gt; and learn how to add support for this new channel in &lt;strong&gt;Elm&lt;/strong&gt;. Let&amp;#39;s do this!&lt;/p&gt;
-
-&lt;h3&gt;Phoenix changes&lt;/h3&gt;
-
-&lt;p&gt;First of all, let&amp;#39;s get rid of what we are not going to need anymore. This includes deleting the &lt;code&gt;ContactContoller&lt;/code&gt; file, located in &lt;code&gt;web/controllers/contact_controller.ex&lt;/code&gt;
-and the &lt;code&gt;ContactView&lt;/code&gt; in &lt;code&gt;web/views/contact_view.ex&lt;/code&gt;. We also need to update the &lt;code&gt;router&lt;/code&gt; file to remove the &lt;strong&gt;API&lt;/strong&gt; pipeline:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# web/router.ex
-
-defmodule PhoenixAndElm.Router do
-  use PhoenixAndElm.Web, :router
-
-  pipeline :browser do
-    plug :accepts, [&amp;quot;html&amp;quot;]
-    plug :fetch_session
-    plug :fetch_flash
-    plug :protect_from_forgery
-    plug :put_secure_browser_headers
-  end
-
-  scope &amp;quot;/&amp;quot;, PhoenixAndElm do
-    pipe_through :browser # Use the default browser stack
-
-    get &amp;quot;/*path&amp;quot;, PageController, :index
-  end
-end
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Once we have removed the unnecessary stuff, let&amp;#39;s create the channel which is going to replace the old &lt;code&gt;ContactController&lt;/code&gt;.
-First, we need to declare it in the &lt;code&gt;UserSocket&lt;/code&gt; module:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# web/channels/user_socket.ex
-
-defmodule PhoenixAndElm.UserSocket do
-  use Phoenix.Socket
-
-  ## Channels
-  channel &amp;quot;contacts&amp;quot;, PhoenixAndElm.ContactsChannel
-
-  # ...
-end
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Next step is to create the &lt;code&gt;ContactsChannel&lt;/code&gt; module in the same folder:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# web/channels/contacts_channel.ex
-
-defmodule PhoenixAndElm.ContactsChannel do
-  use Phoenix.Channel
-  alias PhoenixAndElm.{Contact, Repo}
-  import Ecto.Query, only: [order_by: 2]
-
-  require Logger
-
-  def join(&amp;quot;contacts&amp;quot;, _, socket), do: {:ok, socket}
-
-  def handle_in(&amp;quot;contacts:fetch&amp;quot;, params, socket) do
-    Logger.info &amp;quot;Handling contacts...&amp;quot;
-
-    search = Map.get(params, &amp;quot;search&amp;quot;) || &amp;quot;&amp;quot;
-
-    page = Contact
-    |&amp;gt; Contact.search(search)
-    |&amp;gt; order_by(:first_name)
-    |&amp;gt; Repo.paginate(params)
-
-    {:reply, {:ok, page}, socket}
-  end
-
-  def handle_in(&amp;quot;contact:&amp;quot; &amp;lt;&amp;gt; contact_id, _, socket) do
-    Logger.info &amp;quot;Handling contact...&amp;quot;
-
-    contact = Contact
-    |&amp;gt; Repo.get(contact_id)
-
-    case contact do
-      nil -&amp;gt;
-        {:reply, {:error, %{error: &amp;quot;Contact no found&amp;quot;}}, socket}
-      _ -&amp;gt;
-        {:reply, {:ok, contact}, socket}
-    end
-  end
-end
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;The &lt;code&gt;ContactsChannel&lt;/code&gt; handles two events:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;contacts:fetch&lt;/code&gt; wich handles contact search and pagination like the old index action of the &lt;code&gt;ContactController&lt;/code&gt;.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;contacts:id&lt;/code&gt; which returns a given contact&amp;#39;s data, just like the old show action.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Depending on the environment the application is running, the socket &lt;strong&gt;URL&lt;/strong&gt; will probably change.
-The front-end application needs to know the &lt;strong&gt;URL&lt;/strong&gt; to create the connection, so we need it to pass it somehow.
-The easiest way of doing so is by creating a helper method in a &lt;strong&gt;Phoenix&lt;/strong&gt; view and call it to assign it to javascript
-globally. Let&amp;#39;s add the helper method in the &lt;code&gt;LayoutView&lt;/code&gt; module:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# web/views/layout_view.ex
-
-defmodule PhoenixAndElm.LayoutView do
-  use PhoenixAndElm.Web, :view
-
-  def socket_url, do: System.get_env(&amp;quot;WEBSOCKECT_URL&amp;quot;) || &amp;quot;ws://localhost:4000/socket/websocket&amp;quot;
-end
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;The &lt;code&gt;socket_url&lt;/code&gt; function returns the value in the &lt;code&gt;WEBSOCKECT_URL&lt;/code&gt; system variable, or the default one if not set. Now we can update
-the main template file to call this function and set value in javascript:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# web/templates/layout/app.html.eex
-
-&amp;lt;!DOCTYPE html&amp;gt;
-&amp;lt;html lang=&amp;quot;en&amp;quot;&amp;gt;
-  # ...
-
-  &amp;lt;body&amp;gt;
-    # ...
-
-    &amp;lt;script&amp;gt;window.socketUrl = &amp;#39;&amp;lt;%= PhoenixAndElm.LayoutView.socket_url %&amp;gt;&amp;#39;;&amp;lt;/script&amp;gt;
-    &amp;lt;script src=&amp;quot;&amp;lt;%= static_path(@conn, &amp;quot;/js/app.js&amp;quot;) %&amp;gt;&amp;quot;&amp;gt;&amp;lt;/script&amp;gt;
-  &amp;lt;/body&amp;gt;
-&amp;lt;/html&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Once the &lt;code&gt;socketUrl&lt;/code&gt; value is set, we can use it in the &lt;code&gt;app.js&lt;/code&gt; file:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="javascript"&gt;// web/static/js/app.js
-
-import Elm from &amp;#39;./main&amp;#39;;
-
-const elmDiv = document.querySelector(&amp;#39;#elm_target&amp;#39;);
-
-if (elmDiv) {
-  const socketUrl = window.socketUrl;
-
-  Elm.Main.embed(elmDiv, { socketUrl });
-}
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Cool, but how does &lt;strong&gt;Elm&lt;/strong&gt; handle this values?&lt;/p&gt;
-
-&lt;h3&gt;Program with flags&lt;/h3&gt;
-
-&lt;p&gt;Conveniently, &lt;strong&gt;Elm&lt;/strong&gt; has the concept of flags which are values that can be received from &lt;strong&gt;JavaScript&lt;/strong&gt; while
-creating the application. To use flags, we need to do some refactoring in the application, so let&amp;#39;s start by editing the &lt;code&gt;Main&lt;/code&gt; module:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- web/elm/Main.elm
-
-module Main exposing (..)
-
--- ...
-
-init : Flags -&amp;gt; Navigation.Location -&amp;gt; ( Model, Cmd Msg )
-init flags location =
-    let
-        currentRoute =
-            parse location
-
-        model =
-            initialModel flags currentRoute
-    in
-        urlUpdate model
-
-
-main : Program Flags Model Msg
-main =
-    Navigation.programWithFlags UrlChange
-        { init = init
-        , view = view
-        , update = update
-        , subscriptions = always &amp;lt;| Sub.none
-        }
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;The &lt;code&gt;main&lt;/code&gt; function now has a Flags type in its definition, that is passed to the init function and from
-there to the &lt;code&gt;initialModel&lt;/code&gt;. Let&amp;#39;s move on to the &lt;code&gt;Model&lt;/code&gt; module to implement this type:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt; -- web/elm/Model.elm
-
- module Model exposing (..)
-
- -- ...
-
-type alias Flags =
-    { socketUrl : String }
-
-
-type alias Model =
-    { -- ---
-    , flags : Flags
-    }
-
-
-initialModel : Flags -&amp;gt; Route -&amp;gt; Model
-initialModel flags route =
-    { -- ...
-    , flags = flags
-    }
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;The &lt;code&gt;Flags&lt;/code&gt; type is a record containing a &lt;code&gt;socketUrl&lt;/code&gt; key. As we want to initialize this value with the flags
-received from javascript, we pass it to the &lt;code&gt;initialModel&lt;/code&gt; function. If we now refresh the browser and take a closer
-look at the debugger history, we can see how the flags key is already set:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="/images/blog/phoenix_and_elm/flags.jpg" alt="Flags" style="background: #fff;" /&gt;&lt;/p&gt;
-
-&lt;p&gt;Now we are ready to start implementing the socket communication between the &lt;strong&gt;Elm&lt;/strong&gt; program and the &lt;strong&gt;Phoenix&lt;/strong&gt; backend.&lt;/p&gt;
-
-&lt;h3&gt;The elm-phoenix package&lt;/h3&gt;
-
-&lt;p&gt;There are many different ways to add &lt;strong&gt;WebSockets&lt;/strong&gt; support in &lt;strong&gt;Elm&lt;/strong&gt;, but my favorite one so far is using the &lt;a href="https://github.com/saschatimme/elm-phoenix"&gt;elm-phoenix&lt;/a&gt;
-package.
-This package is an effect manager, so at the moment is not in the elm package repository. Therefore, its installation can
-be tricky depending on your &lt;strong&gt;Phoenix&lt;/strong&gt; configuration, so easiest way I have found is by &lt;a href="https://github.com/saschatimme/elm-phoenix/archive/master.zip"&gt;downloading&lt;/a&gt; it and
-adding the source files into a vendor folder. Before doing this, let&amp;#39;s move all of our &lt;strong&gt;Elm&lt;/strong&gt; module files into a
-new &lt;code&gt;web/elm/src&lt;/code&gt; folder. After doing it, it should look like this:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;web/elm
-├── elm-package.json
-├── elm-stuff
-└── src
-    ├── Commands.elm
-    ├── Common
-    │   └── View.elm
-    ├── Contact
-    │   └── View.elm
-    ├── ContactList
-    │   └── View.elm
-    ├── Decoders.elm
-    ├── Main.elm
-    ├── Messages.elm
-    ├── Model.elm
-    ├── Routing.elm
-    ├── Update.elm
-    └── View.elm
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Next, create a new &lt;code&gt;web/elm/vendor&lt;/code&gt; folder and copy there the &lt;code&gt;elm-phoenix&lt;/code&gt; source files:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;web/elm
-├── elm-package.json
-├── elm-stuff
-├── src
-└── vendor
-    ├── Phoenix
-    │   ├── Channel.elm
-    │   ├── Internal
-    │   │   ├── Channel.elm
-    │   │   ├── Helpers.elm
-    │   │   ├── Message.elm
-    │   │   └── Socket.elm
-    │   ├── Push.elm
-    │   └── Socket.elm
-    └── Phoenix.elm
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Now we have to make the &lt;strong&gt;Elm&lt;/strong&gt; compiler aware of these changes, so let&amp;#39;s update the &lt;code&gt;elm-package.json&lt;/code&gt; file:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="json"&gt;// web/elm/elm-package.json
-
-{
-    &amp;quot;version&amp;quot;: &amp;quot;1.0.0&amp;quot;,
-    &amp;quot;summary&amp;quot;: &amp;quot;helpful summary of your project, less than 80 characters&amp;quot;,
-    &amp;quot;repository&amp;quot;: &amp;quot;https://github.com/user/project.git&amp;quot;,
-    &amp;quot;license&amp;quot;: &amp;quot;BSD3&amp;quot;,
-    &amp;quot;source-directories&amp;quot;: [
-        &amp;quot;./src&amp;quot;,
-        &amp;quot;./vendor&amp;quot;
-    ],
-    // ...
-}
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;We also need to change &lt;strong&gt;Brunch&amp;#39;s&lt;/strong&gt; configuration; otherwise, the build is not going to succeed:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="javascript"&gt;// brunch-config.js
-
-exports.config = {
-  // ...
-
-  // Configure your plugins
-  plugins: {
-    // ...
-
-    elmBrunch: {
-      elmFolder: &amp;#39;web/elm&amp;#39;,
-      mainModules: [&amp;#39;src/Main.elm&amp;#39;],
-      outputFolder: &amp;#39;../static/js&amp;#39;,
-      makeParameters: [&amp;#39;--debug&amp;#39;],
-    },
-
-    //...
-  }
-}
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Finally, &lt;code&gt;elm-phoenix&lt;/code&gt; depends on the &lt;a href="http://package.elm-lang.org/packages/elm-lang/websocket/latest"&gt;elm-lang/websocket&lt;/a&gt; package, so let&amp;#39;s install it:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;$ cd web/elm &amp;amp;&amp;amp; elm-package install elm-lang/websocket -y
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;After doing this and restarting the &lt;strong&gt;Phoenix&lt;/strong&gt; server, everything should be working as before. In case it does not, here is the &lt;a href="https://github.com/bigardone/phoenix-and-elm/commit/03bc44cf6c4465e650b1412c4571012200664606"&gt;commit&lt;/a&gt;
-with all these changes.&lt;/p&gt;
-
-&lt;h3&gt;The Subscriptions module&lt;/h3&gt;
-
-&lt;p&gt;In order to listen to external input, such as mouse events or location changes, &lt;strong&gt;Elm&lt;/strong&gt; uses subscriptions. In our case, as we are using &lt;code&gt;elm-phoenix&lt;/code&gt;, we want
-to handle &lt;strong&gt;WebSockets&lt;/strong&gt; events and make the application respond to them. Let&amp;#39;s create a new &lt;code&gt;Subscriptions&lt;/code&gt; module:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- web/elm/src/Subscriptions.elm
-
-module Subscriptions exposing (..)
-
-import Messages exposing (Msg(..))
-import Model exposing (Model)
-import Phoenix
-import Phoenix.Channel as Channel exposing (Channel)
-import Phoenix.Socket as Socket exposing (Socket)
-
-
-subscriptions : Model -&amp;gt; Sub Msg
-subscriptions model =
-    Phoenix.connect (socket model.flags.socketUrl) [ contacts ]
-
-
-socket : String -&amp;gt; Socket Msg
-socket socketUrl =
-    Socket.init socketUrl
-
-
-contacts : Channel Msg
-contacts =
-    Channel.init &amp;quot;contacts&amp;quot;
-        |&amp;gt; Channel.withDebug
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;The &lt;code&gt;subscriptions&lt;/code&gt; function prepares the socket and the channel we want to join, using the program&amp;#39;s
-flags to set the &lt;code&gt;socketUrl&lt;/code&gt;. In our case, we only have a single channel, so we do not need to add extra
-configuration to check which channel or channels it has to join, but if you feel curious about how
-to join multiple channels, there is an excellent &lt;a href="https://github.com/saschatimme/elm-phoenix/blob/master/example/web/elm/src/Chat.elm#L233"&gt;demo example&lt;/a&gt; in the official repo. In our case, we
-are good to continue, so let&amp;#39;s update the &lt;code&gt;Main&lt;/code&gt; module, so the main program uses the new &lt;code&gt;subscriptions&lt;/code&gt; function:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- web/elm/src/Main.elm
-
-module Main exposing (..)
-
-import Subscriptions exposing (subscriptions)
-
--- ...
-
-main : Program Flags Model Msg
-main =
-    Navigation.programWithFlags UrlChange
-        { init = init
-        , view = view
-        , update = update
-        , subscriptions = subscriptions
-        }
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;If we refresh the browser and check our browser&amp;#39;s console, we can see two log messages, one when the program tries to join the &lt;code&gt;ContactsChannel&lt;/code&gt; and
-another one when the join result is successful:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="/images/blog/phoenix_and_elm/socket-connect.jpg" alt="Socket connection" style="background: #fff;" /&gt;&lt;/p&gt;
-
-&lt;h3&gt;Commands refactoring&lt;/h3&gt;
-
-&lt;p&gt;Now that we have the connection to the &lt;strong&gt;WebSocket&lt;/strong&gt; ready, we need to refactor the &lt;code&gt;Commands&lt;/code&gt; module to replace the old &lt;strong&gt;Http&lt;/strong&gt; requests with &lt;code&gt;WebSocket&lt;/code&gt; ones:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- web/elm/src/Commands.elm
-
-module Commands exposing (..)
-
-import Phoenix exposing (..)
-import Phoenix.Push as Push
--- ...
-
-fetch : String -&amp;gt; Int -&amp;gt; String -&amp;gt; Cmd Msg
-fetch socketUrl page search =
-    let
-        payload =
-            JE.object
-                [ ( &amp;quot;page&amp;quot;, JE.int page )
-                , ( &amp;quot;search&amp;quot;, JE.string search )
-                ]
-
-        push =
-            Push.init &amp;quot;contacts&amp;quot; &amp;quot;contacts:fetch&amp;quot;
-                |&amp;gt; Push.withPayload payload
-                |&amp;gt; Push.onOk FetchSuccess
-                |&amp;gt; Push.onError FetchError
-    in
-        Phoenix.push socketUrl push
-
-
-fetchContact : String -&amp;gt; Int -&amp;gt; Cmd Msg
-fetchContact socketUrl id =
-    let
-        push =
-            Push.init &amp;quot;contacts&amp;quot; (&amp;quot;contact:&amp;quot; ++ toString id)
-                |&amp;gt; Push.onOk FetchContactSuccess
-                |&amp;gt; Push.onError FetchContactError
-    in
-        Phoenix.push socketUrl push
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;The &lt;code&gt;fetch&lt;/code&gt; function now receives one more parameter with the &lt;code&gt;socketUrl&lt;/code&gt; value that it is going to need to send
-the request. It first creates a &lt;strong&gt;JSON&lt;/strong&gt; payload with the page and search, just like the old &lt;strong&gt;Http&lt;/strong&gt; one. Next, it creates
-a &lt;code&gt;push&lt;/code&gt;, from the &lt;code&gt;elm-phoenix&lt;/code&gt; package, in which passes the &lt;strong&gt;Phoenix&amp;#39;s&lt;/strong&gt; channel name and the event, in this case &lt;code&gt;contacts:fetch&lt;/code&gt;.
-It attaches the previously created payload using &lt;code&gt;withPayload&lt;/code&gt; and sets the messages for both the &lt;code&gt;onOk&lt;/code&gt; and &lt;code&gt;onError&lt;/code&gt; callbacks,
-triggered depending on the result. Finally, it sends the push to the &lt;code&gt;socketUrl&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;On the other hand, &lt;code&gt;fetchContact&lt;/code&gt; is more simple. It creates a &lt;code&gt;push&lt;/code&gt; to the same channel, but for the &lt;code&gt;contact:*&lt;/code&gt; where &lt;code&gt;*&lt;/code&gt; is the id of the contact we want to fetch. It only sets the
-messages for the &lt;code&gt;onOk&lt;/code&gt; and &lt;code&gt;onError&lt;/code&gt; callbacks, and finally sends the push through the &lt;code&gt;socketUrl&lt;/code&gt;.&lt;/p&gt;
-
-&lt;h3&gt;Messages and the Update module&lt;/h3&gt;
-
-&lt;p&gt;At this point, the compiler must be some errors related to the new messages we have added in the &lt;code&gt;Commands&lt;/code&gt; module, but we have not declared it yet. So let&amp;#39;s edit
-the &lt;code&gt;Messages&lt;/code&gt; module to fix this:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- web/elm/src/Messages.elm
-
-module Messages exposing (..)
-
-import Json.Encode as JE
-import Navigation
-import Routing exposing (Route)
-
-
-type Msg
-    -- Remove this -&amp;gt; = FetchResult (Result Http.Error ContactList)
-    = FetchSuccess JE.Value          -- Add this
-    | FetchError JE.Value            -- Add this
-    | Paginate Int
-    | HandleSearchInput String
-    | HandleFormSubmit
-    | ResetSearch
-    | UrlChange Navigation.Location
-    | NavigateTo Route
-    -- Remove this -&amp;gt; | FetchContactResult (Result Http.Error Contact)
-    | FetchContactSuccess JE.Value   -- Add this
-    | FetchContactError JE.Value     -- Add this
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;The previous &lt;code&gt;FetchResult&lt;/code&gt; was receiving a &lt;code&gt;Result&lt;/code&gt;, but now both success and error callbacks, which receive a &lt;strong&gt;JSON&lt;/strong&gt; value,
-which need to be decoded by the &lt;code&gt;update&lt;/code&gt; function, and we also need to update the commands calls to pass the &lt;code&gt;socketUrl&lt;/code&gt; parameter,
-so let&amp;#39;s edit the &lt;code&gt;Update&lt;/code&gt; module:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- web/elm/src/Update.elm
-
-module Update exposing (..)
-
--- ...
-
-update : Msg -&amp;gt; Model -&amp;gt; ( Model, Cmd Msg )
-update msg model =
-    case msg of
-        FetchSuccess raw -&amp;gt;
-            case JD.decodeValue contactListDecoder raw of
-                Ok payload -&amp;gt;
-                    { model | contactList = Success payload } ! []
-
-                Err err -&amp;gt;
-                    { model | contactList = Failure &amp;quot;Error while decoding contact list&amp;quot; } ! []
-
-        FetchError raw -&amp;gt;
-            { model | contactList = Failure &amp;quot;Error while fetching contact list&amp;quot; } ! []
-
-        Paginate pageNumber -&amp;gt;
-            model ! [ fetch model.flags.socketUrl pageNumber model.search ]
-
-        -- ...
-
-        HandleFormSubmit -&amp;gt;
-            { model | contactList = Requesting } ! [ fetch model.flags.socketUrl 1 model.search ]
-
-        ResetSearch -&amp;gt;
-            { model | search = &amp;quot;&amp;quot; } ! [ fetch model.flags.socketUrl 1 &amp;quot;&amp;quot; ]
-
-        -- ...
-
-        FetchContactSuccess raw -&amp;gt;
-            case JD.decodeValue contactDecoder raw of
-                Ok payload -&amp;gt;
-                    { model | contact = Success payload } ! []
-
-                Err err -&amp;gt;
-                    { model | contact = Failure &amp;quot;Error while decoding contact&amp;quot; } ! []
-
-        FetchContactError raw -&amp;gt;
-            { model | contact = Failure &amp;quot;Contact not found&amp;quot; } ! []
-
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Both &lt;code&gt;FetchSuccess&lt;/code&gt; and &lt;code&gt;FetchContactSuccess&lt;/code&gt; branches decode the &lt;code&gt;raw&lt;/code&gt; response received from the channel and, depending on the result,
-set the corresponding key value in the new model. On the other hand, &lt;code&gt;FetchError&lt;/code&gt; and &lt;code&gt;FetchContactError&lt;/code&gt; set a friendly error message.
-We are missing one thing, though; the &lt;code&gt;urlUpdate&lt;/code&gt; function needs some minor editing as well:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- web/elm/src/Update.elm
-
-module Update exposing (..)
-
--- ...
-
-urlUpdate : Model -&amp;gt; ( Model, Cmd Msg )
-urlUpdate model =
-    case model.route of
-        HomeIndexRoute -&amp;gt;
-            case model.contactList of
-                NotRequested -&amp;gt;
-                    model ! [ fetch model.flags.socketUrl 1 &amp;quot;&amp;quot; ]
-
-                _ -&amp;gt;
-                    model ! []
-
-        ShowContactRoute id -&amp;gt;
-            { model | contact = Requesting } ! [ fetchContact model.flags.socketUrl id ]
-
-        _ -&amp;gt;
-            model ! []
-
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;That is pretty much it. If we now refresh the browser and navigate through the application, everything should just work as before.
-Yay! If you are missing anything, please check out the branch I have prepared with all the changes for this part.
-I hope you have enjoyed the series and thanks for all the support.&lt;/p&gt;
-
-&lt;p&gt;Happy coding!&lt;/p&gt;
-
-&lt;div class="btn-wrapper"&gt;
-  &lt;a href="https://phoenix-and-elm.herokuapp.com/" target="_blank" class="btn"&gt;&lt;i class="fa fa-cloud"&gt;&lt;/i&gt; Live demo&lt;/a&gt;
-  &lt;a href="https://github.com/bigardone/phoenix-and-elm" target="_blank" class="btn"&gt;&lt;i class="fa fa-github"&gt;&lt;/i&gt; Source code&lt;/a&gt;
 &lt;/div&gt;
 </content>
   </entry>

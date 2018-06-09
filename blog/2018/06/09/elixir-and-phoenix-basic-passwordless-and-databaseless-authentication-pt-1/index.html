@@ -1,0 +1,518 @@
+<!DOCTYPE html> <!--[if lt IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8 lt-ie7" lang=en-us><![endif]--> <!--[if IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8" lang=en-us><![endif]--> <!--[if IE 8]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if IE 9]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if lt IE 10]><html class="no-js lt-ie10" lang=en-us><![endif]--> <!--[if !IE]>><![endif]--> <html class=no-js lang=en> <head> <title>Elixir and Phoenix basic passwordless and databaseless authentication (pt.1) - Code, Love & Boards</title> <meta charset=utf-8 content='text/html' http-equiv=content-type> <meta content='ie=edge,chrome=1' http-equiv=x-ua-compatible> <meta content='Project setup and the initial functionality for storing and verifying authentication tokens' name=description> <meta content='Ricardo García Vega - http://twitter.com/bigardone' name=author> <meta content='elixir, phoenix, elm' name=keywords> <meta content='initial-scale=1.0,user-scalable=no,maximum-scale=1,width=device-width' name=viewport> <link href='//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css' rel=stylesheet> <link href="//fonts.googleapis.com/css?family=Montserrat:400,700|Lora:400,700" media=screen rel=stylesheet /> <link href="../../../../../stylesheets/blog-ed6b1e0f.css" media=all rel=stylesheet /> <link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/styles/tomorrow.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.11.0/highlight.min.js'></script> <link href='/images/apple-touch-icon-57x57-6e598dc4.png' rel=apple-touch-icon sizes=57x57> <link href='/images/apple-touch-icon-114x114-5be964ba.png' rel=apple-touch-icon sizes=114x114> <link href='/images/apple-touch-icon-72x72-70084a85.png' rel=apple-touch-icon sizes=72x72> <link href='/images/apple-touch-icon-144x144-1dbb56c1.png' rel=apple-touch-icon sizes=144x144> <link href='/images/apple-touch-icon-60x60-d05a5ea9.png' rel=apple-touch-icon sizes=60x60> <link href='/images/apple-touch-icon-120x120-5dafce59.png' rel=apple-touch-icon sizes=120x120> <link href='/images/apple-touch-icon-76x76-b2c0d784.png' rel=apple-touch-icon sizes=76x76> <link href='/images/apple-touch-icon-152x152-45595360.png' rel=apple-touch-icon sizes=152x152> <link href='/images/favicon-160x160-944ce76e.png' rel=icon sizes=160x160 type='image/png'> <link href='/images/favicon-96x96-b7e4e089.png' rel=icon sizes=96x96 type='image/png'> <link href='/images/favicon-32x32-b7f34a79.png' rel=icon sizes=32x32 type='image/png'> <link href='/images/favicon-16x16-2712c528.png' rel=icon sizes=16x16 type='image/png'> <meta content='#9f00a7' name=msapplication-TileColor> <meta content='/images/mstile-144x144-028d4c4c.png' name=msapplication-TileImage> <script>
+  var _StatHat = _StatHat || [];
+  _StatHat.push(['_setUser', 'NzIzMCDaNaL5bvEP1HQkMYwfYsQe']);
+  (function() {
+          var sh = document.createElement('script'); sh.type = 'text/javascript';
+          sh.async = true;
+          sh.src = '//www.stathat.com/javascripts/api.js';
+          var s = document.getElementsByTagName('script')[0];
+          s.parentNode.insertBefore(sh, s);
+  })();
+</script> <link href='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.js'></script> <script>
+  window.addEventListener("load", function(){
+  window.cookieconsent.initialise({
+    "palette": {
+      "popup": {
+        "background": "#252e39"
+      },
+      "button": {
+        "background": "#217dbb"
+      }
+    },
+    "theme": "classic",
+    "position": "bottom-right"
+  })});
+</script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Elixir and Phoenix basic passwordless and databaseless authentication (pt.1)</h1> <h3></h3> <div class=meta-data> <hr> posted Jun 9, 2018 on <a class=tag href="/blog/tags/elixir.html">elixir</a> <a class=tag href="/blog/tags/phoenix.html">phoenix</a> <a class=tag href="/blog/tags/elm.html">elm</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <p>Have you found yourself working on a small project where, at some point, you are asked to give access to some users to a private part of the application or a small admin panel of some sort? Depending on the project&#39;s constraints, we can resolve this situation in many different ways. For instance, if having administrator profiles and roles forms part of the business logic and the scope of the project, having a standard authorization and authentication system is probably the way to go. On the other hand, if we only need administrator users to authenticate and let them have access to a private part, we can rely on other simple alternatives like HTTP basic authentication, which might not be as flexible and secure as we might need them to be.</p> <h3>Passwordless authentication</h3> <p>A couple of years ago I read <a href="https://www.smashingmagazine.com/2016/06/the-current-state-of-authentication-we-have-a-password-problem/">this excellent article</a> about the current state of authentication where it showcases the most common ways of authenticating users, describing their strengths and weaknesses. Between all of them, passwordless authentication is the one that I liked the most, as the perfect balance between ease of implementation and security strength, using this approach in many different projects since then. If you are not familiar with this technique, it mainly consists of asking the user for an email address and sending a link which will automatically authenticate them into the application, just like Slack does. I&#39;m very pleased with the result so far, as my users don&#39;t need to remember passwords anymore (which tend to be frequently forgotten), and I don&#39;t have to deal with credentials storage, validation and recovery any longer.</p> <h3>Databaseless authentication</h3> <p>As I said before, sometimes we don&#39;t need a complex authentication system which involves modifying the database schema or altering the existing business logic to let a few users access a particular part of the application. Therefore, I want to experiment alternative ways of storing credentials, and Elixir is perfect for this particular use case.</p> <h3>What are we building</h3> <p>For this experiment, we are building a small <a href="https://elixir-lang.org/getting-started/mix-otp/dependencies-and-umbrella-projects.html#umbrella-projects">Elixir umbrella project</a> which consists of two applications:</p> <ul> <li><strong>passwordless_auth</strong>: Responsible for token generation, storage and authentication logic.</li> <li><strong>passwordless_auth_web</strong>: Responsible for sending authentication emails and serving the Elm SPA to test out our auth experiment against a Phoenix socket.</li> </ul> <p>The final result looks something like this:</p> <p><img alt="Final result" src="https://monosnap.com/image/5VUT424b4Hu9ITi8r1SGae7HQleCPT.png"/></p> <p>We are going to have three screens:</p> <ul> <li>The last screen in the image corresponds to the root path of the admin panel, which is only displayed to authenticated users.</li> <li>The first screen corresponds to &#39;/sign-in&#39;, displayed to any user trying to access &#39;/&#39; while not authenticated.</li> <li>The second screen corresponds to the success message showed to the user after requesting the magic link.</li> </ul> <p>Bear in mind that these screens might change while we are going through the tutorial, as I keep making changes and refactoring things. Without further ado, let&#39;s do this!</p> <h3>Project setup</h3> <p>First things first. Let&#39;s build a new Phoenix project with the following options:</p> <pre><code class="bash">$ mix phx.new passwordless_auth --umbrella --no-ecto --no-brunch
+</code></pre> <p><code>--umbrella</code> tells the mix task to generate an umbrella project instead of a regular one. As we don&#39;t need to handle any database connections, we use the <code>--no-ecto</code> option to prevent having <code>Ecto</code> installed, and a default repository created. Finally, I&#39;ve been having some issues related to assets building with Brunch, so let&#39;s remove it with the <code>--no-brunch</code> option for the moment as we are going to be using a customized Webpack build when we get to that point.</p> <p>After running the mix task, we can see that we have our new umbrella project with the two applications inside the <code>/apps</code> folder:</p> <pre><code>passwordless-auth
+├── README.md
+├── apps
+│   ├── passwordless_auth
+│   └── passwordless_auth_web
+├── config
+│   ├── config.exs
+│   ├── dev.exs
+│   ├── prod.exs
+│   └── test.exs
+├── mix.exs
+└── mix.lock
+</code></pre> <h3>The authentication repository</h3> <p>We are not relying on a database to store admitted user emails and their corresponding authentication tokens, but we have to store them somewhere else. Erlang/Elixir offer a simple and straightforward solution for in-memory storage, the <a href="https://hexdocs.pm/elixir/GenServer.html">GenServer</a> behaviour, which seems to fit perfectly for our needs. Let&#39;s go ahead and create the <code>Repo</code> module:</p> <pre><code class="elixir"># apps/passwordless_auth/lib/passwordless_auth/repo.ex
+
+defmodule PasswordlessAuth.Repo do
+  use GenServer
+  @name __MODULE__
+
+  def start_link(opts) do
+    opts = Keyword.put_new(opts, :name, @name)
+    {:ok, emails} = Keyword.fetch(opts, :emails)
+
+    GenServer.start_link(__MODULE__, emails, opts)
+  end
+
+  @impl true
+  def init(emails) when is_list(emails) and length(emails) &gt; 0 do
+    state = Enum.reduce(emails, %{}, &amp;Map.put(&amp;2, &amp;1, nil))
+
+    {:ok, state}
+  end
+
+  def init(_), do: {:stop, &quot;Invalid list of emails&quot;}
+end
+</code></pre> <p>The <code>start_link</code> function receives the options to spawn the <code>GenServer</code> process of the repository. These options consist of:</p> <ul> <li><code>:name</code> which is optional and used for registering the process.</li> <li><code>:emails</code> which is mandatory, represents the list of admitted emails, and which we are using in the <code>init</code> function to build the initial state of the process.</li> </ul> <p>The <code>init</code> function receives a list of emails and creates a <code>Map</code> where keys are the emails, and the values will store the authentication tokens, but at the moment we are setting them to <code>nil</code>. On the contrary, if what receives is not a list, we want it to return <code>{:stop, &quot;Invalid list of emails&quot;}</code>, exiting the process and not letting the application to start.</p> <p>Let&#39;s create a test module to test this out:</p> <pre><code class="elixir"># apps/passwordless_auth/test/passwordless_auth/repo_test.exs
+
+defmodule PasswordlessAuth.RepoTest do
+  use ExUnit.Case, async: true
+
+  alias PasswordlessAuth.Repo
+
+  describe &quot;.init/1&quot; do
+    test &quot;returns error when emails are wrong&quot; do
+      Process.flag(:trap_exit, true)
+
+      name = :repo_test_1
+      Repo.start_link(name: name, emails: &quot;&quot;)
+
+      assert_receive {:EXIT, _, &quot;Invalid list of emails&quot;}
+    end
+
+    test &quot;starts the repo when emails is a list&quot; do
+      name = :repo_test_1
+      assert {:ok, _pid} = Repo.start_link(name: name, emails: [&quot;foo@email.com&quot;])
+    end
+  end
+end
+</code></pre> <p>Running the test shows that everything works as we expect:</p> <pre><code class="bash">$ mix test test/passwordless_auth/repo_test.exs
+==&gt; passwordless_auth
+..
+
+Finished in 0.1 seconds
+2 tests, 0 failures
+
+Randomized with seed 407876
+==&gt; passwordless_auth_web
+Test patterns did not match any file: test/passwordless_auth/repo_test.exs
+</code></pre> <p>Cool! Now we need to spawn the <code>Repo</code> process once the application starts, so let&#39;s add it to the main supervision tree:</p> <pre><code class="elixir"># apps/passwordless_auth/lib/passwordless_auth/application.ex
+
+defmodule PasswordlessAuth.Application do
+  use Application
+
+  def start(_type, _args) do
+    import Supervisor.Spec, warn: false
+
+    children = [
+      worker(
+        PasswordlessAuth.Repo,
+        [[emails: emails()]]
+      )
+    ]
+
+    Supervisor.start_link(children, strategy: :one_for_one, name: PasswordlessAuth.Supervisor)
+  end
+
+  defp emails, do: Application.get_env(:passwordless_auth, :repo)[:emails]
+end
+</code></pre> <p>If we try to start the application at this point, it will not do it, due to we have not set the emails in the configuration yet, just like we have asserted in the previous test:</p> <pre><code>$ iex -S mix
+Erlang/OTP 21 [RELEASE CANDIDATE 1] [erts-10.0] [source] [64-bit] [smp:8:8] [ds:8:8:10] [async-threads:1] [hipe]
+
+[info] Application passwordless_auth exited: PasswordlessAuth.Application.start(:normal, []) returned an error: shutdown: failed to start child: PasswordlessAuth.Repo
+    ** (EXIT) &quot;Invalid list of emails&quot;
+** (Mix) Could not start application passwordless_auth: PasswordlessAuth.Application.start(:normal, []) returned an error: shutdown: failed to start child: PasswordlessAuth.Repo
+    ** (EXIT) &quot;Invalid list of emails&quot;
+</code></pre> <p>Let&#39;s add a list of emails to the configuration:</p> <pre><code class="elixir"># apps/passwordless_auth/config/config.exs
+
+use Mix.Config
+
+config :passwordless_auth,
+       :repo,
+       emails: ~w(foo@email.com bar@email.com baz@email.com)
+</code></pre> <p>And try to start it again:</p> <pre><code>$ iex -S mix
+Erlang/OTP 21 [RELEASE CANDIDATE 1] [erts-10.0] [source] [64-bit] [smp:8:8] [ds:8:8:10] [async-threads:1] [hipe]
+
+Interactive Elixir (1.6.5) - press Ctrl+C to exit (type h() ENTER for help)
+iex(1)&gt;
+</code></pre> <p>It works as expected, so let&#39;s move on to adding some logic to the <code>Repo</code> module.</p> <h3>Repo logic</h3> <p>Before continuing, let&#39;s start the application and check how the current state of the <code>Repo</code> process looks like:</p> <pre><code>$ iex -S mix
+...
+iex(1)&gt; :sys.get_state PasswordlessAuth.Repo
+%{&quot;bar@email.com&quot; =&gt; nil, &quot;baz@email.com&quot; =&gt; nil, &quot;foo@email.com&quot; =&gt; nil}
+iex(2)&gt;
+</code></pre> <p>There is the map where we are going to store the authentication tokens. Let&#39;s continue by adding some functionality to validate if an email is valid, save and fetch token values:</p> <pre><code class="elixir"># apps/passwordless_auth/lib/passwordless_auth/application.ex
+
+defmodule PasswordlessAuth.Application do
+  use Application
+
+  #...
+
+  def exists?(pid \\ @name, email),
+    do: GenServer.call(pid, {:exists, email})
+
+  def save(pid \\ @name, email, token),
+    do: GenServer.call(pid, {:save, email, token})
+
+  def fetch(pid \\ @name, email),
+    do: GenServer.call(pid, {:fetch, email})
+
+  # ...
+
+  @impl true
+  def handle_call({:exists, email}, _from, state) do
+    {:reply, Map.has_key?(state, email), state}
+  end
+
+  def handle_call({:save, email, token}, _from, state) do
+    if Map.has_key?(state, email) do
+      {:reply, :ok, Map.put(state, email, token)}
+    else
+      {:reply, {:error, :invalid_email}, state}
+    end
+  end
+
+  def handle_call({:fetch, email}, _from, state) do
+    {:reply, Map.fetch(state, email), state}
+  end
+end
+</code></pre> <ul> <li><code>exists?/2</code> takes an email and checks if it belongs to the state&#39;s keys.</li> <li><code>save/3</code> takes an email and a token, and tries to store it into the state, returning <code>:ok</code> if the email exists or <code>{:error, :invalid_email}</code> if it does not.</li> <li><code>fetch/2</code> takes an email and fetches the state for its token value.</li> </ul> <p>Let&#39;s add some tests for the new functionality:</p> <pre><code class="elixir"># apps/passwordless_auth/test/passwordless_auth/repo_test.exs
+
+defmodule PasswordlessAuth.RepoTest do
+  use ExUnit.Case, async: true
+
+  alias PasswordlessAuth.Repo
+
+  # ...
+
+    describe &quot;.exists?/2&quot; do
+    test &quot;returns true when passed email is in the repo&#39;s state&quot; do
+      name = :repo_test_2
+      email = &quot;foo@test.com&quot;
+      {:ok, _pid} = Repo.start_link(name: name, emails: [email])
+
+      assert Repo.exists?(name, email)
+    end
+
+    test &quot;returns false when passed email no it repo&#39;s state&quot; do
+      name = :repo_test_3
+      email = &quot;foo@test.com&quot;
+      {:ok, _pid} = Repo.start_link(name: name, emails: [email])
+
+      refute Repo.exists?(name, &quot;not_found@test.com&quot;)
+    end
+  end
+
+  describe &quot;.save/3&quot; do
+    test &quot;returns :ok and sets token value in state when email exists&quot; do
+      name = :repo_test_4
+      email = &quot;foo@test.com&quot;
+      token = &quot;token-value&quot;
+      {:ok, _pid} = Repo.start_link(name: name, emails: [email])
+
+      assert :ok = Repo.save(name, email, token)
+      assert %{&quot;foo@test.com&quot; =&gt; ^token} = :sys.get_state(name)
+    end
+
+    test &quot;returns {:error, :invalid_email} when email does not exist&quot; do
+      name = :repo_test_5
+      email = &quot;foo@test.com&quot;
+      token = &quot;token-value&quot;
+      {:ok, _pid} = Repo.start_link(name: name, emails: [email])
+
+      assert {:error, :invalid_email} = Repo.save(name, &quot;bar@test.com&quot;, token)
+    end
+  end
+
+  describe &quot;.fetch/2&quot; do
+    test &quot;returns {:ok, token} for passed email&quot; do
+      name = :repo_test_6
+      email = &quot;foo@test.com&quot;
+      token = &quot;token-value&quot;
+      {:ok, _pid} = Repo.start_link(name: name, emails: [email])
+      :ok = Repo.save(name, email, token)
+
+      assert {:ok, ^token} = Repo.fetch(name, email)
+    end
+
+    test &quot;returns :error when token not found&quot; do
+      name = :repo_test_7
+      email = &quot;foo@test.com&quot;
+      token = &quot;token-value&quot;
+      {:ok, _pid} = Repo.start_link(name: name, emails: [email])
+      :ok = Repo.save(name, email, token)
+
+      assert :error = Repo.fetch(name, &quot;not_found@test.com&quot;)
+    end
+  end
+end
+</code></pre> <p>And check that they all pass:</p> <pre><code class="bash">$ mix test test/passwordless_auth/repo_test.exs
+==&gt; passwordless_auth
+........
+
+Finished in 0.1 seconds
+8 tests, 0 failures
+</code></pre> <h3>Token logic</h3> <p>It looks like we have the basic stuff covered, for now, so let&#39;s create the <code>Token</code> module to handle token generation and verification. Phoenix has a convenient module for these purposes, <a href="https://hexdocs.pm/phoenix/Phoenix.Token.html">Phoenix.Token</a>, and we can build our module wrapping it:</p> <pre><code class="elixir"># apps/passwordless_auth/lib/passwordless_auth/token.ex
+
+defmodule PasswordlessAuth.Token do
+  alias Phoenix.Token, as: PhoenixToken
+
+  @salt &quot;token salt&quot;
+  @max_age :timer.minutes(5) / 1000
+  @secret Application.get_env(:passwordless_auth, __MODULE__)[:secret_key_base]
+
+  def generate(data) when data in [nil, &quot;&quot;], do: {:error, :invalid}
+
+  def generate(data) do
+    {:ok, PhoenixToken.sign(@secret, @salt, data)}
+  end
+
+  def verify(token, data, max_age \\ @max_age) do
+    case PhoenixToken.verify(
+           @secret,
+           @salt,
+           token,
+           max_age: max_age
+         ) do
+      {:ok, ^data} -&gt;
+        {:ok, data}
+
+      {:ok, _other} -&gt;
+        {:error, :invalid}
+
+      {:error, reason} -&gt;
+        {:error, reason}
+    end
+  end
+end
+</code></pre> <ul> <li><code>generate/1</code> takes some <code>data</code> and returns <code>{:ok, token}</code> with the token generated using <code>Phoenix.Token.sign/4</code> unless the <code>data</code> it is receiving is either <code>nil</code> or and empty string, in which case it returns the corresponding <code>{:error, :invalid}</code> tuple.</li> <li><code>verify/3</code> takes a <code>token</code>, <code>data</code> and a <code>max_age</code> and uses <code>Phoenix.Token.verify/4</code> to check id the <code>token</code> corresponds to <code>data</code>, and it has not expired yet.</li> </ul> <p>Let&#39;s add a test module to check that everything works as it should:</p> <pre><code class="elixir"># apps/passwordless_auth/test/passwordless_auth/token_test.exs
+
+defmodule PasswordlessAuth.TokenTest do
+  use ExUnit.Case, async: true
+
+  alias PasswordlessAuth.Token
+
+  describe &quot;.generate/1&quot; do
+    test &quot;returns {:error, :invalid} when value is nil&quot; do
+      assert {:error, :invalid} = Token.generate(nil)
+      assert {:error, :invalid} = Token.generate(&quot;&quot;)
+    end
+
+    test &quot;returns {:ok, token}&quot; do
+      assert {:ok, _token} = Token.generate(&quot;foo&quot;)
+    end
+  end
+
+  describe &quot;.verify/3&quot; do
+    test &quot;returns {:ok, data} when token is valid&quot; do
+      {:ok, token} = Token.generate(&quot;foo&quot;)
+
+      assert {:ok, &quot;foo&quot;} = Token.verify(token, &quot;foo&quot;)
+    end
+
+    test &quot;returns {:error, :invalid} when token is not valid&quot; do
+      {:ok, token} = Token.generate(&quot;foo&quot;)
+
+      assert {:error, :invalid} = Token.verify(token, &quot;bar&quot;)
+    end
+
+    test &quot;returns {:error, reason} when token expires&quot; do
+      {:ok, token} = Token.generate(&quot;foo&quot;)
+
+      Process.sleep(150)
+      assert {:error, :expired} = Token.verify(token, &quot;foo&quot;, 0.1)
+    end
+  end
+end
+</code></pre> <p>Now we can run the tests and see the result:</p> <pre><code>$ mix test test/passwordless_auth/token_test.exs
+==&gt; passwordless_auth
+
+
+  1) test .verify/3 returns {:error, reason} when token expires (PasswordlessAuth.TokenTest)
+     test/passwordless_auth/token_test.exs:30
+     ** (UndefinedFunctionError) function nil.config/1 is undefined or private
+     code: {:ok, token} = Token.generate(&quot;foo&quot;)
+     stacktrace:
+       nil.config(:secret_key_base)
+       (phoenix) lib/phoenix/token.ex:202: Phoenix.Token.get_endpoint_key_base/1
+       (phoenix) lib/phoenix/token.ex:111: Phoenix.Token.sign/4
+       (passwordless_auth) lib/passwordless_auth/token.ex:25: PasswordlessAuth.Token.generate/1
+       test/passwordless_auth/token_test.exs:31: (test)
+</code></pre> <p>It looks like we forgot adding the <code>:secret</code> value in the configuration, so let&#39;s go ahead and set it:</p> <pre><code class="elixir"># apps/passwordless_auth/config/config.exs
+
+# ...
+
+config :passwordless_auth,
+       PasswordlessAuth.Token,
+       secret_key_base: &quot;your_secret_key_base&quot;
+
+</code></pre> <p>To generate the <code>secret_key_base</code> value, you can use the <code>phx.gen.secret</code> mix task. After setting the value and running once more the tests, everything should be working fine now:</p> <pre><code class="bash">$ mix test test/passwordless_auth/token_test.exs
+==&gt; passwordless_auth
+.....
+
+Finished in 0.2 seconds
+5 tests, 0 failures
+</code></pre> <h3>Providing and verifying tokens</h3> <p>Let&#39;s edit the main <code>PasswordlessAuth</code> module and add a new function to provide new tokens by using what we have done so far:</p> <pre><code class="elixir"># apps/passwordless_auth/lib/passwordless_auth.ex
+
+defmodule PasswordlessAuth do
+  alias PasswordlessAuth.{Repo, Token}
+
+  def provide_token_for(repo \\ Repo, email)
+  def provide_token_for(_, email) when email in [nil, &quot;&quot;], do: {:error, :invalid_email}
+
+  def provide_token_for(repo, email) do
+    with true &lt;- Repo.exists?(repo, email),
+         {:ok, token} &lt;- Token.generate(email),
+         :ok &lt;- Repo.save(repo, email, token) do
+      {:ok, token}
+    else
+      false -&gt;
+        {:error, :not_found}
+
+      other -&gt;
+        {:error, :internal_error, other}
+    end
+  end
+end
+</code></pre> <p>Before moving on to adding the verification logic, let&#39;s stop for a second and think about what we need. The function will receive a token, and we want to check not only it corresponds to any of the stored ones in the <code>Repo</code>, but also that the token&#39;s signed value corresponds to the email key under which is stored. Therefore, let&#39;s add a new function to return an email by its token from the <code>Repo</code> module:</p> <pre><code class="elixir"># apps/passwordless_auth/lib/passwordless_auth/repo.ex
+
+defmodule PasswordlessAuth.Repo do
+  # ...
+
+  def find_by_token(pid \\ @name, token),
+    do: GenServer.call(pid, {:find_by_token, token})
+
+  # ...
+
+  def handle_call({:find_by_token, token}, _from, state) do
+    {:reply, Enum.find(state, &amp;(elem(&amp;1, 1) == token)), state}
+  end
+end
+</code></pre> <p><code>find_by_token/2</code> checks if there is an element it the state with the value, returning the tuple of <code>{email, token}</code> or nil if not found. This might not be the most performant way of doing it, but as we have already agreed on that the repo is only going to store a few emails, let&#39;s keep it like this for simplicity&#39;s sake. Let&#39;s test it out:</p> <pre><code class="elixir"># apps/passwordless_auth/test/passwordless_auth/repo_test.exs
+
+defmodule PasswordlessAuth.RepoTest do
+  use ExUnit.Case, async: true
+
+  alias PasswordlessAuth.Repo
+
+  # ...
+
+  describe &quot;.find_by_token/2&quot; do
+    test &quot;returns {email, token} when token exists&quot; do
+      name = :repo_test_8
+      email = &quot;foo@test.com&quot;
+      token = &quot;token-value&quot;
+      {:ok, _pid} = Repo.start_link(name: name, emails: [email])
+      :ok = Repo.save(name, email, token)
+
+      assert {^email, ^token} = Repo.find_by_token(name, token)
+    end
+
+    test &quot;returns nil when token not found&quot; do
+      name = :repo_test_9
+      email = &quot;foo@test.com&quot;
+      token = &quot;token-value&quot;
+      {:ok, _pid} = Repo.start_link(name: name, emails: [email])
+      :ok = Repo.save(name, email, token)
+
+      assert nil == Repo.find_by_token(name, &quot;other-token&quot;)
+    end
+  end
+</code></pre> <pre><code class="bash">$ mix test test/passwordless_auth/repo_test.exs
+==&gt; passwordless_auth
+..........
+
+Finished in 0.1 seconds
+10 tests, 0 failures
+</code></pre> <p>Now we are ready to continue where we left it, so let&#39;s go ahead and add the verification functionality to the <code>PasswordlessAuth</code> module:</p> <pre><code class="elixir"># apps/passwordless_auth/lib/passwordless_auth.ex
+
+defmodule PasswordlessAuth do
+  alias PasswordlessAuth.{Repo, Token}
+
+  # ...
+
+  def verify_token(repo \\ Repo, token) do
+    repo
+    |&gt; Repo.find_by_token(token)
+    |&gt; do_verify()
+  end
+
+  # ...
+
+  defp do_verify(nil), do: {:error, :not_found}
+  defp do_verify({email, token}), do: Token.verify(token, email)
+end
+</code></pre> <p>As we&#39;ve been doing so far, let&#39;s create a test module for the <code>PasswordlessAuth</code> module:</p> <pre><code class="elixir"># apps/passwordless_auth/test/passwordless_auth_test.exs
+
+defmodule PasswordlessAuthTest do
+  use ExUnit.Case, async: true
+
+  alias PasswordlessAuth.Repo
+
+  describe &quot;provide_token_for/2&quot; do
+    test &quot;returns error when email is blank&quot; do
+      assert {:error, :invalid_email} = PasswordlessAuth.provide_token_for(nil)
+      assert {:error, :invalid_email} = PasswordlessAuth.provide_token_for(&quot;&quot;)
+    end
+
+    test &quot;returns error when email does not exist&quot; do
+      repo = :&quot;repo_test_#{__MODULE__}_1&quot;
+      email = &quot;foo@test.com&quot;
+      {:ok, _pid} = Repo.start_link(name: repo, emails: [email])
+
+      assert {:error, :not_found} =
+               PasswordlessAuth.provide_token_for(repo, &quot;not-found-email@test.com&quot;)
+    end
+
+    test &quot;returns token when valid email&quot; do
+      repo = :&quot;repo_test_#{__MODULE__}_2&quot;
+      email = &quot;foo@test.com&quot;
+      {:ok, _pid} = Repo.start_link(name: repo, emails: [email])
+
+      assert {:ok, token} = PasswordlessAuth.provide_token_for(repo, email)
+      assert byte_size(token) &gt; 0
+    end
+  end
+
+  describe &quot;verify_token/2&quot; do
+    test &quot;returns error when token not found&quot; do
+      repo = :&quot;repo_test_#{__MODULE__}_3&quot;
+      email = &quot;foo@test.com&quot;
+      {:ok, _pid} = Repo.start_link(name: repo, emails: [email])
+      {:ok, _token} = PasswordlessAuth.provide_token_for(repo, email)
+
+      assert {:error, :not_found} = PasswordlessAuth.verify_token(repo, &quot;not-found-token&quot;)
+    end
+
+    test &quot;returns value when token valid&quot; do
+      repo = :&quot;repo_test_#{__MODULE__}_4&quot;
+      email = &quot;foo@test.com&quot;
+      {:ok, _pid} = Repo.start_link(name: repo, emails: [email])
+      {:ok, token} = PasswordlessAuth.provide_token_for(repo, email)
+
+      assert {:ok, ^email} = PasswordlessAuth.verify_token(repo, token)
+    end
+  end
+end
+</code></pre> <p>And finally run it to confirm that everything is working as it should:</p> <pre><code class="bash">$ mix test test/passwordless_auth_test.exs
+==&gt; passwordless_auth
+.....
+
+Finished in 0.07 seconds
+5 tests, 0 failures
+
+Randomized with seed 291795
+</code></pre> <p>Yay! Let&#39;s leave it here for now. In the next part of the series, we will take care of sending the authentication link via email to the user, and use this link to verify the token and authenticate a Phoenix Socket connection. In the meantime, don&#39;t forget to check out the source code with the final result of our small experiment:</p> <div class=btn-wrapper> <a href="https://github.com/bigardone/passwordless-auth" target=_blank class=btn><i class="fa fa-github"></i> Source code</a> </div> <p>Happy coding!</p> <div id=disqus_thread></div> <script>
+  /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+  var disqus_shortname = 'codeloveandboards'; // required: replace example with your forum shortname
+  
+  /* * * DON'T EDIT BELOW THIS LINE * * */
+  (function() {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script> <noscript> Please enable JavaScript to view the <a href='//disqus.com/?ref_noscript'>comments powered by Disqus.</a> </noscript> <a class=dsq-brlink href='//disqus.com'> comments powered by <span class=logo-disqus>Disqus</span> </a> </article> </section> </div> </section> <footer id=main_footer> <ul class=article-nav> <li class=previous> <a href="/blog/2018/01/06/phoenix-elm-landing-page-pt-3/"><h4>previous post</h4> <h3> Phoenix & Elm landing page (pt.3) </h3> <div class=meta-data> <hr> posted Jan 6, 2018 on elixir, phoenix, elm </div> </a> </li> <li class=next> </li> </ul> <section> <div class=container> <div class=center> <ul> <li> <a href='/blog'>Archives</a> </li> <li> <a href='//feeds.feedburner.com/CodeLoveAndBoards' target=_blank>RSS</a> </li> </ul> Copyright © 2018 - Ricardo García Vega - Code, Love & Boards! </div> </div> </section> </footer> <script src="../../../../../javascripts/blog-5ddb0520.js"></script> <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  
+  ga('create', 'UA-37802122-1', 'codeloveandboards.com');
+  ga('send', 'pageview');
+</script> <script>
+  _StatHat.push(["_trackCount", "g2pcD9xou7DlR0DtndiwvSBBYU5k", 1.0]);
+</script> </body> </html>
