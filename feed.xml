@@ -14,11 +14,21 @@
     <link rel="alternate" href="http://codeloveandboards.com/blog/2018/06/09/elixir-and-phoenix-basic-passwordless-and-databaseless-authentication-pt-1/"/>
     <id>http://codeloveandboards.com/blog/2018/06/09/elixir-and-phoenix-basic-passwordless-and-databaseless-authentication-pt-1/</id>
     <published>2018-06-09T07:00:00Z</published>
-    <updated>2018-06-09T09:52:29+02:00</updated>
+    <updated>2018-06-09T10:35:21+02:00</updated>
     <author>
       <name>Article Author</name>
     </author>
-    <content type="html">&lt;p&gt;Have you found yourself working on a small project where, at some point,
+    <content type="html">&lt;div class="index"&gt;
+  &lt;p&gt;This post belongs to the &lt;strong&gt;Elixir and Phoenix basic passwordless and databaseless authentication&lt;/strong&gt; series.&lt;/p&gt;
+  &lt;ol&gt;
+    &lt;li&gt;&lt;a href="/blog/2018/06/09/elixir-and-phoenix-basic-passwordless-and-databaseless-authentication-pt-1.html.markdown"&gt;Project setup and the initial functionality for storing and verifying authentication tokens&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;Coming soon...&lt;/li&gt;
+  &lt;/ol&gt;
+
+  &lt;a href="https://github.com/bigardone/passwordless-auth" target="_blank"&gt;&lt;i class="fa fa-github"&gt;&lt;/i&gt; Source code&lt;/a&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Have you found yourself working on a small project where, at some point,
 you are asked to give access to some users to a private part of the
 application or a small admin panel of some sort? Depending on the
 project&amp;#39;s constraints, we can resolve this situation in many different
