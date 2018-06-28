@@ -5,16 +5,16 @@
   <id>http://codeloveandboards.com/blog</id>
   <link href="http://codeloveandboards.com/blog"/>
   <link href="http://codeloveandboards.com/feed.xml" rel="self"/>
-  <updated>2018-06-09T07:00:00Z</updated>
+  <updated>2018-06-20T07:00:00Z</updated>
   <author>
     <name>Blog Author</name>
   </author>
   <entry>
-    <title>Elixir and Phoenix basic passwordless and databaseless authentication (pt.1)</title>
-    <link rel="alternate" href="http://codeloveandboards.com/blog/2018/06/09/elixir-and-phoenix-basic-passwordless-and-databaseless-authentication-pt-1/"/>
-    <id>http://codeloveandboards.com/blog/2018/06/09/elixir-and-phoenix-basic-passwordless-and-databaseless-authentication-pt-1/</id>
-    <published>2018-06-09T07:00:00Z</published>
-    <updated>2018-06-21T08:30:19+02:00</updated>
+    <title>Elixir and Phoenix basic passwordless and databaseless authentication (pt.2)</title>
+    <link rel="alternate" href="http://codeloveandboards.com/blog/2018/06/20/elixir-and-phoenix-basic-passwordless-and-databaseless-authentication-pt-2/"/>
+    <id>http://codeloveandboards.com/blog/2018/06/20/elixir-and-phoenix-basic-passwordless-and-databaseless-authentication-pt-2/</id>
+    <published>2018-06-20T07:00:00Z</published>
+    <updated>2018-06-28T08:44:02+02:00</updated>
     <author>
       <name>Article Author</name>
     </author>
@@ -22,6 +22,380 @@
   &lt;p&gt;This post belongs to the &lt;strong&gt;Elixir and Phoenix basic passwordless and databaseless authentication&lt;/strong&gt; series.&lt;/p&gt;
   &lt;ol&gt;
     &lt;li&gt;&lt;a href="/blog/2018/06/09/elixir-and-phoenix-basic-passwordless-and-databaseless-authentication-pt-1"&gt;Project setup and the initial functionality for storing and verifying authentication tokens&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="/blog/2018/06/20/elixir-and-phoenix-basic-passwordless-and-databaseless-authentication-pt-2"&gt;Sending authentication link emails and the user socket connection&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;Coming soon...&lt;/li&gt;
+  &lt;/ol&gt;
+
+  &lt;a href="https://github.com/bigardone/passwordless-auth" target="_blank"&gt;&lt;i class="fa fa-github"&gt;&lt;/i&gt; Source code&lt;/a&gt;
+&lt;/div&gt;
+
+&lt;p&gt;In the &lt;a href="/blog/2018/06/09/elixir-and-phoenix-basic-passwordless-and-databaseless-authentication-pt-1"&gt;previous part&lt;/a&gt; of the series, we set up the umbrella application for our new project and created the necessary modules for storing and generating authentication tokens. Having this done, the next step is sending emails to valid users, containing the sign-in link that will authenticate them into the system once clicked.&lt;/p&gt;
+
+&lt;p&gt;&lt;img alt="Final result" src="https://monosnap.com/image/5VUT424b4Hu9ITi8r1SGae7HQleCPT.png" /&gt;&lt;/p&gt;
+
+&lt;h3&gt;Sending emails&lt;/h3&gt;
+
+&lt;p&gt;To send emails in an Elixir application I usually rely on &lt;a href="https://github.com/thoughtbot/bamboo"&gt;Bamboo&lt;/a&gt; from the awesome team at &lt;a href="https://thoughtbot.com/"&gt;thoughtbot&lt;/a&gt;, which is not only simple and powerful, but very customizable as well. Let&amp;#39;s go ahead and add the dependency to the project, under the &lt;code&gt;PasswordlessAuthWeb&lt;/code&gt; application:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# apps/passwordless_auth_web/mix.exs
+
+defmodule PasswordlessAuthWeb.Mixfile do
+  use Mix.Project
+
+  # ...
+
+  defp deps do
+    [
+      {:phoenix, &amp;quot;~&amp;gt; 1.3.2&amp;quot;},
+      {:phoenix_pubsub, &amp;quot;~&amp;gt; 1.0&amp;quot;},
+      {:phoenix_html, &amp;quot;~&amp;gt; 2.10&amp;quot;},
+      {:phoenix_live_reload, &amp;quot;~&amp;gt; 1.0&amp;quot;, only: :dev},
+      {:gettext, &amp;quot;~&amp;gt; 0.11&amp;quot;},
+      {:passwordless_auth, in_umbrella: true},
+      {:cowboy, &amp;quot;~&amp;gt; 1.0&amp;quot;},
+      {:bamboo, &amp;quot;~&amp;gt; 0.8&amp;quot;}
+    ]
+  end
+
+  # ...
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Don&amp;#39;t forget to run the necessary &lt;code&gt;deps.get&lt;/code&gt; mix task in order to install it. Next step is configuring Bamboo:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# apps/passwordless_auth_web/config/config.exs
+
+use Mix.Config
+
+# ...
+
+# Bamboo mailer configuration
+config :passwordless_auth_web,
+       PasswordlessAuthWeb.Service.Mailer,
+       adapter: Bamboo.LocalAdapter
+
+# ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In the configuration we are specifying two things:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;The name of the module we are going to use as an interface with &lt;code&gt;Bamboo&lt;/code&gt;&amp;#39;s functionality.&lt;/li&gt;
+&lt;li&gt;The adapter we want to use to send emails.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;For our particular case and while developing the project, we are going to take advantage of the &lt;a href="https://hexdocs.pm/bamboo/Bamboo.LocalAdapter.html"&gt;LocalAdapter&lt;/a&gt; which stores sent emails in memory and offers us a small inbox application where we can view them. In order to have access to this inbox application, we need to mount a new route it in the router, which will be only accessible in the &lt;code&gt;:dev&lt;/code&gt; environment:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# apps/passwordless_auth_web/lib/passwordless_auth_web/router.ex
+
+defmodule PasswordlessAuthWeb.Router do
+  use PasswordlessAuthWeb, :router
+
+  if Mix.env() == :dev, do: forward(&amp;quot;/sent_emails&amp;quot;, Bamboo.EmailPreviewPlug)
+
+  # ...
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The only part we are missing is creating the &lt;code&gt;Mailer&lt;/code&gt; module, so let&amp;#39;s go ahead and add it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# apps/passwordless_auth_web/lib/passwordless_auth_web/service/mailer.ex
+
+defmodule PasswordlessAuthWeb.Service.Mailer do
+  use Bamboo.Mailer, otp_app: :passwordless_auth_web
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If we start the Phoenix server at this point and visit &lt;a href="http://localhost:4000/sent_emails"&gt;http://localhost:4000/sent_emails&lt;/a&gt;, we should see the following message:&lt;/p&gt;
+
+&lt;p&gt;&lt;img alt="Empty inbox" src="https://monosnap.com/image/gB604OQdzH4yWfhptA9PyaxD16M3AD.png" /&gt;&lt;/p&gt;
+
+&lt;p&gt;This is completely fine, as we haven&amp;#39;t sent any emails yet, so let&amp;#39;s go ahead and create the necessary functionality to build up an email containing the authentication link using an email address and a token:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# apps/passwordless_auth_web/lib/passwordless_auth_web/emails/auth_email.
+
+
+defmodule PasswordlessAuthWeb.Emails.AuthEmail do
+  import Bamboo.Email, only: [new_email: 1]
+  import PasswordlessAuthWeb.Router.Helpers, only: [page_url: 4]
+
+  @from &amp;quot;support@passwordlessauth.com&amp;quot;
+
+  def build(email, token) do
+    url = page_url(PasswordlessAuthWeb.Endpoint, :index, [], token: token)
+
+    new_email(
+      to: email,
+      from: @from,
+      subject: &amp;quot;Your authentication link&amp;quot;,
+      html_body: &amp;quot;&amp;quot;&amp;quot;
+      &amp;lt;p&amp;gt;Here is your authentication link:&amp;lt;/p&amp;gt;
+      &amp;lt;a href=&amp;quot;#{url}&amp;quot;&amp;gt;#{url}&amp;lt;/a&amp;gt;
+      &amp;lt;p&amp;gt;It is valid for 5 minutes.&amp;lt;/p&amp;gt;
+      &amp;quot;&amp;quot;&amp;quot;,
+      text_body: &amp;quot;&amp;quot;&amp;quot;
+      Here is your authentication link: \n
+      #{url}\n
+      It is valid for 5 minutes.
+      &amp;quot;&amp;quot;&amp;quot;
+    )
+  end
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;With the token parameter and thanks to Phoenix&amp;#39;s route helpers, we build the new Bamboo email which has the authentication link in its body, and which addressee is the email parameter. For the time being, let&amp;#39;s use the default route that comes with Phoenix out of the box, and which points to &lt;code&gt;/&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Let&amp;#39;s test this out by starting the Phoenix server again and sending a new email:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;$ iex -S mix phx.server
+Erlang/OTP 21 [erts-10.0] [source] [64-bit] [smp:8:8] [ds:8:8:10] [async-threads:1] [hipe]
+
+[info] Running PasswordlessAuthWeb.Endpoint with Cowboy using http://0.0.0.0:4000
+Interactive Elixir (1.6.6) - press Ctrl+C to exit (type h() ENTER for help)
+iex(1)&amp;gt; email = PasswordlessAuthWeb.Emails.AuthEmail.build(&amp;quot;foo@email.com&amp;quot;, &amp;quot;token&amp;quot;)
+%Bamboo.Email{
+  assigns: %{},
+  bcc: nil,
+  cc: nil,
+  from: &amp;quot;support@passwordlessauth.com&amp;quot;,
+  headers: %{},
+  html_body: &amp;quot;&amp;lt;p&amp;gt;Here is your authentication link:&amp;lt;/p&amp;gt;\n&amp;lt;a href=\&amp;quot;http://localhost:4000/?token=token\&amp;quot;&amp;gt;http://localhost:4000/?token=token&amp;lt;/a&amp;gt;\n&amp;lt;p&amp;gt;It is valid for 5 minutes.&amp;lt;/p&amp;gt;\n&amp;quot;,
+  private: %{},
+  subject: &amp;quot;Your authentication link&amp;quot;,
+  text_body: &amp;quot;Here is your authentication link: \n\nhttp://localhost:4000/?token=token\n\nIt is valid for 5 minutes.\n&amp;quot;,
+  to: &amp;quot;foo@email.com&amp;quot;
+}
+iex(2)&amp;gt; PasswordlessAuthWeb.Service.Mailer.deliver_later email
+[debug] Sending email with Bamboo.LocalAdapter:
+
+%Bamboo.Email{assigns: %{}, bcc: [], cc: [], from: {nil, &amp;quot;support@passwordlessauth.com&amp;quot;}, headers: %{}, html_body: &amp;quot;&amp;lt;p&amp;gt;Here is your authentication link:&amp;lt;/p&amp;gt;\n&amp;lt;a href=\&amp;quot;http://localhost:4000/?token=token\&amp;quot;&amp;gt;http://localhost:4000/?token=token&amp;lt;/a&amp;gt;\n&amp;lt;p&amp;gt;It is valid for 5 minutes.&amp;lt;/p&amp;gt;\n&amp;quot;, private: %{}, subject: &amp;quot;Your authentication link&amp;quot;, text_body: &amp;quot;Here is your authentication link: \n\nhttp://localhost:4000/?token=token\n\nIt is valid for 5 minutes.\n&amp;quot;, to: [nil: &amp;quot;foo@email.com&amp;quot;]}
+
+iex(3)&amp;gt;
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If we revisit &lt;a href="http://localhost:4000/sent_emails"&gt;http://localhost:4000/sent_emails&lt;/a&gt;, we can see the email that we just sent:&lt;/p&gt;
+
+&lt;p&gt;&lt;img alt="Bamboo inbox" src="https://monosnap.com/image/PLsLxEljpZnc3KHuJLc7oR3Tl0CLPK.png" /&gt;&lt;/p&gt;
+
+&lt;p&gt;But, how are the users going to request the authentication email?&lt;/p&gt;
+
+&lt;h3&gt;The authentication controller&lt;/h3&gt;
+
+&lt;p&gt;Despite the admin site being an Elm single page application, that relies on a socket connection, we still need to provide a mechanism so users can request the authentication email. Let&amp;#39;s use a controller for this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# apps/passwordless_auth_web/lib/passwordless_auth_web/controllers/authentication_controller.ex
+
+defmodule PasswordlessAuthWeb.AuthenticationController do
+  use PasswordlessAuthWeb, :controller
+
+  alias PasswordlessAuthWeb.{Emails.AuthEmail, Service.Mailer}
+
+  @email_regex ~r/^[A-Za-z0-9._%+-+&amp;#39;]+@[A-Za-z0-9.-]+\.[A-Za-z]+$/
+
+  def create(conn, params) do
+    with %{&amp;quot;email&amp;quot; =&amp;gt; email} &amp;lt;- params,
+         true &amp;lt;- valid_email?(email),
+         {:ok, token} &amp;lt;- PasswordlessAuth.provide_token_for(email) do
+      build_and_deliver_email(email, token)
+    end
+
+    json(conn, %{message: gettext(&amp;quot;auth.message&amp;quot;)})
+  end
+
+  def valid_email?(email), do: Regex.match?(@email_regex, email)
+
+  defp build_and_deliver_email(email, token) do
+    email
+    |&amp;gt; AuthEmail.build(token)
+    |&amp;gt; Mailer.deliver_later()
+  end
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If the received parameters contain the &lt;code&gt;email&lt;/code&gt; with a valid format, it provides a token, builds and delivers the authentication email. On the contrary, for security reasons we don&amp;#39;t want to give any clues to the user if the email provided has a wrong format or it does not exist, so it just returns the same success message. Let&amp;#39;s add a new route for this controller and action:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# apps/passwordless_auth_web/lib/passwordless_auth_web/router.ex
+
+defmodule PasswordlessAuthWeb.Router do
+  use PasswordlessAuthWeb, :router
+
+    if Mix.env() == :dev, do: forward(&amp;quot;/sent_emails&amp;quot;, Bamboo.EmailPreviewPlug)
+
+    # ...
+
+    pipeline :api do
+        plug(:accepts, [&amp;quot;json&amp;quot;])
+    end
+
+    # ...
+
+    scope &amp;quot;/api&amp;quot;, PasswordlessAuthWeb do
+        pipe_through(:api)
+
+        post(&amp;quot;/auth&amp;quot;, AuthenticationController, :create)
+    end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Finally, to check that everything works as we expect, let&amp;#39;s add a new test module for the controller:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# apps/passwordless_auth_web/test/passwordless_auth_web/controllers/authentication_controller_test.exs
+
+defmodule PasswordlessAuthWeb.AuthenticationControllerTest do
+  use PasswordlessAuthWeb.ConnCase
+  use Bamboo.Test
+
+  import PasswordlessAuthWeb.Gettext
+
+  alias PasswordlessAuth.Repo
+  alias PasswordlessAuthWeb.Emails.AuthEmail
+
+  describe &amp;quot;POST /api/auth&amp;quot; do
+    test &amp;quot;always returns success message no matter what parameters receives&amp;quot;, %{conn: conn} do
+      conn = post(conn, authentication_path(conn, :create), email: &amp;quot;foo@test.com&amp;quot;)
+      assert %{&amp;quot;message&amp;quot; =&amp;gt; _} = json_response(conn, 200)
+
+      conn = post(conn, authentication_path(conn, :create), %{})
+      assert assert %{&amp;quot;message&amp;quot; =&amp;gt; _} = json_response(conn, 200)
+    end
+
+    test &amp;quot;delivers the email only when valid email&amp;quot;, %{conn: conn} do
+      email = &amp;quot;#{__MODULE__}@email.com&amp;quot;
+      Repo.add_email(email)
+
+      post(conn, authentication_path(conn, :create), email: email)
+
+      {:ok, token} = Repo.fetch(email)
+
+      assert_delivered_email(AuthEmail.build(email, token))
+    end
+
+    test &amp;quot;does not deliver the email only when invalid email format&amp;quot;, %{conn: conn} do
+      email = &amp;quot;#{__MODULE__}emailcom&amp;quot;
+      Repo.add_email(email)
+
+      post(conn, authentication_path(conn, :create), email: email)
+
+      {:ok, token} = Repo.fetch(email)
+
+      refute_delivered_email(AuthEmail.build(email, token))
+    end
+  end
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If we run it, we can check that it is actually working fine:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="bash"&gt;$ mix test test/passwordless_auth_web/controllers/authentication_controller_test.exs
+==&amp;gt; passwordless_auth
+Test patterns did not match any file: test/passwordless_auth_web/controllers/authentication_controller_test.exs
+==&amp;gt; passwordless_auth_web
+...
+
+Finished in 0.1 seconds
+3 tests, 0 failures
+
+Randomized with seed 547795
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Yay! Now that we have the email generation and delivery sorted out, let&amp;#39;s move on the next important part of our application, the user socket.&lt;/p&gt;
+
+&lt;h3&gt;Authenticating the user socket connection&lt;/h3&gt;
+
+&lt;p&gt;Phoenix creates a default &lt;code&gt;UserSocket&lt;/code&gt; module while bootstrapping a new project, so let&amp;#39;s edit it to add the authentication logic:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# apps/passwordless_auth_web/lib/passwordless_auth_web/channels/user_socket.ex
+
+defmodule PasswordlessAuthWeb.UserSocket do
+  use Phoenix.Socket
+
+  alias PasswordlessAuth
+
+  ## Transports
+  transport(:websocket, Phoenix.Transports.WebSocket)
+
+  def connect(%{&amp;quot;token&amp;quot; =&amp;gt; token}, socket) do
+    case PasswordlessAuth.verify_token(token) do
+      {:ok, email} -&amp;gt;
+        {:ok, assign(socket, :user, %{email: email})}
+
+      _ -&amp;gt;
+        :error
+    end
+  end
+
+  def connect(_, _socket), do: :error
+
+  def id(socket), do: &amp;quot;user_socket:#{socket.assigns.user.email}&amp;quot;
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;connect/2&lt;/code&gt; callback function receives a &lt;code&gt;token&lt;/code&gt; parameter, and using &lt;code&gt;PasswordlessAuth.verify_token/1&lt;/code&gt; checks whether this token is valid or not, assigning to the socket the corresponding email on success. On the other hand, if no &lt;code&gt;token&lt;/code&gt; parameter is received or the verification goes wrong, it returns &lt;code&gt;:error&lt;/code&gt; rejecting the connection. Let&amp;#39;s add some unit tests to ensure that it works as we expect:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# apps/passwordless_auth_web/test/passwordless_auth_web/channels/user_socket_test.exs
+
+defmodule PasswordlessAuthWeb.UserSocketTest do
+  use PasswordlessAuthWeb.ChannelCase, async: true
+
+  alias Phoenix.Socket
+  alias PasswordlessAuth.Repo
+  alias PasswordlessAuthWeb.UserSocket
+
+  describe &amp;quot;connect/2&amp;quot; do
+    test &amp;quot;errors when passing invalid params or token&amp;quot; do
+      assert :error = connect(UserSocket, %{})
+      assert :error = connect(UserSocket, %{&amp;quot;token&amp;quot; =&amp;gt; &amp;quot;invalid-token&amp;quot;})
+    end
+
+    test &amp;quot;joins when passing valid token&amp;quot; do
+      email = &amp;quot;foo@#{__MODULE__}.com&amp;quot;
+      :ok = Repo.add_email(email)
+      {:ok, token} = PasswordlessAuth.provide_token_for(email)
+
+      assert {:ok, %Socket{assigns: %{user: %{email: ^email}}}} =
+               connect(UserSocket, %{&amp;quot;token&amp;quot; =&amp;gt; token})
+    end
+  end
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And run them to check the result:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="bash"&gt;$ mix test test/passwordless_auth_web/channels/user_socket_test.exs
+==&amp;gt; passwordless_auth
+Test patterns did not match any file: test/passwordless_auth_web/channels/user_socket_test.exs
+==&amp;gt; passwordless_auth_web
+..
+
+Finished in 0.06 seconds
+2 tests, 0 failures
+
+Randomized with seed 589379
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Cool, it works! I think this is all for today. In the next part, we will work on the front end side, configuring &lt;a href="https://webpack.js.org/"&gt;webpack&lt;/a&gt; as our asset build tool of choice, adding Elm support to start building the admin single page application, using everything we have done until now to authenticate users. In the meantime, don&amp;#39;t forget to check out the source code with the final result:&lt;/p&gt;
+
+&lt;div class="btn-wrapper"&gt;
+  &lt;a href="https://github.com/bigardone/passwordless-auth" target="_blank" class="btn"&gt;&lt;i class="fa fa-github"&gt;&lt;/i&gt; Source code&lt;/a&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Happy coding!&lt;/p&gt;
+</content>
+  </entry>
+  <entry>
+    <title>Elixir and Phoenix basic passwordless and databaseless authentication (pt.1)</title>
+    <link rel="alternate" href="http://codeloveandboards.com/blog/2018/06/09/elixir-and-phoenix-basic-passwordless-and-databaseless-authentication-pt-1/"/>
+    <id>http://codeloveandboards.com/blog/2018/06/09/elixir-and-phoenix-basic-passwordless-and-databaseless-authentication-pt-1/</id>
+    <published>2018-06-09T07:00:00Z</published>
+    <updated>2018-06-28T08:43:35+02:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;div class="index"&gt;
+  &lt;p&gt;This post belongs to the &lt;strong&gt;Elixir and Phoenix basic passwordless and databaseless authentication&lt;/strong&gt; series.&lt;/p&gt;
+  &lt;ol&gt;
+    &lt;li&gt;&lt;a href="/blog/2018/06/09/elixir-and-phoenix-basic-passwordless-and-databaseless-authentication-pt-1"&gt;Project setup and the initial functionality for storing and verifying authentication tokens&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="/blog/2018/06/20/elixir-and-phoenix-basic-passwordless-and-databaseless-authentication-pt-2"&gt;Sending authentication link emails and the user socket connection&lt;/a&gt;&lt;/li&gt;
     &lt;li&gt;Coming soon...&lt;/li&gt;
   &lt;/ol&gt;
 
@@ -694,7 +1068,7 @@ Finished in 0.07 seconds
 Randomized with seed 291795
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;p&gt;Yay! Let&amp;#39;s leave it here for now. In the next part of the series, we will take care of sending the authentication link via email to the user, and use this link to verify the token and authenticate a Phoenix Socket connection. In the meantime, don&amp;#39;t forget  to check out the source code with the final result of our small experiment:&lt;/p&gt;
+&lt;p&gt;Yay! Let&amp;#39;s leave it here for now. In the next part of the series, we will take care of sending the authentication link via email to the user, and use this link to verify the token and authenticate a Phoenix Socket connection. In the meantime, don&amp;#39;t forget to check out the source code with the final result of our small experiment:&lt;/p&gt;
 
 &lt;div class="btn-wrapper"&gt;
   &lt;a href="https://github.com/bigardone/passwordless-auth" target="_blank" class="btn"&gt;&lt;i class="fa fa-github"&gt;&lt;/i&gt; Source code&lt;/a&gt;
@@ -3288,649 +3662,6 @@ think about the solution so far? Have you happened to run into a similar
 problem? How did you solved it?&lt;/p&gt;
 
 &lt;p&gt;Happy coding!&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <title>Elm and the outer world</title>
-    <link rel="alternate" href="http://codeloveandboards.com/blog/2017/05/15/elm-and-the-outer-world/"/>
-    <id>http://codeloveandboards.com/blog/2017/05/15/elm-and-the-outer-world/</id>
-    <published>2017-05-16T06:57:00Z</published>
-    <updated>2017-10-04T07:36:08+02:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;p&gt;&lt;em&gt;Huge thanks to my teammate &lt;a href="https://github.com/alvivi" target="_blank"&gt;Alvaro&lt;/a&gt; for the Elm masterclasses and his endless patience :)&lt;/em&gt;&lt;/p&gt;
-
-&lt;p&gt;These have been very exciting weeks of development at &lt;a href="https://thebookofeveryone.com"&gt;The Book of Everyone&lt;/a&gt;. We have been migrating a crucial part of our core functionality to Elm. This hard work includes not only front-end stuff, but also other cool features like static assets downloading and caching, running server-side &lt;strong&gt;Elm&lt;/strong&gt; applications through &lt;strong&gt;Elixir&lt;/strong&gt; ports and &lt;strong&gt;Node&lt;/strong&gt;, and creating our &lt;strong&gt;Elm Native modules&lt;/strong&gt; for the not supported stuff. Before these weeks, &lt;strong&gt;Native modules&lt;/strong&gt; were something that I have not used before, so I would like to give you a small introduction to them, just in case you might find it useful in the future. But before, let&amp;#39;s start by understanding how &lt;strong&gt;Elm&lt;/strong&gt; communicates with external code.&lt;/p&gt;
-
-&lt;h2&gt;Elm ports&lt;/h2&gt;
-
-&lt;p&gt;If you are into &lt;strong&gt;Elm&lt;/strong&gt;, then you should probably know that an &lt;strong&gt;Elm&lt;/strong&gt; application is like a bulletproof box, where any interaction with the outside world needs to be done through a very specific API. If you want to communicate with external &lt;strong&gt;JavaScript&lt;/strong&gt; code from your application, you need to use &lt;strong&gt;Ports&lt;/strong&gt; to handle the incoming and outgoing messages. These ports have to be defined correctly as any other function in &lt;strong&gt;Elm&lt;/strong&gt;, so nothing weird happens to break the application. The problem with this is that your project is going to be tightly coupled to external code, which makes it difficult to share or reuse, especially when building libraries that might be included in other projects.&lt;/p&gt;
-
-&lt;p&gt;To understand it better let&amp;#39;s build a very simple application which has an HTML file input, and that renders a preview of any selected image with it.&lt;/p&gt;
-
-&lt;h3&gt;The setup&lt;/h3&gt;
-
-&lt;p&gt;Let&amp;#39;s start by creating a new &lt;strong&gt;Elm&lt;/strong&gt; project by running the following command from your terminal:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;$ elm package install elm-lang/html -y
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;The output is something like this:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;Starting downloads...
-
-  ● elm-lang/html 2.0.0
-  ● elm-lang/virtual-dom 2.0.4
-  ● elm-lang/core 5.1.1
-
-Packages configured successfully!
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;If you check the folder&amp;#39;s content, you can find an &lt;code&gt;elm-stuff&lt;/code&gt; folder and a &lt;code&gt;elm-package.json&lt;/code&gt; file. Let&amp;#39;s open it to edit its content to be something similar to the following:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="json"&gt;{
-    &amp;quot;version&amp;quot;: &amp;quot;1.0.0&amp;quot;,
-    &amp;quot;summary&amp;quot;: &amp;quot;helpful summary of your project, less than 80 characters&amp;quot;,
-    &amp;quot;repository&amp;quot;: &amp;quot;https://github.com/user/project.git&amp;quot;,
-    &amp;quot;license&amp;quot;: &amp;quot;BSD3&amp;quot;,
-    &amp;quot;source-directories&amp;quot;: [
-        &amp;quot;.&amp;quot;
-    ],
-    &amp;quot;exposed-modules&amp;quot;: [],
-    &amp;quot;dependencies&amp;quot;: {
-        &amp;quot;elm-lang/core&amp;quot;: &amp;quot;5.1.1 &amp;lt;= v &amp;lt; 6.0.0&amp;quot;,
-        &amp;quot;elm-lang/html&amp;quot;: &amp;quot;2.0.0 &amp;lt;= v &amp;lt; 3.0.0&amp;quot;
-    },
-    &amp;quot;elm-version&amp;quot;: &amp;quot;0.18.0 &amp;lt;= v &amp;lt; 0.19.0&amp;quot;
-}
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;I usually create an &lt;code&gt;src&lt;/code&gt; folder as the main directory of my project, so let&amp;#39;s update the config file to reflect this...&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="json"&gt;{
-    ...
-
-    &amp;quot;source-directories&amp;quot;: [
-        &amp;quot;src&amp;quot;
-    ],
-
-    ...
-}
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;...and create the &lt;em&gt;src&lt;/em&gt; folder:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;$ mkdir src
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Next,  let&amp;#39;s create an &lt;em&gt;src/Main.elm&lt;/em&gt; file with the following content:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- src/Main.elm
-
-module Main exposing (main)
-
-import Html exposing (Html, text)
-
-
-main : Html msg
-main =
-    text &amp;quot;Hello, Elm!&amp;quot;
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;We are also going to create a very basic &lt;em&gt;src/index.html&lt;/em&gt; in which we are going to render the &lt;strong&gt;Elm&lt;/strong&gt; application:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="html"&gt;&amp;lt;!-- src/index.html --&amp;gt;
-
-&amp;lt;!DOCTYPE html&amp;gt;
-&amp;lt;html&amp;gt;
-  &amp;lt;head&amp;gt;
-    &amp;lt;meta charset=&amp;quot;utf-8&amp;quot; /&amp;gt;
-    &amp;lt;title&amp;gt;Elm FileReader&amp;lt;/title&amp;gt;
-  &amp;lt;/head&amp;gt;
-  &amp;lt;body&amp;gt;
-    &amp;lt;div id=&amp;quot;main&amp;quot;&amp;gt;&amp;lt;/div&amp;gt;
-    &amp;lt;script src=&amp;quot;main.js&amp;quot;&amp;gt;&amp;lt;/script&amp;gt;
-    &amp;lt;script&amp;gt;
-      const elmDiv = document.querySelector(&amp;#39;#main&amp;#39;);
-
-      if (elmDiv) {
-        const app = Elm.Main.embed(elmDiv);
-      }
-    &amp;lt;/script&amp;gt;
-  &amp;lt;/body&amp;gt;
-&amp;lt;/html&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Once these two files are ready, let&amp;#39;s build the project using Elm&amp;#39;s make:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;$ elm make --warn --debug src/Main.elm --output src/main.js
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Now we can start Elm&amp;#39;s reactor by typing &lt;code&gt;elm reactor&lt;/code&gt; and visit &lt;a href="http://localhost:8000/src/index.html"&gt;http://localhost:8000/src/index.html&lt;/a&gt; to check that the &lt;code&gt;Hello, Elm!&lt;/code&gt; text gets displayed in our browser :)&lt;/p&gt;
-
-&lt;h3&gt;Elm basic modules&lt;/h3&gt;
-
-&lt;p&gt;Now that we have setup the project and we have checked that everything is working fine let&amp;#39;s start building the basic &lt;strong&gt;Elm Architecture&lt;/strong&gt; modules. The first of these modules is the &lt;code&gt;Model&lt;/code&gt;, so let&amp;#39;s add a new &lt;em&gt;src/Model.elm&lt;/em&gt; file with the following content:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- src/Model.elm
-
-module Model exposing (..)
-
-
-type ImageData e s
-    = NotLoaded
-    | Loading
-    | Error e
-    | Success s
-
-
-type alias Model =
-    { imageData : ImageData String String }
-
-
-initialModel : Model
-initialModel =
-    { imageData = NotLoaded }
-
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;The model consist of an &lt;code&gt;ImageData&lt;/code&gt; type which can have different values:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;NotLoaded&lt;/code&gt; for the initial state.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;Loading&lt;/code&gt; for when the file is selected, and it calls the port for reading the file&amp;#39;s content.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;Error r&lt;/code&gt; represents a failure while reading the file.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;Success s&lt;/code&gt; means that reading the file is successful, having its binary content.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Now let&amp;#39;s define a default message, by creating a &lt;em&gt;src/Messages.elm&lt;/em&gt; file:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- src/Messages.elm
-
-module Messages exposing (Msg(..))
-
-type Msg
-    = NoOp
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Let&amp;#39;s do the same with the &lt;code&gt;Update&lt;/code&gt; module, to handle the &lt;code&gt;NoOp&lt;/code&gt; message:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- src/Update.elm
-
-module Update exposing (update)
-
-import Messages exposing (Msg(..))
-import Model exposing (..)
-
-
-update : Msg -&amp;gt; Model -&amp;gt; ( Model, Cmd Msg )
-update msg model =
-    case msg of
-        NoOp -&amp;gt;
-            model ! []
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Next, we can create the &lt;code&gt;View&lt;/code&gt; module as follows:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- src/View.elm
-
-module View exposing (view)
-
-import Html exposing (..)
-import Html.Attributes exposing (..)
-import Messages exposing (Msg(..))
-import Model exposing (Model, ImageData(..))
-
-
-view : Model -&amp;gt; Html Msg
-view model =
-    section
-        [ sectionStyles ]
-        [ imageView model.imageData
-        , input
-            [ type_ &amp;quot;file&amp;quot;
-            , accept &amp;quot;image/*&amp;quot;
-            ]
-            []
-        ]
-
-
-sectionStyles : Html.Attribute Msg
-sectionStyles =
-    style
-        [ ( &amp;quot;height&amp;quot;, &amp;quot;100vh&amp;quot; )
-        , ( &amp;quot;display&amp;quot;, &amp;quot;flex&amp;quot; )
-        , ( &amp;quot;justify-content&amp;quot;, &amp;quot;center&amp;quot; )
-        , ( &amp;quot;align-items&amp;quot;, &amp;quot;center&amp;quot; )
-        , ( &amp;quot;flex-direction&amp;quot;, &amp;quot;column&amp;quot; )
-        ]
-
-
-imageView : ImageData String String -&amp;gt; Html Msg
-imageView imageData =
-    case imageData of
-        NotLoaded -&amp;gt;
-            p
-                []
-                [ text &amp;quot;Choose an image file using the selector below...&amp;quot; ]
-
-        Loading -&amp;gt;
-            p
-
-                [ text &amp;quot;Loading...&amp;quot; ]
-
-        Error error -&amp;gt;
-            p
-                []
-                [ text error ]
-
-        Success binary -&amp;gt;
-            img
-                [ style
-                    [ ( &amp;quot;max-height&amp;quot;, &amp;quot;300px&amp;quot; )
-                    , ( &amp;quot;margin-bottom&amp;quot;, &amp;quot;3rem&amp;quot; )
-                    ]
-                , src binary
-                ]
-                []
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Please note that in the &lt;code&gt;imageView&lt;/code&gt; function we render the necessary HTML depending on the model&amp;#39;s &lt;code&gt;imageData&lt;/code&gt; current value, proving how convenient is using a union type as its value in this case.&lt;/p&gt;
-
-&lt;p&gt;To wrap everything together let&amp;#39;s update the original &lt;code&gt;Main&lt;/code&gt; module, and make it look like this:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- src/Main.elm
-
-module Main exposing (..)
-
-import Html exposing (Html)
-import Messages exposing (Msg(..))
-import Model exposing (Model, initialModel)
-import Update exposing (update)
-import View exposing (view)
-
-
-init : ( Model, Cmd Msg )
-init =
-    initialModel ! []
-
-
-main : Program Never Model Msg
-main =
-    Html.program
-        { init = init
-        , view = view
-        , update = update
-        , subscriptions = (\_ -&amp;gt; Sub.none)
-        }
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;To check the result of these changes, build the project again and visit &lt;a href="http://localhost:8000/src/index.html"&gt;http://localhost:8000/src/index.html&lt;/a&gt;, seeing something similar to:&lt;/p&gt;
-
-&lt;p&gt;&lt;img alt="Final result 1" src="../../../../../images/blog/elm-native-modules/final-result-1-4dea1d1e.jpg" /&gt;&lt;/p&gt;
-
-&lt;p&gt;Let&amp;#39;s move on to the ports part. What we want to do is, once a file is selected, read its binary content using JavaScript&amp;#39;s &lt;a href="https://developer.mozilla.org/en-US/docs/Web/API/FileReader"&gt;FileReader&lt;/a&gt; object, and return it to the application to render the image. Having this in mind, let&amp;#39;s create an &lt;em&gt;src/Ports.elm&lt;/em&gt; file with the two different ports we need:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- src/Ports.elm
-
-port module Ports exposing (fileSelected, fileLoaded)
-
-import Json.Decode as JD
-
-
--- Out ports
-
-
-port fileSelected : JD.Value -&amp;gt; Cmd msg
-
-
-
--- In ports
-
-
-port fileLoaded : (String -&amp;gt; msg) -&amp;gt; Sub msg
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;The &lt;code&gt;fileSelected&lt;/code&gt; port gets triggered once we select a file using the input in the view, so let&amp;#39;s update the view to add the &lt;code&gt;on change&lt;/code&gt; event:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- src/View.elm
-
-module View exposing (view)
-
-import Html.Events exposing (on)
-import Json.Decode as JD
-
--- ...
-
-view : Model -&amp;gt; Html Msg
-view model =
-    section
-        [ sectionStyles ]
-        [ imageView model.imageData
-        , input
-            [ type_ &amp;quot;file&amp;quot;
-            , accept &amp;quot;image/*&amp;quot;
-            , on &amp;quot;change&amp;quot; &amp;lt;| JD.map FileSelected JD.value
-            ]
-            []
-        ]
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;The change event triggers a new &lt;code&gt;FileSelected&lt;/code&gt; message that we still need to define in the &lt;code&gt;Messages&lt;/code&gt; module, so let&amp;#39;s add it:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- src/Messages.elm
-
-module Messages exposing (Msg(..))
-
-import Json.Decode as JD
-
-
-type Msg
-    = FileSelected JD.Value
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;We have to edit as well the &lt;code&gt;Update&lt;/code&gt; module to handle the new message:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- src/Update.elm
-
-module Update exposing (update)
-
-import Ports exposing (fileSelected)
--- ...
-
-
-update : Msg -&amp;gt; Model -&amp;gt; ( Model, Cmd Msg )
-update msg model =
-    case msg of
-        FileSelected event -&amp;gt;
-            { model | imageData = Loading } ! [ fileSelected event ]
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;The &lt;code&gt;FileSelected&lt;/code&gt; message has the &lt;code&gt;event&lt;/code&gt;, which is sent through the port to the outer world, and to which we can now subscribe from the &lt;code&gt;index.html&lt;/code&gt; file, so let&amp;#39;s update it:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="html"&gt;&amp;lt;!-- src/index.html --&amp;gt;
-
-&amp;lt;!DOCTYPE html&amp;gt;
-&amp;lt;html&amp;gt;
-  &amp;lt;head&amp;gt;
-    &amp;lt;meta charset=&amp;quot;utf-8&amp;quot; /&amp;gt;
-    &amp;lt;title&amp;gt;Elm FileReader&amp;lt;/title&amp;gt;
-  &amp;lt;/head&amp;gt;
-
-  &amp;lt;body&amp;gt;
-    &amp;lt;div id=&amp;quot;main&amp;quot;&amp;gt;&amp;lt;/div&amp;gt;
-    &amp;lt;script src=&amp;quot;main.js&amp;quot;&amp;gt;&amp;lt;/script&amp;gt;
-    &amp;lt;script&amp;gt;
-      const elmDiv = document.querySelector(&amp;#39;#main&amp;#39;);
-
-      if (elmDiv) {
-        const app = Elm.Main.embed(elmDiv);
-
-        app.ports.fileSelected.subscribe(function (e) {
-          const input = e.target;
-          const file = input.files[0];
-          const reader = new FileReader();
-
-          reader.onload = (function (event) {
-            const binary = event.target.result;
-
-            console.log(&amp;#39;Binary size&amp;#39;, binary.length);
-
-            app.ports.fileLoaded.send(binary);
-          });
-
-          reader.onerror = (function (err) {
-            console.error(err);
-          });
-
-          reader.readAsDataURL(file);
-        });
-      }
-    &amp;lt;/script&amp;gt;
-  &amp;lt;/body&amp;gt;
-&amp;lt;/html&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;To receive messages from &lt;strong&gt;Elm&lt;/strong&gt;, we only need to subscribe to any of the defined ports. In this case &lt;code&gt;app.ports.fileSelected.subscribe&lt;/code&gt; receives the event triggered once selected the file, takes the file and using &lt;code&gt;FileReader&lt;/code&gt; tries to load the content. If it is successful, it logs through the console its length and sends the content through the previous defined &lt;code&gt;fileLoaded&lt;/code&gt; port. Let&amp;#39;s rebuild the project and refresh the browser to check if it works correctly:&lt;/p&gt;
-
-&lt;p&gt;&lt;img alt="Final result 2" src="../../../../../images/blog/elm-native-modules/final-result-2-9fb60b70.jpg" /&gt;&lt;/p&gt;
-
-&lt;p&gt;Cool, it seems to be working perfectly. However, we still need to handle the fileLoaded port to set the file content into the application&amp;#39;s model and render it. As in the &lt;strong&gt;JavaScript&lt;/strong&gt; side, &lt;strong&gt;Elm&lt;/strong&gt; handles external ports by subscribing to them, so let&amp;#39;s create a new &lt;em&gt;src/Subscriptions.elm&lt;/em&gt; file with the following content:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- src/Subscriptions.elm
-
-module Subscriptions exposing (subscriptions)
-
-import Messages exposing (Msg(..))
-import Model exposing (Model)
-import Ports exposing (fileLoaded)
-
-
-subscriptions : Model -&amp;gt; Sub Msg
-subscriptions model =
-    Sub.batch [ fileLoaded FileLoaded ]
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Don&amp;#39;t forget about updating the &lt;code&gt;Main&lt;/code&gt; module, so it uses the &lt;code&gt;subscriptions&lt;/code&gt; function:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- src/Main.elm
-
-module Main exposing (..)
-
-import Subscriptions exposing (subscriptions)
--- ...
-
-
-main : Program Never Model Msg
-main =
-    Html.program
-        { init = init
-        , view = view
-        , update = update
-        , subscriptions = subscriptions
-        }
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;The &lt;code&gt;fileLoaded&lt;/code&gt; port will is going to be handled by a new &lt;code&gt;FileLoaded&lt;/code&gt; message with the content of the file, which we have to add to the &lt;code&gt;Messages&lt;/code&gt; module:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- src/Messages.elm
-
-module Messages exposing (Msg(..))
-
--- ...
-
-
-type Msg
-    = FileSelected JD.Value
-    | FileLoaded String
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Finally, we have to edit the &lt;code&gt;Update&lt;/code&gt; module as well and implement the corresponding handler for it:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- src/Update.elm
-
-module Update exposing (update)
-
--- ...
-
-update : Msg -&amp;gt; Model -&amp;gt; ( Model, Cmd Msg )
-update msg model =
-    case msg of
-        -- ...
-
-        FileLoaded binary -&amp;gt;
-            { model | imageData = Success binary } ! []
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Setting the &lt;code&gt;imageData&lt;/code&gt; key of the model as &lt;code&gt;Success&lt;/code&gt; with the content of the file makes the &lt;code&gt;view&lt;/code&gt; function render an image with that content as its &lt;code&gt;src&lt;/code&gt; attribute, displaying the selected image in the browser. Let&amp;#39;s rebuild the project and check it out:&lt;/p&gt;
-
-&lt;p&gt;&lt;img alt="Final result 3" src="../../../../../images/blog/elm-native-modules/final-result-3-16d298ec.jpg" /&gt;&lt;/p&gt;
-
-&lt;p&gt;It works, yay! In some cases, this is good enough. We have our application which depends on some ports to run properly, but as we do not need to use in any other place in the project, we can leave it like this. However, what if we want to reuse it somewhere else? It forces us, not only to take the &lt;strong&gt;Elm&lt;/strong&gt; code but the related &lt;strong&gt;JavaScript&lt;/strong&gt; as well, which in the new project might be handled very differently. Wouldn&amp;#39;t it better having that &lt;strong&gt;JavaScript&lt;/strong&gt; code encapsulated within the &lt;strong&gt;Elm&lt;/strong&gt; application itself?&lt;/p&gt;
-
-&lt;h2&gt;Elm Native modules&lt;/h2&gt;
-
-&lt;p&gt;Fortunately, &lt;strong&gt;Elm&lt;/strong&gt; has another way of dealing with external code, which is by using &lt;strong&gt;Native modules&lt;/strong&gt;. These modules, usually written in &lt;strong&gt;Javascript&lt;/strong&gt;, can be called from anywhere in your application instead of having to use ports. Some of the downsides are:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;The Native API &lt;strong&gt;is not officially documented&lt;/strong&gt; and usually changes between different Elm versions making your application harder to upgrade and maintain.&lt;/li&gt;
-&lt;li&gt;Elm applications using Native modules can make it have runtime errors due to relying on unsafe &lt;strong&gt;Javascript&lt;/strong&gt; code, also making it more difficult to debug.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Although using custom &lt;strong&gt;Native modules&lt;/strong&gt; is not usually recommended for these (and more) reasons, sometimes it makes sense using them, so let&amp;#39;s refactor our application to remove the ports and move the external &lt;strong&gt;JavaScript&lt;/strong&gt; code to a &lt;strong&gt;Native&lt;/strong&gt; module.&lt;/p&gt;
-
-&lt;h3&gt;The setup&lt;/h3&gt;
-
-&lt;p&gt;The first thing we need to do is updating the the &lt;em&gt;elm-package.json&lt;/em&gt; file adding these two changes:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="json"&gt;{
-    ...
-    &amp;quot;repository&amp;quot;: &amp;quot;https://github.com/bigardone/elm-file-reader.git&amp;quot;,
-    &amp;quot;native-modules&amp;quot;: true
-}
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;We need to add a proper &lt;code&gt;repository&lt;/code&gt; name, which is vital for defining Native modules, and we also have to tell &lt;strong&gt;Elm&lt;/strong&gt; that this project is going to use &lt;strong&gt;Native&lt;/strong&gt; modules by setting &lt;code&gt;native-modules&lt;/code&gt; to &lt;code&gt;true&lt;/code&gt;.&lt;/p&gt;
-
-&lt;h3&gt;The Native module&lt;/h3&gt;
-
-&lt;p&gt;Next, let&amp;#39;s create a new file in this path &lt;em&gt;src/Native/FileReader.js&lt;/em&gt; with the following content:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="javascript"&gt;// src/Native/FileReader.js
-
-var _bigardone$elm_file_reader$Native_FileReader = (function () {
-  function readFile(e) {
-    // Content here...
-  }
-
-  return {
-    readFile,
-  };
-}());
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Here comes the tricky part. When compiling to &lt;strong&gt;Javascript&lt;/strong&gt;, &lt;strong&gt;Elm&lt;/strong&gt; takes the repository&amp;#39;s name and username specified in the &lt;em&gt;elm-package.json&lt;/em&gt; file to define the different functions, and this is the reason why naming your Native module this way is so important. Otherwise, it will not find your module at runtime. So we start by defining a &lt;code&gt;_bigardone$elm_file_reader$Native_FileReader&lt;/code&gt; function, where &lt;code&gt;_bighardone$elm_file_reader&lt;/code&gt; corresponds to the repository&amp;#39;s user name and name. The final &lt;code&gt;$Native_FileReader&lt;/code&gt; chunk of the name, corresponds to the module namespace, in this case, &lt;code&gt;Native.FileReader&lt;/code&gt;. We also declare a readFile function, in which we are going to implement the reading logic. Finally, we return an object with the exposed functions of this module.&lt;/p&gt;
-
-&lt;p&gt;So far so good. Now let&amp;#39;s add the missing functionality:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="javascript"&gt;// src/Native/FileReader.js
-
-var _bigardone$elm_file_reader$Native_FileReader = (function () {
-  function readFile(e) {
-    return _elm_lang$core$Native_Scheduler.nativeBinding(function (cb) {
-      var input = e.target;
-      var file = input.files[0];
-      var reader = new FileReader();
-
-      reader.onload = (function (event) {
-        var binary = event.target.result;
-
-        console.log(&amp;#39;Binary size&amp;#39;, binary.length);
-
-        cb(_elm_lang$core$Native_Scheduler.succeed(binary));
-      });
-
-      reader.onerror = (function (err) {
-        cb(_elm_lang$core$Native_Scheduler.fail(err.toString()));
-      });
-
-      reader.readAsDataURL(file);
-    });
-  }
-
-  return {
-    readFile,
-  };
-}());
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;As reading a file is not only async but an impure action in &lt;strong&gt;Elm&lt;/strong&gt; terms, we have to use a &lt;code&gt;Task&lt;/code&gt; for it. That is why it returns a &lt;code&gt;_elm_lang$core$Native_Scheduler.nativeBinding&lt;/code&gt; that takes a callback to use it once the task finishes. The rest of the code is pretty similar to the ports version, except for the fact that instead of calling a port when is ready or there is an error, it returns the callback with either a &lt;code&gt;succeed&lt;/code&gt; or a &lt;code&gt;fail&lt;/code&gt; call to tell Elm&amp;#39;s runtime whether the task is successful or not.&lt;/p&gt;
-
-&lt;h2&gt;Refactoring the existing modules&lt;/h2&gt;
-
-&lt;p&gt;Once the native module is ready, let&amp;#39;s get rid of the old modules we do not need any more, which are &lt;code&gt;Ports&lt;/code&gt; and &lt;code&gt;Subscriptions&lt;/code&gt;.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;$ rm src/Ports.elm src/Subscriptions.elm
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;This change is going to break the build, so let&amp;#39;s update the &lt;code&gt;Main&lt;/code&gt; module to remove the corresponding imports and the subscriptions:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- src/Main.elm
-
-module Main exposing (..)
-
--- ...
-
-main : Program Never Model Msg
-main =
-    Html.program
-        { init = init
-        -- ...
-        , subscriptions = (\_ -&amp;gt; Sub.none)
-        }
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Same happens with the &lt;code&gt;Update&lt;/code&gt; module. We no longer have to use a port for reading the file content, so let&amp;#39;s edit it:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- src/Update.elm
-
-module Update exposing (update)
-
--- ...
-import Native.FileReader
-import Task
-
-
-update : Msg -&amp;gt; Model -&amp;gt; ( Model, Cmd Msg )
-update msg model =
-    case msg of
-        FileSelected event -&amp;gt;
-            { model | imageData = Loading } ! [ readFile event ]
-
-        FileLoaded (Ok binary) -&amp;gt;
-            { model | imageData = Success binary } ! []
-
-        FileLoaded (Err error) -&amp;gt;
-            { model | imageData = Error error } ! []
-
-
-readFile : JD.Value -&amp;gt; Cmd Msg
-readFile =
-    Native.FileReader.readFile &amp;gt;&amp;gt; Task.attempt FileLoaded
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;In the &lt;code&gt;FileSelected event&lt;/code&gt; message, along with the model, it now returns the &lt;code&gt;readFile event&lt;/code&gt; command, which uses the new &lt;code&gt;Native.FileReader.readFile&lt;/code&gt; function defined previously to read the selected file&amp;#39;s content. As it is an asynchronous action and it might fail, we use &lt;code&gt;Task.attempt&lt;/code&gt; to call it, passing the &lt;code&gt;FileLoaded&lt;/code&gt; message to handle the result of the task, setting the content in the model when succeeds or the error when it fails. Changing this, forces us to change as well the &lt;code&gt;Messages&lt;/code&gt; module to add this new message type:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- src/Messages.elm
-
-
-module Messages exposing (Msg(..))
-
-import Json.Decode as JD
-
-
-type Msg
-    = FileSelected JD.Value
-    | FileLoaded (Result String String)
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;The new &lt;code&gt;FileLoaded&lt;/code&gt; type consists of a &lt;code&gt;Result&lt;/code&gt; with a &lt;code&gt;String&lt;/code&gt; for the error and another &lt;code&gt;String&lt;/code&gt; for the binary content of the file. If we build the project again with &lt;code&gt;elm make --warn --debug src/Main.elm --output src/main.js&lt;/code&gt;, start the  reactor with &lt;code&gt;elm reactor&lt;/code&gt; and visit &lt;a href="http://localhost:8000/src/index.html"&gt;http://localhost:8000/src/index.html&lt;/a&gt;, everything should be working as before:&lt;/p&gt;
-
-&lt;p&gt;&lt;img alt="Final result 4" src="../../../../../images/blog/elm-native-modules/final-result-4-8ec3925b.jpg" /&gt;&lt;/p&gt;
-
-&lt;p&gt;And in fact it does, yay! Now our Elm application doesn&amp;#39;t depend on the JavaScript in the &lt;em&gt;index.htlm&lt;/em&gt; to work. Moreover, if we visit &lt;a href="http://localhost:8000/src/Main.elm"&gt;http://localhost:8000/src/Main.elm&lt;/a&gt; in our browser, which runs the Elm code without the JavaScript in the index.html file, everything works perfectly.&lt;/p&gt;
-
-&lt;h2&gt;Conclusion&lt;/h2&gt;
-
-&lt;p&gt;While building &lt;strong&gt;Elm&lt;/strong&gt; applications, it is very common to use external &lt;strong&gt;JavaScript&lt;/strong&gt; at some point. Ports are the official and safe way to go, but sometimes you need to encapsulate that external code in your application&amp;#39;s core, and for that you can use &lt;strong&gt;Native modules&lt;/strong&gt;, always knowing the drawbacks and at your own risk.&lt;/p&gt;
-
-&lt;p&gt;Happy coding!&lt;/p&gt;
-
-&lt;div class="btn-wrapper"&gt;
-  &lt;a class="btn" href="https://github.com/bigardone/elm-file-reader" target="_blank"&gt;&lt;i class="fa fa-github"&gt;&lt;/i&gt; Source code&lt;/a&gt;
-  &lt;a class="btn" href="https://github.com/bigardone/elm-file-reader/ports" target="_blank"&gt;&lt;i class="fa fa-github"&gt;&lt;/i&gt; Ports version source code&lt;/a&gt;
-&lt;/div&gt;
 </content>
   </entry>
 </feed>
