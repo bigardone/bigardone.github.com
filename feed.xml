@@ -14,7 +14,7 @@
     <link rel="alternate" href="http://codeloveandboards.com/blog/2018/08/31/elixir-and-phoenix-basic-passwordless-and-databaseless-authentication-pt-3/"/>
     <id>http://codeloveandboards.com/blog/2018/08/31/elixir-and-phoenix-basic-passwordless-and-databaseless-authentication-pt-3/</id>
     <published>2018-08-31T07:00:00Z</published>
-    <updated>2018-09-01T08:36:32+02:00</updated>
+    <updated>2018-09-01T08:37:09+02:00</updated>
     <author>
       <name>Article Author</name>
     </author>
@@ -298,7 +298,7 @@ main =
         }
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;p&gt;We probably still have the default layout template from *&lt;em&gt;Phoenix&lt;/em&gt;,* so let&amp;#39;s replace its content with the following:&lt;/p&gt;
+&lt;p&gt;We probably still have the default layout template from &lt;strong&gt;Phoenix&lt;/strong&gt;, so let&amp;#39;s replace its content with the following:&lt;/p&gt;
 
 &lt;pre&gt;&lt;code class="html"&gt;&amp;lt;!-- apps/passwordless_auth_web/lib/passwordless_auth_web/templates/layout/app.html.eex  --&amp;gt;
 
