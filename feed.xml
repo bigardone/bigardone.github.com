@@ -14,7 +14,7 @@
     <link rel="alternate" href="http://codeloveandboards.com/blog/2018/08/31/elixir-and-phoenix-basic-passwordless-and-databaseless-authentication-pt-3/"/>
     <id>http://codeloveandboards.com/blog/2018/08/31/elixir-and-phoenix-basic-passwordless-and-databaseless-authentication-pt-3/</id>
     <published>2018-08-31T07:00:00Z</published>
-    <updated>2018-09-01T08:37:09+02:00</updated>
+    <updated>2018-09-01T08:47:53+02:00</updated>
     <author>
       <name>Article Author</name>
     </author>
@@ -1351,7 +1351,7 @@ end
 &lt;li&gt;&lt;code&gt;handle_in(&amp;quot;sign_out&amp;quot;, _, _)&lt;/code&gt; takes the assigned email and invalidates its token in the repository, so cannot use it again.&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;p&gt;So that&amp;#39;s pretty much it. We finally have our basic &lt;strong&gt;Elm&lt;/strong&gt; SPA admin panel, backed with a &lt;strong&gt;Phoenix&lt;/strong&gt; passwordless and databaseless system. While I was writing this post, I have refactored many parts of the application so I probably might have missed including some of the changes. Therefore, don&amp;#39;t forget to check out the source code for the missing pieces. &lt;strong&gt;Elm 0.19.0&lt;/strong&gt; just came out, so I&amp;#39;m planning to write a new part about upgrading it, once it has proper support for Websockets.&lt;/p&gt;
+&lt;p&gt;So that&amp;#39;s pretty much it. We finally have our basic &lt;strong&gt;Elm&lt;/strong&gt; SPA admin panel, backed with a &lt;strong&gt;Phoenix&lt;/strong&gt; passwordless and databaseless system. While I was writing this post, I have refactored many parts of the application so I probably might have missed including some of the changes. Therefore, don&amp;#39;t forget to check out the source code for the missing pieces, and sorry for any inconvenience. &lt;strong&gt;Elm 0.19.0&lt;/strong&gt; just came out, so I&amp;#39;m planning to write a new part about upgrading it, once it has proper support for Websockets.&lt;/p&gt;
 
 &lt;p&gt;Happy coding!&lt;/p&gt;
 
