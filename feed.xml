@@ -14,7 +14,7 @@
     <link rel="alternate" href="http://codeloveandboards.com/blog/2018/06/20/elixir-and-phoenix-basic-passwordless-and-databaseless-authentication-pt-2/"/>
     <id>http://codeloveandboards.com/blog/2018/06/20/elixir-and-phoenix-basic-passwordless-and-databaseless-authentication-pt-2/</id>
     <published>2018-06-20T07:00:00Z</published>
-    <updated>2018-06-28T08:44:02+02:00</updated>
+    <updated>2018-09-01T07:53:25+02:00</updated>
     <author>
       <name>Article Author</name>
     </author>
@@ -23,7 +23,7 @@
   &lt;ol&gt;
     &lt;li&gt;&lt;a href="/blog/2018/06/09/elixir-and-phoenix-basic-passwordless-and-databaseless-authentication-pt-1"&gt;Project setup and the initial functionality for storing and verifying authentication tokens&lt;/a&gt;&lt;/li&gt;
     &lt;li&gt;&lt;a href="/blog/2018/06/20/elixir-and-phoenix-basic-passwordless-and-databaseless-authentication-pt-2"&gt;Sending authentication link emails and the user socket connection&lt;/a&gt;&lt;/li&gt;
-    &lt;li&gt;Coming soon...&lt;/li&gt;
+    &lt;li&gt;&lt;a href="/blog/2018/09/01/elixir-and-phoenix-basic-passwordless-and-databaseless-authentication-pt-3"&gt;Setting up webpack as our asset bundler and the Elm single-page application&lt;/a&gt;&lt;/li&gt;
   &lt;/ol&gt;
 
   &lt;a href="https://github.com/bigardone/passwordless-auth" target="_blank"&gt;&lt;i class="fa fa-github"&gt;&lt;/i&gt; Source code&lt;/a&gt;
@@ -387,7 +387,7 @@ Randomized with seed 589379
     <link rel="alternate" href="http://codeloveandboards.com/blog/2018/06/09/elixir-and-phoenix-basic-passwordless-and-databaseless-authentication-pt-1/"/>
     <id>http://codeloveandboards.com/blog/2018/06/09/elixir-and-phoenix-basic-passwordless-and-databaseless-authentication-pt-1/</id>
     <published>2018-06-09T07:00:00Z</published>
-    <updated>2018-06-28T08:43:35+02:00</updated>
+    <updated>2018-09-01T07:53:23+02:00</updated>
     <author>
       <name>Article Author</name>
     </author>
@@ -396,7 +396,7 @@ Randomized with seed 589379
   &lt;ol&gt;
     &lt;li&gt;&lt;a href="/blog/2018/06/09/elixir-and-phoenix-basic-passwordless-and-databaseless-authentication-pt-1"&gt;Project setup and the initial functionality for storing and verifying authentication tokens&lt;/a&gt;&lt;/li&gt;
     &lt;li&gt;&lt;a href="/blog/2018/06/20/elixir-and-phoenix-basic-passwordless-and-databaseless-authentication-pt-2"&gt;Sending authentication link emails and the user socket connection&lt;/a&gt;&lt;/li&gt;
-    &lt;li&gt;Coming soon...&lt;/li&gt;
+    &lt;li&gt;&lt;a href="/blog/2018/09/01/elixir-and-phoenix-basic-passwordless-and-databaseless-authentication-pt-3"&gt;Setting up webpack as our asset bundler and the Elm single-page application&lt;/a&gt;&lt;/li&gt;
   &lt;/ol&gt;
 
   &lt;a href="https://github.com/bigardone/passwordless-auth" target="_blank"&gt;&lt;i class="fa fa-github"&gt;&lt;/i&gt; Source code&lt;/a&gt;
