@@ -1,0 +1,1082 @@
+<!DOCTYPE html> <!--[if lt IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8 lt-ie7" lang=en-us><![endif]--> <!--[if IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8" lang=en-us><![endif]--> <!--[if IE 8]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if IE 9]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if lt IE 10]><html class="no-js lt-ie10" lang=en-us><![endif]--> <!--[if !IE]>><![endif]--> <html class=no-js lang=en> <head> <title>Elixir and Phoenix basic passwordless and databaseless authentication (pt. 3) - Code, Love & Boards</title> <meta charset=utf-8 content='text/html' http-equiv=content-type> <meta content='ie=edge,chrome=1' http-equiv=x-ua-compatible> <meta content='Setting up webpack as our asset bundler and the Elm single-page application.' name=description> <meta content='Ricardo García Vega - http://twitter.com/bigardone' name=author> <meta content='elixir, phoenix, elm' name=keywords> <meta content='initial-scale=1.0,user-scalable=no,maximum-scale=1,width=device-width' name=viewport> <link href='//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css' rel=stylesheet> <link href="//fonts.googleapis.com/css?family=Montserrat:400,700|Lora:400,700" media=screen rel=stylesheet /> <link href="../../../../../stylesheets/blog-82c14d7c.css" media=all rel=stylesheet /> <link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/tomorrow.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js'></script> <script src='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/elixir.min.js'></script> <script src='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/elm.min.js'></script> <link href='/images/apple-touch-icon-57x57-6e598dc4.png' rel=apple-touch-icon sizes=57x57> <link href='/images/apple-touch-icon-114x114-5be964ba.png' rel=apple-touch-icon sizes=114x114> <link href='/images/apple-touch-icon-72x72-70084a85.png' rel=apple-touch-icon sizes=72x72> <link href='/images/apple-touch-icon-144x144-1dbb56c1.png' rel=apple-touch-icon sizes=144x144> <link href='/images/apple-touch-icon-60x60-d05a5ea9.png' rel=apple-touch-icon sizes=60x60> <link href='/images/apple-touch-icon-120x120-5dafce59.png' rel=apple-touch-icon sizes=120x120> <link href='/images/apple-touch-icon-76x76-b2c0d784.png' rel=apple-touch-icon sizes=76x76> <link href='/images/apple-touch-icon-152x152-45595360.png' rel=apple-touch-icon sizes=152x152> <link href='/images/favicon-160x160-944ce76e.png' rel=icon sizes=160x160 type='image/png'> <link href='/images/favicon-96x96-b7e4e089.png' rel=icon sizes=96x96 type='image/png'> <link href='/images/favicon-32x32-b7f34a79.png' rel=icon sizes=32x32 type='image/png'> <link href='/images/favicon-16x16-2712c528.png' rel=icon sizes=16x16 type='image/png'> <meta content='#9f00a7' name=msapplication-TileColor> <meta content='/images/mstile-144x144-028d4c4c.png' name=msapplication-TileImage> <script>
+  var _StatHat = _StatHat || [];
+  _StatHat.push(['_setUser', 'NzIzMCDaNaL5bvEP1HQkMYwfYsQe']);
+  (function() {
+          var sh = document.createElement('script'); sh.type = 'text/javascript';
+          sh.async = true;
+          sh.src = '//www.stathat.com/javascripts/api.js';
+          var s = document.getElementsByTagName('script')[0];
+          s.parentNode.insertBefore(sh, s);
+  })();
+</script> <link href='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.js'></script> <script>
+  window.addEventListener("load", function(){
+  window.cookieconsent.initialise({
+    "palette": {
+      "popup": {
+        "background": "#252e39"
+      },
+      "button": {
+        "background": "#217dbb"
+      }
+    },
+    "theme": "classic",
+    "position": "bottom-right"
+  })});
+</script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Elixir and Phoenix basic passwordless and databaseless authentication (pt. 3)</h1> <h3></h3> <div class=meta-data> <hr> posted Aug 31, 2018 on <a class=tag href="/blog/tags/elixir.html">elixir</a> <a class=tag href="/blog/tags/phoenix.html">phoenix</a> <a class=tag href="/blog/tags/elm.html">elm</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <div class=index> <p>This post belongs to the <strong>Elixir and Phoenix basic passwordless and databaseless authentication</strong> series.</p> <ol> <li><a href="/blog/2018/06/09/elixir-and-phoenix-basic-passwordless-and-databaseless-authentication-pt-1">Project setup and the initial functionality for storing and verifying authentication tokens</a></li> <li><a href="/blog/2018/06/20/elixir-and-phoenix-basic-passwordless-and-databaseless-authentication-pt-2">Sending authentication link emails and the user socket connection</a></li> <li><a href="/blog/2018/09/01/elixir-and-phoenix-basic-passwordless-and-databaseless-authentication-pt-3">Setting up webpack as our asset bundler and the Elm single-page application</a></li> </ol> <a href="https://github.com/bigardone/passwordless-auth" target=_blank><i class="fa fa-github"></i> Source code</a> </div> <p>In the <a href="/blog/2018/06/20/elixir-and-phoenix-basic-passwordless-and-databaseless-authentication-pt-2">previous part</a> of the series, we covered all the back-end logic regarding sending authentication emails and using the generated tokens to authenticate the connection of a <strong>Phoenix</strong> socket. In this part, we are going to focus on the front-end, building the <strong>Elm</strong> single page application skeleton, and using the websockect authentication to hide some parts of it to unauthenticated users. Let&#39;s get cracking!</p> <h2>Front-end setup</h2> <p>I&#39;ve been using <strong>Elixir</strong> and <strong>Phoenix</strong> in the back-end, and <strong>Elm</strong> in the front-end, for almost three years already, and I&#39;m delighted with the result. I tend to use Phoenix&#39;s default asset bundler, <a href="https://brunch.io/">Brunch</a>, but I&#39;ve been having some issues lately with it, especially while using its <strong>Elm</strong> and <strong>SASS</strong> plugins. Therefore, for this particular experiment, I wanted to test out other alternatives, replacing Brunch with <a href="https://webpack.js.org/">webpack</a> and <strong>SASS</strong> with <a href="https://tailwindcss.com/">Tailwind CSS</a>, which I&#39;m starting to like a lot and seems like the first strong candidate to replace <strong>SASS</strong> in my front-end stack. Recalling the <a href="/blog/2018/06/09/elixir-and-phoenix-basic-passwordless-and-databaseless-authentication-pt-1">first part</a> of the series, we created the project using the --no-brunch flag, which doesn&#39;t install Brunch so that we can add <strong>webpack</strong> directly. For that, I followed <a href="//www.schmitty.me/stack-setup-phoenix-elm-graphql-tailwindcss/">this great article</a> from <a href="https://twitter.com/_GazD">@_GazD</a>, taking the parts that I needed and making some small changes to add <strong>Elm</strong> support.</p> <h3>Adding webpack to the project</h3> <p>This being said, let&#39;s start by adding a <code>package.json</code> file to the <code>passwordless_auth_web</code> application:</p> <pre><code class="json">// apps/passwordless_auth_web/assets/package.json
+
+{
+  &quot;repository&quot;: {},
+  &quot;license&quot;: &quot;MIT&quot;,
+  &quot;scripts&quot;: {
+    &quot;deploy&quot;: &quot;webpack --mode production&quot;,
+    &quot;watch&quot;: &quot;webpack --mode development --watch&quot;
+  },
+  &quot;dependencies&quot;: {
+    &quot;phoenix&quot;: &quot;file:../../../deps/phoenix&quot;,
+    &quot;phoenix_html&quot;: &quot;file:../../../deps/phoenix_html&quot;
+  },
+  &quot;devDependencies&quot;: {
+    &quot;autoprefixer&quot;: &quot;^8.6.0&quot;,
+    &quot;babel-core&quot;: &quot;^6.26.0&quot;,
+    &quot;babel-loader&quot;: &quot;^7.1.3&quot;,
+    &quot;babel-preset-env&quot;: &quot;^1.6.1&quot;,
+    &quot;copy-webpack-plugin&quot;: &quot;^4.5.0&quot;,
+    &quot;css-loader&quot;: &quot;^0.28.10&quot;,
+    &quot;elm&quot;: &quot;^0.18.0&quot;,
+    &quot;elm-webpack-loader&quot;: &quot;^4.5.0&quot;,
+    &quot;mini-css-extract-plugin&quot;: &quot;^0.4.0&quot;,
+    &quot;optimize-css-assets-webpack-plugin&quot;: &quot;^4.0.0&quot;,
+    &quot;postcss-loader&quot;: &quot;^2.1.5&quot;,
+    &quot;style-loader&quot;: &quot;^0.21.0&quot;,
+    &quot;tailwindcss&quot;: &quot;^0.5.3&quot;,
+    &quot;uglifyjs-webpack-plugin&quot;: &quot;^1.2.4&quot;,
+    &quot;webpack&quot;: &quot;^4.10.0&quot;,
+    &quot;webpack-cli&quot;: &quot;^3.0.0&quot;
+  }
+}
+</code></pre> <p>These are all the necessary dependencies that we need to add support for <strong>webpack<em>,</em> **Elm</strong> and <strong>Tailwind CSS</strong>, although bear in mind that package versions might be outdated since I wrote this part. We can continue by adding the necessary configuration files:</p> <pre><code class="bash">$ curl https://raw.githubusercontent.com/phoenixframework/phoenix/master/installer/templates/phx_assets/webpack/webpack.config.js &gt; apps/passwordless_auth_web/assets/webpack.config.js
+$ curl https://raw.githubusercontent.com/phoenixframework/phoenix/master/installer/templates/phx_assets/webpack/babelrc &gt; apps/passwordless_auth_web/assets/.babelrc
+</code></pre> <p>Let&#39;s continue by installing all the necessary dependencies:</p> <pre><code class="bash">$ cd apps/passwordless_auth_web/assets &amp;&amp; npm install
+</code></pre> <p>We want <strong>Phoenix</strong> to update the changes we make while developing, so let&#39;s add the convenient watcher for this:</p> <pre><code class="elixir"># apps/passwordless_auth_web/config/dev.exs
+
+use Mix.Config
+
+config :passwordless_auth_web, PasswordlessAuthWeb.Endpoint,
+  http: [port: 4000],
+  debug_errors: true,
+  code_reloader: true,
+  check_origin: false,
+  watchers: [
+    node: [
+      &quot;node_modules/webpack/bin/webpack.js&quot;,
+      &quot;--mode&quot;,
+      &quot;development&quot;,
+      &quot;--watch-stdin&quot;,
+      cd: Path.expand(&quot;../assets&quot;, __DIR__)
+    ]
+  ]
+
+# ...
+</code></pre> <h3>Configuring Tailwind CSS</h3> <p>To generate Tailwind&#39;s configuration file, we have to do the following:</p> <pre><code class="bash">$ cd apps/passwordless_auth_web/assets &amp;&amp; ./node_modules/.bin/tailwind init
+</code></pre> <p>Next, we have to make <strong>webpack</strong> process <strong>CSS</strong> and <strong>Tailwind</strong> using <strong>postcss</strong>:</p> <pre><code class="javascript">// apps/passwordless_auth_web/assets/webpack.config.js
+
+const path = require(&#39;path&#39;);
+const MiniCssExtractPlugin = require(&#39;mini-css-extract-plugin&#39;);
+const UglifyJsPlugin = require(&#39;uglifyjs-webpack-plugin&#39;);
+const OptimizeCSSAssetsPlugin = require(&#39;optimize-css-assets-webpack-plugin&#39;);
+const CopyWebpackPlugin = require(&#39;copy-webpack-plugin&#39;);
+
+module.exports = (env, options) =&gt; ({
+  optimization: {
+    minimizer: [
+      new UglifyJsPlugin({ cache: true, parallel: true, sourceMap: false }),
+      new OptimizeCSSAssetsPlugin({}),
+    ],
+  },
+  entry: &#39;./js/app.js&#39;,
+  output: {
+    filename: &#39;app.js&#39;,
+    path: path.resolve(__dirname, &#39;../priv/static/js&#39;),
+  },
+  module: {
+    rules: [
+      {
+        test: /\.js$/,
+        exclude: /node_modules/,
+        use: {
+          loader: &#39;babel-loader&#39;,
+        },
+      },
+      {
+        test: /\.css$/,
+        use: [MiniCssExtractPlugin.loader, &#39;css-loader&#39;, &#39;postcss-loader&#39;],
+      }
+    ],
+  },
+  plugins: [
+    new MiniCssExtractPlugin({ filename: &#39;../css/app.css&#39; }),
+    new CopyWebpackPlugin([{ from: &#39;static/&#39;, to: &#39;../&#39; }]),
+  ],
+});
+</code></pre> <pre><code class="javascript">// apps/passwordless_auth_web/assets/postcss.config.js
+
+module.exports = {
+  plugins: [
+    require(&#39;tailwindcss&#39;)(&#39;./tailwind.js&#39;),
+    require(&#39;autoprefixer&#39;)
+  ]
+}
+</code></pre> <p>Finally, we need to import the main <strong>CSS</strong> file in the main javascript file and add all the necessary <strong>Tailwind</strong> hooks:</p> <pre><code class="javascript">// apps/passwordless_auth_web/assets/js/app.js
+
+import css from &quot;../css/app.css&quot;;
+</code></pre> <pre><code class="css">/* apps/passwordless_auth_web/assets/css/app.css */
+
+@tailwind preflight;
+@tailwind components;
+@tailwind utilities;
+</code></pre> <h3>Adding Elm support</h3> <p>To make <strong>Elm</strong> work with <strong>webpack</strong>, we need to edit its configuration file:</p> <pre><code class="javascript">// apps/passwordless_auth_web/assets/webpack.config.js
+
+// ...
+
+module.exports = (env, options) =&gt; ({
+  // ...
+
+  module: {
+    rules: [
+      // ...
+      {
+        test: /\.elm$/,
+        exclude: [&#39;/elm-stuff/&#39;, &#39;/node_modules&#39;],
+        loader: &#39;elm-webpack-loader&#39;,
+        options: {
+          debug: true,
+          warn: true,
+          cwd: path.resolve(__dirname, &#39;elm&#39;),
+        },
+      },
+    ],
+    noParse: [/.elm$/],
+  },
+  plugins: [
+    new MiniCssExtractPlugin({ filename: &#39;../css/app.css&#39; }),
+    new CopyWebpackPlugin([{ from: &#39;static/&#39;, to: &#39;../&#39; }]),
+  ],
+});
+</code></pre> <p>To install all the necessary <strong>Elm</strong> packages let&#39;s add the following file:</p> <pre><code class="json">// apps/passwordless_auth_web/assets/elm/elm-package.json
+
+{
+    &quot;version&quot;: &quot;1.0.0&quot;,
+    &quot;summary&quot;: &quot;helpful summary of your project, less than 80 characters&quot;,
+    &quot;repository&quot;: &quot;https://github.com/user/project.git&quot;,
+    &quot;license&quot;: &quot;BSD3&quot;,
+    &quot;source-directories&quot;: [
+        &quot;./src&quot;,
+        &quot;./vendor&quot;
+    ],
+    &quot;exposed-modules&quot;: [],
+    &quot;dependencies&quot;: {
+        &quot;NoRedInk/elm-decode-pipeline&quot;: &quot;3.0.0 &lt;= v &lt; 4.0.0&quot;,
+        &quot;elm-lang/core&quot;: &quot;5.1.1 &lt;= v &lt; 6.0.0&quot;,
+        &quot;elm-lang/html&quot;: &quot;2.0.0 &lt;= v &lt; 3.0.0&quot;,
+        &quot;elm-lang/http&quot;: &quot;1.0.0 &lt;= v &lt; 2.0.0&quot;,
+        &quot;elm-lang/navigation&quot;: &quot;2.1.0 &lt;= v &lt; 3.0.0&quot;,
+        &quot;elm-lang/websocket&quot;: &quot;1.0.2 &lt;= v &lt; 2.0.0&quot;,
+        &quot;evancz/url-parser&quot;: &quot;2.0.1 &lt;= v &lt; 3.0.0&quot;
+    },
+    &quot;elm-version&quot;: &quot;0.18.0 &lt;= v &lt; 0.19.0&quot;
+}
+</code></pre> <p>And run the following command:</p> <pre><code class="bash">$ cd apps/passwordless_auth_web/assets/elm &amp;&amp; elm package install
+</code></pre> <p>Now we can add a very basic <strong>Elm</strong> application to check that everything is working as expected:</p> <pre><code class="elm">-- apps/passwordless_auth_web/assets/elm/src/Main.elm
+
+module Main exposing (..)
+
+import Html exposing (Html)
+
+
+type alias Model =
+    {}
+
+
+init : ( Model, Cmd Msg )
+init =
+    {} ! []
+
+
+type Msg
+    = Noop
+
+
+update : Msg -&gt; Model -&gt; ( Model, Cmd Msg )
+update msg model =
+    case msg of
+        Noop -&gt;
+            model ! []
+
+
+view : Model -&gt; Html Msg
+view model =
+    Html.text &quot;Hello from Elm!&quot;
+
+
+subscriptions : Model -&gt; Sub Msg
+subscriptions model =
+    Sub.none
+
+
+main : Program Never Model Msg
+main =
+    Html.program
+        { init = init
+        , view = view
+        , update = update
+        , subscriptions = subscriptions
+        }
+</code></pre> <p>We probably still the default layout template from *<em>Phoenix</em>,* so let&#39;s replace its content with the following:</p> <pre><code class="html">&lt;!-- apps/passwordless_auth_web/lib/passwordless_auth_web/templates/layout/app.html.eex  --&gt;
+
+&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+  &lt;head&gt;
+    &lt;meta charset=&quot;utf-8&quot;&gt;
+    &lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;IE=edge&quot;&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;
+    &lt;meta name=&quot;description&quot; content=&quot;&quot;&gt;
+    &lt;meta name=&quot;author&quot; content=&quot;&quot;&gt;
+    &lt;link rel=&quot;stylesheet&quot; href=&quot;&lt;%= static_path(@conn, &quot;/css/app.css&quot;) %&gt;&quot;&gt;
+    &lt;title&gt;Passwordless Auth&lt;/title&gt;
+  &lt;/head&gt;
+
+  &lt;body&gt;
+    &lt;%= render @view_module, @view_template, assigns %&gt;
+    &lt;script src=&quot;&lt;%= static_path(@conn, &quot;/js/app.js&quot;) %&gt;&quot;&gt;&lt;/script&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</code></pre> <p>We also need to add the container in which we are going to render the <strong>Elm</strong> application:</p> <pre><code class="html">&lt;!-- apps/passwordless_auth_web/lib/passwordless_auth_web/templates/page/index.html.eex --&gt;
+
+&lt;div id=&quot;elm-main&quot; class=&quot;flex items-center justify-center h-screen&quot;&gt;
+&lt;/div&gt;
+</code></pre> <p>And finally, create the <strong>Elm</strong> application and render it in its container:</p> <pre><code class="javascript">// apps/passwordless_auth_web/assets/js/app.js
+
+import css from &#39;../css/app.css&#39;;
+import Elm from &#39;../elm/src/Main.elm&#39;;
+
+const elmDiv = document.getElementById(&#39;elm-main&#39;);
+
+if (elmDiv) {
+  const app = Elm.Main.embed(elmDiv);
+}
+</code></pre> <p>Now we are ready to start Phoenix&#39;s server, visit <a href="//localhost:4000">http://localhost:4000</a> and watch our basic <strong>Elm</strong> application render correctly, yay!</p> <p><img alt="Basic application" src="https://monosnap.com/image/hOk7G1IDEdtHhSdEBwTu5ZK3rhLvHz"/></p> <p>There is one thing left to do though. We are going to use the <a href="https://github.com/saschatimme/elm-phoenix">elm-phoenix</a> library to handle <strong>Phoenix</strong> sockets communication, therefore we need to download the content of <a href="https://github.com/bigardone/passwordless-auth/tree/master/apps/passwordless_auth_web/assets/elm/vendor">this folder</a> and place it in the <code>apps/passwordless_auth_web/assets/elm/vendor</code> folder.</p> <h2>Building the Elm application</h2> <p>Now that our basic <strong>Elm</strong> application is working let&#39;s make some changes to the <strong>Phoenix</strong> controller and template in charge of rendering it.</p> <pre><code class="elixir"># apps/passwordless_auth_web/lib/passwordless_auth_web/controllers/page_controller.ex
+
+defmodule PasswordlessAuthWeb.PageController do
+  use PasswordlessAuthWeb, :controller
+
+  def index(conn, params) do
+    conn
+    |&gt; assign(:token, Map.get(params, &quot;token&quot;, &quot;&quot;))
+    |&gt; render(&quot;index.html&quot;)
+  end
+end
+</code></pre> <p>The first change consists of assigning the received <code>token</code> value from the authentication link to the connection so that we can pass it to the <strong>Elm</strong> application as a flag. We also need to pass the socket URL, so let&#39;s create a helper function for that:</p> <pre><code class="elixir"># apps/passwordless_auth_web/lib/passwordless_auth_web/views/page_view.ex
+
+defmodule PasswordlessAuthWeb.PageView do
+  use PasswordlessAuthWeb, :view
+
+  def socket_url do
+    PasswordlessAuthWeb.Endpoint.url()
+    |&gt; String.replace(&quot;http&quot;, &quot;ws&quot;)
+    |&gt; Kernel.&lt;&gt;(&quot;/socket/websocket&quot;)
+  end
+end
+</code></pre> <p>Now we can set these two values in the template:</p> <pre><code class="elixir"># apps/passwordless_auth_web/lib/passwordless_auth_web/templates/page/index.html.eex
+
+&lt;div id=&quot;elm-main&quot; class=&quot;flex items-center justify-center h-screen&quot;&gt;
+&lt;/div&gt;
+
+&lt;script&gt;
+  window.token = &#39;&lt;%= @token %&gt;&#39;;
+  window.socketUrl = &#39;&lt;%= socket_url() %&gt;&#39;;
+&lt;/script&gt;
+</code></pre> <p>And finally pass them as flags in the Elm application:</p> <pre><code class="js">// apps/passwordless_auth_web/assets/js/app.js
+
+import Elm from &#39;../elm/src/Main.elm&#39;;
+import css from &#39;../css/app.css&#39;;
+
+const elmDiv = document.getElementById(&#39;elm-main&#39;);
+
+let token = window.token;
+const socketUrl = window.socketUrl;
+
+if (token === &#39;&#39; || token == null) token = window.localStorage.getItem(&#39;token&#39;);
+
+if (elmDiv) {
+  const app = Elm.Main.embed(elmDiv, { token, socketUrl });
+
+  app.ports.saveToken.subscribe((token) =&gt; {
+    window.localStorage.setItem(&#39;token&#39;, token);
+  });
+}
+</code></pre> <p>We have also added a port for saving the token into <code>localStorage</code>, that we are going to use later on.</p> <p>Before continuing any further, let&#39;s take a moment to think about what we are building, using the following mock image:</p> <p><img alt=Routes src="https://monosnap.com/image/Isrs18qTVpNMYfWcXNuq9RbvG7Z4nS.png"/></p> <p>To test out our passwordless authentication experiment, we only need a couple of screens and routes:</p> <ol> <li><code>/</code> which is only accessible by authenticated users, and can potentially have any private data we want to display.</li> <li><code>/sign-in</code> which is public, renders the form to request the magic link, and is where we are redirecting any user that tries to navigate to <code>/</code> without being properly authenticated.</li> </ol> <p>Having this in mind, we can start by implementing the routing module, so we can add these two routes:</p> <pre><code class="elm">-- apps/passwordless_auth_web/assets/elm/src/Route.elm
+
+
+module Route
+    exposing
+        ( Route(..)
+        , fromLocation
+        , newUrl
+        )
+
+import Navigation exposing (Location)
+import UrlParser as Url exposing ((&lt;/&gt;), Parser, oneOf, s, string, parsePath)
+
+
+-- ROUTING --
+
+
+type Route
+    = SignInRoute
+    | LobbyRoute
+
+
+matchers : Parser (Route -&gt; a) a
+matchers =
+    oneOf
+        [ Url.map LobbyRoute &lt;| s &quot;&quot;
+        , Url.map SignInRoute &lt;| s &quot;sign-in&quot;
+        ]
+
+
+
+-- INTERNAL --
+
+
+routeToString : Route -&gt; String
+routeToString page =
+    let
+        pieces =
+            case page of
+                LobbyRoute -&gt;
+                    []
+
+                SignInRoute -&gt;
+                    [ &quot;sign-in&quot; ]
+    in
+        &quot;/&quot; ++ String.join &quot;/&quot; pieces
+
+
+
+-- PUBLIC HELPERS --
+
+
+newUrl : Route -&gt; Cmd msg
+newUrl =
+    routeToString &gt;&gt; Navigation.newUrl
+
+
+fromLocation : Location -&gt; Maybe Route
+fromLocation location =
+    parsePath matchers location
+</code></pre> <p>Now that we have defined the routes that we need, let&#39;s move on to the main elm module and start coding the application. In many of my <strong>Elm</strong> projects and tutorials, I&#39;ve been organizing all the <strong>Elm</strong> code in folders, creating one for each route. Inside of these folders, I tended to add four different files, one for each of the Model, Messages, Update and View modules of that route. This approach used to work fine for small projects, but it didn&#39;t scale that well for bigger ones. Then I read <a href="https://twitter.com/rtfeldman">Richard Feldman&#39;s</a> article <a href="https://dev.to/rtfeldman/tour-of-an-open-source-elm-spa">Tour of an Open-Source Elm SPA</a>, and I have started to organize my new <strong>Elm</strong> projects following his recommendations, feeling more comfortable now when they start to grow.</p> <h3>The Page modules</h3> <p>Although this is a very small project, we will stick to Richard&#39;s approach, therefore let&#39;s get started by defining the page modules that define the logic for each screen for the application, and which we will use from the main module depending on which is the current page set in the application.</p> <h4>Page.SignIn</h4> <p>The first page we are implementing is the sign-in page. The goal is to define everything we need as it was a standalone <strong>Elm</strong> program, except that it does not have a view function, and the entry point can be either an init function to load any necessary data from the backend or its initial model:</p> <pre><code class="elm">-- apps/passwordless_auth_web/assets/elm/src/Page/SignIn.elm
+
+module Page.SignIn
+    exposing
+        ( Model
+        , SignInForm(..)
+        , Msg(..)
+        , update
+        , initialModel
+        )
+
+import Http
+import Json.Encode as Encode
+import Json.Decode as Decode
+import Request.Token exposing (requestToken)
+
+
+-- MODEL --
+
+
+type SignInForm
+    = Editing String
+    | Sending String
+    | Success String
+    | Error String
+
+
+type alias Model =
+    { form : SignInForm }
+
+
+initialModel : Model
+initialModel =
+    { form = Editing &quot;&quot; }
+
+
+
+-- UPDATE --
+
+
+type Msg
+    = HandleEmailInput String
+    | HandleFormSubmit
+    | FormSubmitResponse (Result Http.Error String)
+
+
+update : Msg -&gt; Model -&gt; ( Model, Cmd Msg )
+update msg ({ form } as model) =
+    case ( msg, form ) of
+        ( HandleEmailInput value, Editing _ ) -&gt;
+            { model | form = Editing value } ! []
+
+        ( HandleFormSubmit, Editing email ) -&gt;
+            { model | form = Sending email } ! [ requestToken FormSubmitResponse email ]
+
+        ( FormSubmitResponse payload, Sending _ ) -&gt;
+            case payload of
+                Ok message -&gt;
+                    { model | form = Success message } ! []
+
+                _ -&gt;
+                    { model | form = Error &quot;We couldn&#39;t sent you your magic link due to an error, please try again later.&quot; } ! []
+
+        _ -&gt;
+            model ! []
+
+
+requestToken : (Result Http.Error String -&gt; msg) -&gt; String -&gt; Cmd msg
+requestToken msg email =
+    let
+        body =
+            Encode.object [ ( &quot;email&quot;, Encode.string email ) ]
+
+        request =
+            Http.request
+                { method = &quot;POST&quot;
+                , headers = []
+                , url = &quot;/api/auth&quot;
+                , body = Http.jsonBody body
+                , expect = Http.expectJson requestTokenDecoder
+                , timeout = Nothing
+                , withCredentials = False
+                }
+    in
+        Http.send msg request
+
+
+requestTokenDecoder : Decode.Decoder String
+requestTokenDecoder =
+    Decode.at [ &quot;message&quot; ] Decode.string
+</code></pre> <p>The <code>Model</code> for this page consists of a record with a <code>form</code> custom type that represents the different states that we need in the sign-in form:</p> <ul> <li><code>Editing String</code> when the user is typing so we can store the value typed.</li> <li><code>Sending String</code> when the user submits the form so we can, for instance, render a spinner in the submit button.</li> <li><code>Success String</code> which means a successful form submission, and the <code>String</code> received from the server.</li> <li><code>Error String</code> if anything goes wrong, and we want to show an error message.</li> </ul> <p>The <code>update</code> function is very simple too, handling the following messages:</p> <ul> <li><code>HandleEmailInput String</code> when the form email input changes its value, storing it in the model.</li> <li><code>HandleFormSubmit</code> sends the <code>requestToken</code> HTTP request.</li> <li><code>FormSubmitResponse (Result Http.Error String)</code> which handles the response from the previous HTTP request.</li> </ul> <h4>Page.Lobby</h4> <p>The other page we need to implement is the one we want to display only to authenticated users:</p> <pre><code class="elm">-- apps/passwordless_auth_web/assets/elm/src/Page/Lobby.elm
+
+module Page.Lobby exposing ( Model , Msg(..) , init , update)
+
+import Json.Decode as Decode exposing (Value)
+import Phoenix
+import Phoenix.Push as Push exposing (Push)
+
+
+-- MODEL --
+
+
+type alias Model =
+    { emails : List String }
+
+
+initialModel : Model
+initialModel =
+    { emails = [] }
+
+
+
+-- UPDATE --
+
+
+type Msg
+    = HandleInitSuccess Decode.Value
+
+
+update : Msg -&gt; Model -&gt; ( Model, Cmd Msg )
+update msg model =
+    case msg of
+        HandleInitSuccess payload -&gt;
+            case Decode.decodeValue usersDecoder payload of
+                Ok emails -&gt;
+                    { model | emails = emails } ! []
+
+                Err _ -&gt;
+                    model ! []
+
+
+usersDecoder : Decode.Decoder (List String)
+usersDecoder =
+    Decode.at [ &quot;data&quot; ] &lt;| Decode.list Decode.string
+
+
+
+-- INIT --
+
+
+init : String -&gt; ( Model, Cmd Msg )
+init socketUrl =
+    ( initialModel
+    , Push.init &quot;admin:lobby&quot; &quot;data&quot;
+        |&gt; Push.onOk HandleInitSuccess
+        |&gt; Phoenix.push socketUrl
+    )
+</code></pre> <p>For simplicity&#39;s sake, the <code>Model</code> consists of a list of strings representing the list of emails able to authenticate into the application. The <code>init</code> function, called every time an authenticated user visits the <code>/</code> route, receives the <code>socketUrl</code> and pushes a <code>data</code> message to the <code>admin:lobby</code> channel through the socket (already connected, we&#39;ll get there in a minute). If the message result is successful, it receives the list of emails, handled by the <code>HandleInitSuccess</code> message, decodes the list and sets it as the new <code>Model</code>.</p> <h3>The Views modules</h3> <p>Having the main Page modules done, let&#39;s focus now on the view modules for them. Taking a look at the <code>Lobby</code> page, we can see that there is a navigation bar on top, with the signout link. This navigation bar will appear in all the future private screen that we might implement, so we need to share it somehow.</p> <h4>Views.Page</h4> <p>Let&#39;s add a basic module that wraps each particular view content in a container along with the navigation bar:</p> <pre><code class="elm">-- apps/passwordless_auth_web/assets/elm/src/Views/Page.elm
+
+module Views.Page
+    exposing
+        ( frameView
+        , headerView
+        , Msg(..)
+        )
+
+import Data.Session exposing (Session(..))
+import Html exposing (Html)
+import Html.Attributes as Html
+import Html.Events as Html
+
+
+type Msg
+    = SignOut
+
+
+frameView : Session -&gt; Html msg -&gt; Html msg -&gt; Html msg
+frameView session header content =
+    case session of
+        Anonymous -&gt;
+            Html.text &quot;&quot;
+
+        Authenticated _ -&gt;
+            Html.div
+                [ Html.class &quot;main-section flex-1 flex-col flex h-screen&quot; ]
+                [ header
+                , Html.div
+                    [ Html.class &quot;main-content bg-grey-lightest flex-1 flex items-center justify-center&quot; ]
+                    [ content ]
+                ]
+
+
+headerView : Html Msg
+headerView =
+    Html.header
+        [ Html.class &quot;main-header&quot; ]
+        [ Html.nav
+            [ Html.class &quot;flex justify-between&quot; ]
+            [ Html.span
+                [ Html.class &quot;flex-1 p-4 text-white text-left&quot; ]
+                [ Html.text &quot;Admin panel&quot; ]
+            , Html.a
+                [ Html.class &quot;p-4&quot;
+                , Html.onClick SignOut
+                ]
+                [ Html.text &quot;Sign out&quot; ]
+            ]
+        ]
+</code></pre> <p>It exposes two functions:</p> <ul> <li><code>frameView</code> which defines the structure of all private screens.</li> <li><code>headerView</code> which renders the top navigation bar, with the sign-out link.</li> </ul> <p><code>frameView</code> takes a <code>Session</code>, so we can render the contents only when the user is authenticated, and both the <code>header</code> and the <code>content</code> for the particular page it is rendering.</p> <h4>Views.SignIn</h4> <p>Let&#39;s add the view module for the <code>SignIn</code> page.</p> <pre><code class="elm">-- apps/passwordless_auth_web/assets/elm/src/Views/SignIn.elm
+
+module Views.SignIn exposing (view)
+
+import Html exposing (Html, form)
+import Html.Attributes as Html
+import Html.Events as Html
+import Page.SignIn exposing (Model, SignInForm(..), Msg(..))
+
+
+view : Model -&gt; Html Msg
+view { form } =
+    let
+        content =
+            case form of
+                Editing email -&gt;
+                    formView email
+
+                Sending email -&gt;
+                    formView email
+
+                Success text -&gt;
+                    successMessageView text
+
+                Error text -&gt;
+                    errorMessageView text
+    in
+        Html.section
+            [ Html.class &quot;bg-purple-darker p-8 flex flex-1 items-center justify-center h-screen&quot; ]
+            [ content ]
+
+
+formView : String -&gt; Html Msg
+formView email =
+    Html.div
+        []
+        [ Html.img
+            [ Html.src &quot;/images/icons8-mailbox-128.png&quot;
+            , Html.class &quot;mb-4 slide-in-blurred-top&quot;
+            ]
+            []
+        , Html.h3
+            []
+            [ Html.text &quot;Password long? Hard to type?&quot; ]
+        , Html.p
+            []
+            [ Html.text &quot;Get a magic link sent to your email that&#39;ll sign you instantly!&quot; ]
+        , form
+            [ Html.class &quot;w-full max-w-md&quot;
+            , Html.onSubmit HandleFormSubmit
+            ]
+            [ Html.input
+                [ Html.class &quot;appearance-none block w-full bg-grey-lighter text-grey-darker rounded py-3 px-4 mb-3&quot;
+                , Html.placeholder &quot;foo@email.com&quot;
+                , Html.type_ &quot;email&quot;
+                , Html.onInput HandleEmailInput
+                , Html.value email
+                ]
+                []
+            , Html.button
+                [ Html.class &quot;bg-blue hover:bg-blue-dark text-white py-3 px-4 mb-3 rounded w-full&quot; ]
+                [ Html.text &quot;Send Magic Link&quot; ]
+            ]
+        ]
+
+
+successMessageView : String -&gt; Html Msg
+successMessageView message =
+    Html.div
+        []
+        [ Html.img
+            [ Html.src &quot;/images/icons8-postal-128.png&quot;
+            , Html.class &quot;mb-4 jello-horizontal&quot;
+            ]
+            []
+        , Html.h3
+            []
+            [ Html.text &quot;Check your email&quot; ]
+        , Html.p
+            []
+            [ Html.text message ]
+        ]
+
+
+errorMessageView : String -&gt; Html Msg
+errorMessageView message =
+    Html.div
+        []
+        [ Html.h3
+            []
+            [ Html.text &quot;Whoops!&quot; ]
+        , Html.p
+            []
+            [ Html.text message ]
+        ]
+</code></pre> <p>The <code>view</code> function returns the content to render, depending on the value of the custom type we created previously for the model&#39;s form.</p> <h4>View.Lobby</h4> <p>The next view we are going to implement is the view for the <code>Lobby</code> page, so let&#39;s go ahead and add it:</p> <pre><code class="elm">-- apps/passwordless_auth_web/assets/elm/src/Views/Lobby.elm
+
+module Views.Lobby exposing (view)
+
+import Html exposing (Html, form)
+import Html.Keyed
+import Html.Attributes as Html
+import Data.Session exposing (User)
+import Page.Lobby exposing (Model, Msg(..))
+
+
+view : User -&gt; Model -&gt; Html Msg
+view { email } model =
+    Html.div
+        []
+        [ Html.img
+            [ Html.src &quot;/images/icons8-confetti-128.png&quot;
+            , Html.class &quot;mb-4 jello-horizontal&quot;
+            ]
+            []
+        , Html.h3
+            []
+            [ Html.text &lt;| &quot;Welcome &quot; ++ email ++ &quot;!&quot; ]
+        , Html.p
+            []
+            [ Html.text &quot;You signed in successfully.&quot; ]
+        , Html.p
+            []
+            [ Html.text &quot;List of authorized users:&quot; ]
+        , model
+            |&gt; List.map emailView
+            |&gt; Html.Keyed.ul [ Html.class &quot;inline-block m-0 p-0&quot; ]
+        ]
+
+
+emailView : String -&gt; ( String, Html Msg )
+emailView email =
+    ( email
+    , Html.li
+        []
+        [ Html.text email ]
+    )
+</code></pre> <p>Its <code>view</code> function receives the current <code>User</code> and its model, which consists of a list of emails, and renders them in the screen.</p> <h4>View.NotFound</h4> <p>Finally, let&#39;s add the view to render unexisting pages, in case the user visits a wrong route:</p> <pre><code class="elm">-- apps/passwordless_auth_web/assets/elm/src/Views/NotFound.elm
+
+module Views.NotFound exposing (view)
+
+import Html exposing (Html, form)
+
+
+view : Html msg
+view =
+    Html.div
+        []
+        [ Html.h1
+            []
+            [ Html.text &quot;404&quot; ]
+        , Html.p
+            []
+            [ Html.text &quot;Page not found&quot; ]
+        ]
+</code></pre> <h3>The Main module</h3> <p>With our page specific logic and views, we can start editing the <code>Main</code> module. As this module is quite big, let&#39;s split it into different chunks of code.</p> <h4>The model section</h4> <pre><code class="elm">module Main exposing (main)
+
+import Data.Session exposing (Session(..))
+import Html exposing (Html, form, map)
+import Json.Decode as Decode exposing (Value)
+import Navigation exposing (Location)
+import Page.Lobby
+import Page.SignIn
+import Phoenix
+import Phoenix.Channel as Channel exposing (Channel)
+import Phoenix.Push as Push exposing (Push)
+import Phoenix.Socket as Socket exposing (AbnormalClose, Socket)
+import Ports
+import Route exposing (Route(..))
+import Views.Lobby
+import Views.Page
+import Views.SignIn
+
+
+
+-- MODEL --
+
+
+type ConnectionStatus
+    = Connecting
+    | Connected ChannelState
+    | Disconnected
+
+
+type ChannelState
+    = Joining
+    | Joined
+    | Left
+
+
+type Page
+    = BlankPage
+    | NotFoundPage
+    | SignInPage Page.SignIn.Model
+    | LobbyPage Page.Lobby.Model
+
+
+type alias Flags =
+    { token : Maybe String
+    , socketUrl : String
+    }
+
+
+type alias Model =
+    { page : Page
+    , session : Session
+    , connectionStatus : ConnectionStatus
+    , flags : Flags
+    }
+-- ...
+</code></pre> <p>The main <code>Model</code> consists of:</p> <ul> <li><code>page</code> which is a custom type representing the current <code>Page</code> state.</li> <li><code>session</code> which holds information about the authenticated user.</li> <li><code>connectionStatus</code> which is another custom type representing the status of the socket connection and the channel state.</li> <li><code>flags</code> which stores the configuration data passed from the outside while initializing the application.</li> </ul> <h4>The update section</h4> <pre><code class="elm">-- UPDATE --
+
+
+type Msg
+    = SetRoute (Maybe Route)
+    | ConnectionStatusChanged ConnectionStatus
+    | HandleAdminChannelJoin Decode.Value
+    | ViewsPageMsg Views.Page.Msg
+    | HandleSignOutSuccess Decode.Value
+    | PageSignInMsg Page.SignIn.Msg
+    | PageLobbyMsg Page.Lobby.Msg
+
+
+update : Msg -&gt; Model -&gt; ( Model, Cmd Msg )
+update msg ({ flags, page } as model) =
+    let
+        { socketUrl } =
+            flags
+
+        toPage toModel toMsg subUpdate subMsg subModel =
+            let
+                ( newModel, newCmd ) =
+                    subUpdate subMsg subModel
+            in
+            ( { model | page = toModel newModel }, Cmd.map toMsg newCmd )
+    in
+    case ( msg, page ) of
+        ( SetRoute route, _ ) -&gt;
+            setRoute route model
+
+        ( ConnectionStatusChanged connectionStatus, _ ) -&gt;
+            let
+                cmds =
+                    case connectionStatus of
+                        Disconnected -&gt;
+                            [ Route.newUrl SignInRoute
+                            , Ports.saveToken Nothing
+                            ]
+
+                        _ -&gt;
+                            []
+            in
+            { model | connectionStatus = connectionStatus } ! cmds
+
+        ( HandleAdminChannelJoin payload, _ ) -&gt;
+            case Decode.decodeValue Data.Session.decoder payload of
+                Ok user -&gt;
+                    { model
+                        | session =
+                            Authenticated user
+                        , connectionStatus = Connected Joined
+                    }
+                        ! [ Ports.saveToken model.flags.token ]
+
+                Err error -&gt;
+                    let
+                        _ =
+                            Debug.log &quot;Error&quot; error
+                    in
+                    model ! []
+
+        ( HandleSignOutSuccess _, _ ) -&gt;
+            { model
+                | connectionStatus = Disconnected
+                , session = Anonymous
+            }
+                ! [ Route.newUrl SignInRoute, Ports.saveToken Nothing ]
+
+        ( ViewsPageMsg subMsg, _ ) -&gt;
+            case subMsg of
+                Views.Page.SignOut -&gt;
+                    model
+                        ! [ Push.init &quot;admin:lobby&quot; &quot;sign_out&quot;
+                                |&gt; Push.onOk HandleSignOutSuccess
+                                |&gt; Phoenix.push socketUrl
+                          ]
+
+        ( ViewsPageMsg subMsg, _ ) -&gt;
+            case subMsg of
+                Views.Page.SignOut -&gt;
+                    model
+                        ! [ Push.init &quot;admin:lobby&quot; &quot;sign_out&quot;
+                                |&gt; Push.onOk HandleSignOutSuccess
+                                |&gt; Phoenix.push socketUrl
+                          ]
+
+        ( PageSignInMsg subMsg, SignInPage subModel ) -&gt;
+            toPage SignInPage PageSignInMsg Page.SignIn.update subMsg subModel
+
+        ( PageLobbyMsg subMsg, LobbyPage subModel ) -&gt;
+            toPage LobbyPage PageLobbyMsg Page.Lobby.update subMsg subModel
+
+        ( _, _ ) -&gt;
+            model ! []
+
+
+setRoute : Maybe Route -&gt; Model -&gt; ( Model, Cmd Msg )
+setRoute maybeRoute ({ connectionStatus, session, flags } as model) =
+    let
+        transition init page toMsg =
+            let
+                ( subModel, subCmd ) =
+                    init
+            in
+            { model | page = page subModel } ! [ Cmd.map toMsg subCmd ]
+    in
+    case maybeRoute of
+        Nothing -&gt;
+            { model | page = NotFoundPage } ! [ Cmd.none ]
+
+        Just SignInRoute -&gt;
+            { model | page = SignInPage Page.SignIn.initialModel } ! [ Cmd.none ]
+
+        Just LobbyRoute -&gt;
+            case connectionStatus of
+                Disconnected -&gt;
+                    model ! [ Route.newUrl SignInRoute ]
+
+                _ -&gt;
+                    transition (Page.Lobby.init flags.socketUrl) LobbyPage PageLobbyMsg
+</code></pre> <p>The <code>update</code> function evaluates the current <code>msg</code> and <code>page</code>, and depending on the combination takes one of the following actions:</p> <ul> <li><code>( SetRoute route, _ )</code> means a route change, so it calls the <code>setRoute</code> function to initialize the page state depending on the new route.</li> <li><code>( ConnectionStatusChanged connectionStatus, _ )</code> handles changes in the socket connection, and calls a port to delete the stored authentication token from <code>localStorage</code> and redirects to the <code>SignInRoute</code> route, and sets the new connection status in the model.</li> <li><code>( HandleAdminChannelJoin payload, _ )</code> handles the success of joining the admin channel, setting the user&#39;s data into the <code>session</code> key of the model, and changing the connection state to the proper one.</li> <li><code>( HandleSignOutSuccess _, _ )</code> sets <code>connectionStatus</code> to disconnected, resets the session user to <code>Nothing</code>, calls the port to delete the token and redirect to the <code>SignInRoute</code> route.</li> <li><code>( ViewsPageMsg subMsg, _ )</code> checks for <code>Views.Page.SignOut</code> messages, sent by clicking on the sign-out link of the header and sends a <code>sign_out</code> message to the admin channel through the socket.</li> <li><code>( PageSignInMsg subMsg, SignInPage subModel )</code> and <code>( PageLobbyMsg subMsg, LobbyPage subModel )</code> update the current page state using their corresponding update function.</li> </ul> <p>The <code>setRoute</code> function takes care of two different things:</p> <ol> <li>It initializes the current route page model.</li> <li>Redirects to the <code>SignInRoute</code> route if the user is not connected to the socket, which means that is not authenticated.</li> </ol> <h4>The view section</h4> <pre><code class="elm">-- VIEW --
+
+
+view : Model -&gt; Html Msg
+view { session, page } =
+    let
+        header =
+            Html.map ViewsPageMsg Views.Page.headerView
+
+        frame =
+            Views.Page.frameView session header
+    in
+    case ( page, session ) of
+        ( SignInPage subModel, _ ) -&gt;
+            map PageSignInMsg (Views.SignIn.view subModel)
+
+        ( LobbyPage subModel, Authenticated user ) -&gt;
+            frame &lt;| map PageLobbyMsg (Views.Lobby.view user subModel)
+
+        ( NotFoundPage, Authenticated _ ) -&gt;
+            frame Views.NotFound.view
+
+        _ -&gt;
+            frame &lt;| Html.text &quot;View not implemented yet&quot;
+</code></pre> <p>The <code>view</code> function takes the current model, and depending on the current <code>page</code> and <code>session</code>, renders the necessary view wrapping it with the <code>frame</code> or not.</p> <h4>The subscriptions section</h4> <pre><code class="elm">-- SUBSCRIPTIONS --
+
+
+socket : Flags -&gt; Socket Msg
+socket { socketUrl, token } =
+    Socket.init socketUrl
+        |&gt; Socket.withParams [ ( &quot;token&quot;, Maybe.withDefault &quot;&quot; token ) ]
+        |&gt; Socket.onOpen (ConnectionStatusChanged (Connected Joining))
+        |&gt; Socket.onClose (\_ -&gt; ConnectionStatusChanged Disconnected)
+        |&gt; Socket.withDebug
+
+
+subscriptions : Model -&gt; Sub Msg
+subscriptions { connectionStatus, flags } =
+    let
+        { token } =
+            flags
+
+        adminChannel =
+            Channel.init &quot;admin:lobby&quot;
+                |&gt; Channel.onJoin HandleAdminChannelJoin
+                |&gt; Channel.withDebug
+    in
+    case connectionStatus of
+        Disconnected -&gt;
+            Sub.none
+
+        _ -&gt;
+            Phoenix.connect (socket flags) [ adminChannel ]
+</code></pre> <p>Depending on the <code>connectionStatus</code> it tries to connect to the <strong>Phoenix</strong> <code>Socket</code>, changing the status to <code>Connected Joining</code> if the server-side authentication is successful. On the contrary, it sets it to <code>Disconnected</code> which redirects to the sign-in page as we have previously seen.</p> <h4>The main and init section</h4> <pre><code class="elm">-- MAIN AND INIT --
+
+
+init : Flags -&gt; Location -&gt; ( Model, Cmd Msg )
+init flags location =
+    let
+        ( model, cmd ) =
+            setRoute (Route.fromLocation location)
+                { page = BlankPage
+                , session = Anonymous
+                , connectionStatus = Connecting
+                , flags = flags
+                }
+    in
+    model ! [ cmd ]
+
+
+main : Program Flags Model Msg
+main =
+    Navigation.programWithFlags (Route.fromLocation &gt;&gt; SetRoute)
+        { init = init
+        , view = view
+        , update = update
+        , subscriptions = subscriptions
+        }
+</code></pre> <p>As <code>main</code> returns a <code>Navigation.programWithFlags</code> application, the <code>init</code> function takes the received <code>Flags</code> and a <code>Location</code>, calling <code>setRoute</code> to initialize the application&#39;s state depending on the current route.</p> <h3>Additional stuff</h3> <p>We have almost covered everything excepting two missing modules:</p> <h4>The Ports module</h4> <pre><code class="elm">-- apps/passwordless_auth_web/assets/elm/src/Ports.elm
+
+port module Ports exposing (saveToken)
+
+
+port saveToken : Maybe String -&gt; Cmd msg
+</code></pre> <p><code>saveToken</code> is a port, which sends the valid authentication token, or an empty one, to the main <code>app.js</code> script where it is stored using <code>localStorage</code>. The reason for this behaviour is that we want to reuse the valid token to reconnect if the user refreshes the browser, or delete it in case the user signs out.</p> <h4>The Data.Session module</h4> <p>As we are using <code>Session</code> all over the place, and to prevent circular dependencies, it makes sense having everything related to <code>Session</code> in its own module.</p> <pre><code class="elm">-- apps/passwordless_auth_web/assets/elm/src/Data/Session.elm
+
+module Data.Session exposing
+    ( Session(..)
+    , User
+    , decoder
+    , encode
+    )
+
+import Json.Decode as Decode exposing (Decoder)
+import Json.Decode.Pipeline exposing (decode, required)
+import Json.Encode as Encode exposing (Value)
+
+
+type alias User =
+    { email : String }
+
+
+type Session
+    = Anonymous
+    | Authenticated User
+
+
+
+-- SERIALIZATION --
+
+
+decoder : Decoder User
+decoder =
+    decode User
+        |&gt; required &quot;email&quot; Decode.string
+
+
+encode : User -&gt; Decode.Value
+encode user =
+    Encode.object
+        [ ( &quot;email&quot;, Encode.string user.email )
+        ]
+</code></pre> <p>Once again we rely on a custom type to define <code>Session</code> which can be either <code>Anonymous</code> or <code>Authenticated User</code>.</p> <h3>The Phoenix AdminChannel</h3> <p>If we start the application, we can see errors related to socket connection. This is because we haven&#39;t created the <code>AdminChannel</code> yet, so let&#39;s go ahead and add its definition to the <code>UserSocket</code> module:</p> <pre><code class="elixir"># apps/passwordless_auth_web/lib/passwordless_auth_web/channels/user_socket.ex
+
+defmodule PasswordlessAuthWeb.UserSocket do
+  # ...
+
+  channel(&quot;admin:*&quot;, PasswordlessAuthWeb.AdminChannel)
+
+  # ...
+end
+</code></pre> <p>And finally, the channel module:</p> <pre><code class="elixir"># apps/passwordless_auth_web/lib/passwordless_auth_web/channels/admin_channel.ex
+
+defmodule PasswordlessAuthWeb.AdminChannel do
+  use PasswordlessAuthWeb, :channel
+
+  require Logger
+
+  alias PasswordlessAuth.Repo
+
+  def join(&quot;admin:lobby&quot;, _payload, socket) do
+    {:ok, socket.assigns.user, socket}
+  end
+
+  def handle_in(&quot;data&quot;, _, socket) do
+    admin_emails = Application.get_env(:passwordless_auth, :repo)[:emails]
+
+    {:reply, {:ok, %{data: admin_emails}}, socket}
+  end
+
+  def handle_in(&quot;sign_out&quot;, _, socket) do
+    email = socket.assigns.user.email
+    :ok = Repo.invalidate(email)
+
+    {:reply, {:ok, %{success: true}}, socket}
+  end
+end
+</code></pre> <p>The logic for this module is very simple:</p> <ul> <li><code>join</code> always returns success and the authenticated user data assigned to the connection.</li> <li><code>handle_in(&quot;data&quot;, _, _)</code> returns the existing list of valid emails so that we can render it in the lobby view.</li> <li><code>handle_in(&quot;sign_out&quot;, _, _)</code> takes the assigned email and invalidates its token in the repository, so cannot use it again.</li> </ul> <p>So that&#39;s pretty much it. We finally have our basic <strong>Elm</strong> SPA admin panel, backed with a <strong>Phoenix</strong> passwordless and databaseless system. While I was writing this post, I have refactored many parts of the application so I probably might have missed including some of the changes. Therefore, don&#39;t forget to check out the source code for the missing pieces. <strong>Elm 0.19.0</strong> just came out, so I&#39;m planning to write a new part about upgrading it, once it has proper support for Websockets.</p> <p>Happy coding!</p> <div class=btn-wrapper> <a href="https://github.com/bigardone/passwordless-auth" target=_blank class=btn><i class="fa fa-github"></i> Source code</a> </div> <div id=disqus_thread></div> <script>
+  /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+  var disqus_shortname = 'codeloveandboards'; // required: replace example with your forum shortname
+  
+  /* * * DON'T EDIT BELOW THIS LINE * * */
+  (function() {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script> <noscript> Please enable JavaScript to view the <a href='//disqus.com/?ref_noscript'>comments powered by Disqus.</a> </noscript> <a class=dsq-brlink href='//disqus.com'> comments powered by <span class=logo-disqus>Disqus</span> </a> </article> </section> </div> </section> <footer id=main_footer> <ul class=article-nav> <li class=previous> <a href="/blog/2018/06/20/elixir-and-phoenix-basic-passwordless-and-databaseless-authentication-pt-2/"><h4>previous post</h4> <h3> Elixir and Phoenix basic passwordless and databaseless authentication (pt.2) </h3> <div class=meta-data> <hr> posted Jun 20, 2018 on elixir, phoenix, elm </div> </a> </li> <li class=next> </li> </ul> <section> <div class=container> <div class=center> <ul> <li> <a href='/blog'>Archives</a> </li> <li> <a href='//feeds.feedburner.com/CodeLoveAndBoards' target=_blank>RSS</a> </li> </ul> Copyright © 2018 - Ricardo García Vega - Code, Love & Boards! </div> </div> </section> </footer> <script src="../../../../../javascripts/blog-5ddb0520.js"></script> <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  
+  ga('create', 'UA-37802122-1', 'codeloveandboards.com');
+  ga('send', 'pageview');
+</script> <script>
+  _StatHat.push(["_trackCount", "g2pcD9xou7DlR0DtndiwvSBBYU5k", 1.0]);
+</script> </body> </html>
