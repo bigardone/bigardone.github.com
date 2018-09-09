@@ -5,16 +5,155 @@
   <id>http://codeloveandboards.com/blog</id>
   <link href="http://codeloveandboards.com/blog"/>
   <link href="http://codeloveandboards.com/feed.xml" rel="self"/>
-  <updated>2018-08-31T07:00:00Z</updated>
+  <updated>2018-09-09T08:35:00Z</updated>
   <author>
     <name>Blog Author</name>
   </author>
+  <entry>
+    <title>Elm and Web Components</title>
+    <link rel="alternate" href="http://codeloveandboards.com/blog/2018/09/09/elm-and-web-components/"/>
+    <id>http://codeloveandboards.com/blog/2018/09/09/elm-and-web-components/</id>
+    <published>2018-09-09T08:35:00Z</published>
+    <updated>2018-09-09T18:10:57+02:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;One of my favorite talks from &lt;a href="https://2018.elmeurope.org/"&gt;Elm Europe 2018&lt;/a&gt; conference was the one about [When and how to use &lt;strong&gt;Web Components&lt;/strong&gt; with elm] by &lt;a href="https://github.com/lukewestby"&gt;Luke Westby&lt;/a&gt;, creator of the popular &lt;strong&gt;Elm&lt;/strong&gt; live editor &lt;a href="https://ellie-app.com/new"&gt;Ellie&lt;/a&gt;. In this fun and enlightening talk, he suggests an alternative way of using external JS libraries in &lt;strong&gt;Elm&lt;/strong&gt;, rather than relying on ports. Ports, although being the standard way of communicating with external JS in &lt;strong&gt;Elm&lt;/strong&gt;, might not be the right tool for some particular situations, especially when your application grows and you need to handle a significant amount of them. The alternative way he exposes is using &lt;a href="https://developer.mozilla.org/en-US/docs/Web/Web_Components"&gt;Web Components&lt;/a&gt;, which is &lt;em&gt;a suite of different technologies allowing you to create reusable custom elements — with their functionality encapsulated away from the rest of your code — and utilize them in your web apps&lt;/em&gt;. This solution blew up my mind, so I couldn&amp;#39;t resist trying it out myself, and I had the perfect project for it :)&lt;/p&gt;
+
+&lt;h3&gt;Revisiting Phoenix &amp;amp; Elm landing page&lt;/h3&gt;
+
+&lt;p&gt;Some months ago I did a small tutorial about &lt;a href="/blog/2017/12/02/phoenix-elm-landing-page-pt-1"&gt;creating a landing page with Phoenix and Elm&lt;/a&gt;, in which we added &lt;a href="https://developers.google.com/recaptcha/"&gt;Google reCAPTCHA&lt;/a&gt; to add security to the subscription form. Both the initialization and passing the response token are handled using ports, which makes it the perfect candidate for being a custom Web Component. Let&amp;#39;s add the definition of the custom element:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="javascript"&gt;// assets/js/components/recaptcha.
+
+export default class Recaptcha extends HTMLElement {
+  constructor() {
+    const self = super();
+
+    self._grecaptcha = null;
+    self._token = null;
+
+    return self;
+  }
+
+  connectedCallback() {
+    this._grecaptcha = grecaptcha.render(this, {
+      hl: &amp;#39;en&amp;#39;,
+      sitekey: &amp;#39;your-recaptcha-site-key&amp;#39;,
+      callback: (token) =&amp;gt; {
+        this._token = token;
+        this.dispatchEvent(new CustomEvent(&amp;#39;gotToken&amp;#39;));
+      },
+    });
+  }
+
+  set token(token) {
+    this._token = token;
+
+    if (this._grecaptcha !== null &amp;amp;&amp;amp; token === null) grecaptcha.reset(this._grecaptcha);
+  }
+
+  get token() {
+    return this._token;
+  }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We are defining the &lt;code&gt;Recaptcha&lt;/code&gt; class which extends &lt;code&gt;HTMLElement&lt;/code&gt; and has the following functions:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;constructor&lt;/code&gt;, in which we define the internal properties of the component. In our case, we have &lt;code&gt;_grecaptcha&lt;/code&gt; to store the &lt;strong&gt;reCAPTCHA&lt;/strong&gt; plugin instance, and &lt;code&gt;_token&lt;/code&gt; to store the token received from Google while validating the user.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;connetedCallback&lt;/code&gt; is one of the &lt;a href="https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_custom_elements#Using_the_lifecycle_callbacks"&gt;lifecycle callbacks&lt;/a&gt; of any custom element, and in which we initialize the internal &lt;strong&gt;reCAPTCHA&lt;/strong&gt; plugin, and dispatches a custom &lt;code&gt;gotToken&lt;/code&gt; event with the value received from Google.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;set token()&lt;/code&gt; and &lt;code&gt;get token()&lt;/code&gt; which are the getter and setter functions for the &lt;code&gt;token&lt;/code&gt; property.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Once we have defined the &lt;code&gt;Recaptcha&lt;/code&gt; custom element, let&amp;#39;s edit the main &lt;code&gt;app.js&lt;/code&gt; file to remove use it and also remove the unnecessary port&amp;#39;s functionality that we don&amp;#39;t need anymore:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="javascript"&gt;// assets/js/app.
+
+import Elm from &amp;#39;./elm/main&amp;#39;;
+import Recaptcha from &amp;#39;./components/recaptcha&amp;#39;;
+
+window.customElements.define(&amp;#39;g-recaptcha&amp;#39;, Recaptcha);
+
+window.onloadCallback = () =&amp;gt; {
+  const formContainer = document.querySelector(&amp;#39;#form_container&amp;#39;);
+
+  if (formContainer) {
+    Elm.Main.embed(formContainer);
+  }
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We register the custom element using &lt;code&gt;window.customElements.define&lt;/code&gt; which takes the &lt;code&gt;name&lt;/code&gt; (requires a dash on it) of the HTML node and the component definition, in our case &lt;code&gt;Recaptcha&lt;/code&gt;. From now on, we can add  our new &lt;code&gt;Recaptcha&lt;/code&gt; custom element by adding a &lt;code&gt;&amp;lt;g-recaptacha&amp;gt;&amp;lt;/g-recaptcha&amp;gt;&lt;/code&gt; tag, so let&amp;#39;s edit them Elm view module to remove the old div we were using to render the &lt;code&gt;reCAPTCHA&lt;/code&gt; component, and add the new tag:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elm"&gt;-- assets/elm/src/View.elm
+
+module View exposing (view)
+
+-- ...
+
+formView : SubscribeForm -&amp;gt; Html Msg
+formView subscribeForm =
+        let
+            { fullName, email, recaptchaToken } =
+                    extractFormFields subscribeForm
+        -- ...
+        in
+        -- ...
+            , Html.div
+                [ Html.class &amp;quot;field&amp;quot; ]
+                [ Html.node &amp;quot;g-recaptcha&amp;quot;
+                    [ Html.id &amp;quot;recaptcha&amp;quot;
+                    , Html.property &amp;quot;token&amp;quot; &amp;lt;| encodeRecaptchaToken recaptchaToken
+                    , Html.on &amp;quot;gotToken&amp;quot; decodeGotToken
+                    ]
+                    []
+                , validationErrorView &amp;quot;recaptcha_token&amp;quot; validationErrors
+                ]
+                        , -- ...
+
+
+
+encodeRecaptchaToken : Maybe String -&amp;gt; Encode.Value
+encodeRecaptchaToken maybeRecaptchaToken =
+    case maybeRecaptchaToken of
+        Just recaptchaToken -&amp;gt;
+            Encode.string recaptchaToken
+
+        Nothing -&amp;gt;
+            Encode.null
+
+
+decodeGotToken : Decode.Decoder Msg
+decodeGotToken =
+    Decode.map SetRecaptchaToken &amp;lt;| Decode.at [ &amp;quot;target&amp;quot;, &amp;quot;token&amp;quot; ] &amp;lt;| Decode.string
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To make the custom element work we need to do the following:
+- Define the new &lt;code&gt;g-recaptcha&lt;/code&gt; node using &lt;code&gt;Html.node&lt;/code&gt;.
+- Set the &lt;code&gt;token&lt;/code&gt; property with &lt;code&gt;Html.property&lt;/code&gt; which in the component uses internally the &lt;code&gt;set token(token)&lt;/code&gt; setter function we have defined previously.
+- Handle the custom &lt;code&gt;gotToken&lt;/code&gt; event we have also defined previously, which sets the token in the model after getting it back from the custom element in its &lt;code&gt;decodeGotToken&lt;/code&gt; decoder.&lt;/p&gt;
+
+&lt;p&gt;And, that&amp;#39;s it! If we run the application, everything should be working as before, yay!&lt;/p&gt;
+
+&lt;p&gt;&lt;img src="/images/blog/phoenix-elm-landing-page/final-result.gif"
+alt="Final result" style="background: #fff;" /&gt;&lt;/p&gt;
+
+&lt;h3&gt;Conclusion&lt;/h3&gt;
+
+&lt;p&gt;After watching Luke&amp;#39;s talk, I was looking forward to spending some free time playing around with &lt;strong&gt;Web Components&lt;/strong&gt; and checking by myself how they work and how they play with &lt;strong&gt;Elm&lt;/strong&gt;. After implementing the solution, and reviewing the code while writing this post, I have to admit that I  like a lot final result. Having all the functionality related to the component encapsulated in its own definition, and simply rendering it and managing messages using events as with any other HTML node is really cool, and this separation of concerns makes your &lt;strong&gt;Elm&lt;/strong&gt; code cleaner and easier to understand and maintain. Although it surely has some drawbacks like browser compatibility (which you can fix using a proper polyfill), I&amp;#39;m going to start using this solution in my current and future projects to explore its benefits and possible limitations more deeply. If you are curious about the final result, &lt;a href="https://github.com/bigardone/phoenix-and-elm-landing-page/commit/4e9e88037ba7679e6b20fbb942b1b5379db6f418"&gt;here is the commit&lt;/a&gt; with the needed changes.&lt;/p&gt;
+
+&lt;p&gt;Happy coding!&lt;/p&gt;
+</content>
+  </entry>
   <entry>
     <title>Elixir and Phoenix basic passwordless and databaseless authentication (pt. 3)</title>
     <link rel="alternate" href="http://codeloveandboards.com/blog/2018/08/31/elixir-and-phoenix-basic-passwordless-and-databaseless-authentication-pt-3/"/>
     <id>http://codeloveandboards.com/blog/2018/08/31/elixir-and-phoenix-basic-passwordless-and-databaseless-authentication-pt-3/</id>
     <published>2018-08-31T07:00:00Z</published>
-    <updated>2018-09-01T08:47:53+02:00</updated>
+    <updated>2018-09-09T10:36:43+02:00</updated>
     <author>
       <name>Article Author</name>
     </author>
@@ -4264,317 +4403,6 @@ you can check out the source code of the part
 &lt;a href="https://github.com/bigardone/phoenix-and-elm-landing-page/tree/tutorial/part-2"&gt;here&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;Merry Christmas and Happy New Coding Year!&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <title>Phoenix &amp; Elm landing page (pt.1)</title>
-    <link rel="alternate" href="http://codeloveandboards.com/blog/2017/12/02/phoenix-elm-landing-page-pt-1/"/>
-    <id>http://codeloveandboards.com/blog/2017/12/02/phoenix-elm-landing-page-pt-1/</id>
-    <published>2017-12-02T08:00:00Z</published>
-    <updated>2018-01-14T08:25:16+01:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;div class="index"&gt;
-  &lt;p&gt;This post belongs to the &lt;strong&gt;Phoenix &amp; Elm landing page&lt;/strong&gt; series.&lt;/p&gt;
-  &lt;ol&gt;
-    &lt;li&gt;&lt;a href="/blog/2017/12/02/phoenix-elm-landing-page-pt-1/"&gt;Bootstrapping the project and the basic API functionality to save our first leads&lt;/a&gt;&lt;/li&gt;
-    &lt;li&gt;&lt;a href="/blog/2017/12/23/phoenix-elm-landing-page-pt-2/"&gt;Building the landing page UI and the basic Elm subscription form&lt;/a&gt;&lt;/li&gt;
-    &lt;li&gt;&lt;a href="/blog/2018/01/06/phoenix-elm-landing-page-pt-3/"&gt;Adding Google reCAPTCHA support to avoid spambots&lt;/a&gt;&lt;/li&gt;
-  &lt;/ol&gt;
-
-  &lt;a href="https://github.com/bigardone/phoenix-and-elm-landing-page" target="_blank"&gt;&lt;i class="fa fa-github"&gt;&lt;/i&gt; Source code&lt;/a&gt;
-&lt;/div&gt;
-
-&lt;p&gt;In these series, we are going to cover some common patterns and best practices related to using &lt;strong&gt;Phoenix&lt;/strong&gt; and &lt;strong&gt;Elm&lt;/strong&gt; to build a simple landing page with a subscription form. The primary goal is to achieve the following list of tasks:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;Create a new &lt;strong&gt;Phoenix&lt;/strong&gt; project.&lt;/li&gt;
-&lt;li&gt;Add a new &lt;strong&gt;Phoenix&lt;/strong&gt; context for marketing leads.&lt;/li&gt;
-&lt;li&gt;Add an &lt;strong&gt;API&lt;/strong&gt; endpoint to insert a lead&amp;#39;s data into the database.&lt;/li&gt;
-&lt;li&gt;Build the landing page template using &lt;strong&gt;Phoenix&lt;/strong&gt; and &lt;a href="https://bulma.io/"&gt;Bulma&lt;/a&gt; as our CSS framework of choice.&lt;/li&gt;
-&lt;li&gt;Add &lt;strong&gt;Elm&lt;/strong&gt; to the project and build a subscription form that points to the API endpoint described previously.&lt;/li&gt;
-&lt;li&gt;Add &lt;a href="https://developers.google.com/recaptcha/"&gt;Google&amp;#39;s reCAPTCHA&lt;/a&gt; widget to the &lt;strong&gt;Elm&lt;/strong&gt; subscription form, and how to render it and how to handle a visitor&amp;#39;s &lt;strong&gt;reCAPTCHA&lt;/strong&gt; response.&lt;/li&gt;
-&lt;li&gt;Build an HTTP client using &lt;a href="https://github.com/edgurgel/httpoison"&gt;HTTPoison&lt;/a&gt; to verify the token received by the &lt;strong&gt;reCAPTCHA&lt;/strong&gt; widget against &lt;strong&gt;Google&amp;#39;s reCAPTCHA API&lt;/strong&gt; from our backend.&lt;/li&gt;
-&lt;li&gt;Add tests covering the subscription process using &lt;strong&gt;mocks&lt;/strong&gt; for the HTTP clients.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Now that we have detailed what we need let&amp;#39;s get cracking!&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="/images/blog/phoenix-elm-landing-page/landing-page.jpg" alt="Landing page" style="background: #fff;" /&gt;&lt;/p&gt;
-
-&lt;h3&gt;Creating the Phoenix project&lt;/h3&gt;
-
-&lt;p&gt;Let&amp;#39;s start by bootstrapping a new &lt;strong&gt;Phoenix&lt;/strong&gt; project as we usually do:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;$ mix phx.new landing_page
-* creating landing_page/config/config.exs
-* creating landing_page/config/dev.exs
-* creating landing_page/config/prod.exs
-...
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;After the task finishes, we can go to the generated project folder and create the database:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;$ cd landing_page
-$ mix ecto.create
-The database for LandingPage.Repo has already been created
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Now we are ready to start working on the backend.&lt;/p&gt;
-
-&lt;h3&gt;The Marketing context and Lead schema&lt;/h3&gt;
-
-&lt;p&gt;Before continuing, let&amp;#39;s stop for a second and think about what is the primary goal of our future landing page. The principal goal is not only to be the temporally home site of our awesome new product that we are working on but to let potential leads subscribe so we can take any marketing or business decision that we might need, like for instance sending them the latest news and promotions via email campaigns. Having this in mind, we can identify a &lt;code&gt;Marketing&lt;/code&gt; context and a &lt;code&gt;leads&lt;/code&gt; table for the database, so let&amp;#39;s create both of them using the new &lt;strong&gt;Phoenix&lt;/strong&gt; context generator:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;$ mix phx.gen.context Marketing Lead leads full_name:string email:string
-* creating lib/landing_page/marketing/lead.ex
-* creating priv/repo/migrations/20171202101203_create_leads.exs
-* creating lib/landing_page/marketing/marketing.ex
-* injecting lib/landing_page/marketing/marketing.ex
-* creating test/landing_page/marketing/marketing_test.exs
-* injecting test/landing_page/marketing/marketing_test.exs
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Before running the migrations task, we need to tweak the migration file just created to add a &lt;code&gt;unique&lt;/code&gt; index to the &lt;code&gt;email&lt;/code&gt; column, because we do not want leads subscribing multiple times with the same &lt;code&gt;email&lt;/code&gt;:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# priv/repo/migrations/20171201145808_create_leads.exs
-
-defmodule LandingPage.Repo.Migrations.CreateLeads do
-  use Ecto.Migration
-
-  def change do
-    create table(:leads) do
-      add(:full_name, :string, null: false)
-      add(:email, :string, null: false)
-
-      timestamps()
-    end
-
-    create(unique_index(:leads, [:email]))
-  end
-end
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Now we can run the migrations task to create the table:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;mix ecto.migrate
-[info] == Running LandingPage.Repo.Migrations.CreateLeads.change/0 forward
-[info] create table leads
-[info] create index leads_email_index
-[info] == Migrated in 0.0s
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;We also have to add the necessary validation rules and constraints to the &lt;code&gt;Lead&lt;/code&gt; schema module, so let&amp;#39;s edit it:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# lib/landing_page/marketing/lead.ex
-
-defmodule LandingPage.Marketing.Lead do
-  use Ecto.Schema
-  import Ecto.Changeset
-  alias LandingPage.Marketing.Lead
-
-  @derive {Poison.Encoder, only: [:full_name, :email]}
-
-  schema &amp;quot;leads&amp;quot; do
-    field(:email, :string)
-    field(:full_name, :string)
-
-    timestamps()
-  end
-
-  @doc false
-  def changeset(%Lead{} = lead, attrs) do
-    lead
-    |&amp;gt; cast(attrs, [:full_name, :email])
-    |&amp;gt; validate_required([:full_name, :email])
-    |&amp;gt; unique_constraint(:email)
-  end
-end
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Apart from adding the &lt;code&gt;unique_constraint&lt;/code&gt; check function, we are also adding the &lt;code&gt;@derive&lt;/code&gt; clause specifying the fields we want to return when a &lt;code&gt;%Lead{}&lt;/code&gt; struct is automatically encoded by &lt;strong&gt;Poison&lt;/strong&gt;, which is very convenient while developing &lt;strong&gt;JSON APIs&lt;/strong&gt;, as we are going to see in a minute.&lt;/p&gt;
-
-&lt;h3&gt;The API endpoint and saving leads&lt;/h3&gt;
-
-&lt;p&gt;Now that our context and schema are ready to start saving leads, let&amp;#39;s add the new &lt;strong&gt;route&lt;/strong&gt; that we are going to use for this purpose:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# lib/landing_page_web/router.ex
-
-defmodule LandingPageWeb.Router do
-  use LandingPageWeb, :router
-
-    # ...
-
-  # Other scopes may use custom stacks.
-  scope &amp;quot;/api&amp;quot;, LandingPageWeb do
-    pipe_through(:api)
-
-    scope &amp;quot;/v1&amp;quot;, V1 do
-      post(&amp;quot;/leads&amp;quot;, LeadController, :create)
-    end
-  end
-end
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Let&amp;#39;s continue with a more test-driven approach and create a new test file that covers how we expect the controller to work:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# test/landing_page_web/controllers/v1/lead_controller_test.exs
-
-defmodule LandingPageWeb.V1.LeadControllerTest do
-  use LandingPageWeb.ConnCase
-
-  describe &amp;quot;POST /api/v1/leads&amp;quot; do
-    test &amp;quot;returns error response with invalid parms&amp;quot;, %{conn: conn} do
-      conn = post(conn, lead_path(conn, :create), %{&amp;quot;lead&amp;quot; =&amp;gt; %{}})
-
-      assert json_response(conn, 422) == %{
-               &amp;quot;full_name&amp;quot; =&amp;gt; [&amp;quot;can&amp;#39;t be blank&amp;quot;],
-               &amp;quot;email&amp;quot; =&amp;gt; [&amp;quot;can&amp;#39;t be blank&amp;quot;]
-             }
-    end
-
-    test &amp;quot;returns success response with valid params&amp;quot;, %{conn: conn} do
-      params = %{
-        &amp;quot;lead&amp;quot; =&amp;gt; %{&amp;quot;full_name&amp;quot; =&amp;gt; &amp;quot;John&amp;quot;, &amp;quot;email&amp;quot; =&amp;gt; &amp;quot;foo@bar.com&amp;quot;}
-      }
-
-      conn = post(conn, lead_path(conn, :create), params)
-      assert json_response(conn, 200) == params[&amp;quot;lead&amp;quot;]
-    end
-  end
-end
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;It is a very basic test, but it pretty much covers what we need at the moment. If the &lt;code&gt;lead&lt;/code&gt; parameter is invalid, it should return a &lt;code&gt;422&lt;/code&gt; response (unprocessable entity) along with the validation errors. On the other hand, if the sent parameters are correct, it will return a success response along with the inserted data. Let&amp;#39;s run the &lt;code&gt;mix test&lt;/code&gt; task and see what happens:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;$ mix test test/landing_page_web/controllers/v1/lead_controller_test.exs
-
-
-  1) test POST /api/v1/leads returns success response with valid params (LandingPageWeb.V1.LeadControllerTest)
-     test/landing_page_web/controllers/v1/lead_controller_test.exs:14
-     ** (UndefinedFunctionError) function LandingPageWeb.V1.LeadController.init/1 is undefined (module LandingPageWeb.V1.LeadController is not available)
-     code: conn = post(conn, lead_path(conn, :create), params)
-     stacktrace:
-       LandingPageWeb.V1.LeadController.init(:create)
-       (landing_page) lib/landing_page_web/router.ex:1: anonymous fn/1 in LandingPageWeb.Router.__match_route__/4
-       (phoenix) lib/phoenix/router.ex:278: Phoenix.Router.__call__/1
-       (landing_page) lib/landing_page_web/endpoint.ex:1: LandingPageWeb.Endpoint.plug_builder_call/2
-       (landing_page) lib/landing_page_web/endpoint.ex:1: LandingPageWeb.Endpoint.call/2
-       (phoenix) lib/phoenix/test/conn_test.ex:224: Phoenix.ConnTest.dispatch/5
-       test/landing_page_web/controllers/v1/lead_controller_test.exs:19: (test)
-
-
-
-  2) test POST /api/v1/leads returns error response with invalid parms (LandingPageWeb.V1.LeadControllerTest)
-     test/landing_page_web/controllers/v1/lead_controller_test.exs:5
-     ** (UndefinedFunctionError) function LandingPageWeb.V1.LeadController.init/1 is undefined (module LandingPageWeb.V1.LeadController is not available)
-     code: conn = post(conn, lead_path(conn, :create), %{&amp;quot;lead&amp;quot; =&amp;gt; %{}})
-     stacktrace:
-       LandingPageWeb.V1.LeadController.init(:create)
-       (landing_page) lib/landing_page_web/router.ex:1: anonymous fn/1 in LandingPageWeb.Router.__match_route__/4
-       (phoenix) lib/phoenix/router.ex:278: Phoenix.Router.__call__/1
-       (landing_page) lib/landing_page_web/endpoint.ex:1: LandingPageWeb.Endpoint.plug_builder_call/2
-       (landing_page) lib/landing_page_web/endpoint.ex:1: LandingPageWeb.Endpoint.call/2
-       (phoenix) lib/phoenix/test/conn_test.ex:224: Phoenix.ConnTest.dispatch/5
-       test/landing_page_web/controllers/v1/lead_controller_test.exs:6: (test)
-
-
-
-Finished in 0.09 seconds
-2 tests, 2 failures
-
-Randomized with seed 665970
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;As expected, the test is failing because we have not created the controller module yet, so let&amp;#39;s add it:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# lib/landing_page_web/controllers/v1/lead_controller.ex
-
-defmodule LandingPageWeb.V1.LeadController do
-  use LandingPageWeb, :controller
-
-  alias LandingPage.Marketing
-
-  plug(:scrub_params, &amp;quot;lead&amp;quot;)
-
-  def create(conn, %{&amp;quot;lead&amp;quot; =&amp;gt; params}) do
-    with {:ok, lead} &amp;lt;- Marketing.create_lead(params) do
-      json(conn, lead)
-    end
-  end
-end
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;We are using the &lt;code&gt;scrub_params&lt;/code&gt; plug to check if the lead parameter is present and to convert any of its empty keys to nil values. To create the lead, we are using &lt;code&gt;Marketing.create_lead&lt;/code&gt;, which we created before while generating the context. However, we are only pattern matching against the successful &lt;code&gt;{:ok, lead}&lt;/code&gt; response, and there might be validation errors, throwing a runtime error due to the missing pattern matching against &lt;code&gt;{:error, _}&lt;/code&gt;. So what is the reason for doing it like so? Simply because we want to introduce the new &lt;code&gt;Phoenix.Controller.action_fallback/1&lt;/code&gt; macro, which registers a &lt;code&gt;plug&lt;/code&gt; to call as a fallback when an action doesn&amp;#39;t return a valid &lt;code&gt;%Plug.Conn{}&lt;/code&gt; structure. In our particular case, if there is any validation error, it returns a &lt;code&gt;{:error, %Ecto.Changeset{}}&lt;/code&gt; that we need to handle, so let&amp;#39;s setup the fallback controller:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# lib/landing_page_web.ex
-
-defmodule LandingPageWeb do
-# ...
-
-  def controller do
-    quote do
-      use Phoenix.Controller, namespace: LandingPageWeb
-      import Plug.Conn
-      import LandingPageWeb.Router.Helpers
-      import LandingPageWeb.Gettext
-
-      action_fallback(LandingPageWeb.FallbackController)
-    end
-  end
-
-  # ...
-end
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Adding &lt;code&gt;action_fallback&lt;/code&gt; to the main &lt;code&gt;LandingPageWeb&lt;/code&gt; module makes it available to all of the controllers, but we also have to create the &lt;code&gt;FallbackController&lt;/code&gt; plug module itself, implementing the &lt;code&gt;call/2&lt;/code&gt; function:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# lib/landing_page_web/controllers/fallback_controller.ex
-
-defmodule LandingPageWeb.FallbackController do
-  use LandingPageWeb, :controller
-
-  def call(conn, {:error, %Ecto.Changeset{} = changeset}) do
-    conn
-    |&amp;gt; put_status(:unprocessable_entity)
-    |&amp;gt; render(LandingPageWeb.ErrorView, &amp;quot;error.json&amp;quot;, changeset: changeset)
-  end
-end
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;When it receives an error with a &lt;code&gt;changeset&lt;/code&gt;, it sets the &lt;code&gt;unprocessable_entity&lt;/code&gt; status to the connection and renders the &lt;code&gt;error.json&lt;/code&gt; template from the &lt;code&gt;LandingPageWeb.ErrorView&lt;/code&gt; module that we also need to implement in the existing module:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# lib/landing_page_web/views/error_view.ex
-
-defmodule LandingPageWeb.ErrorView do
-  use LandingPageWeb, :view
-
-  import LandingPageWeb.ErrorHelpers
-
-  # ...
-
-  def render(&amp;quot;error.json&amp;quot;, %{changeset: changeset}) do
-    Ecto.Changeset.traverse_errors(changeset, &amp;amp;translate_error/1)
-  end
-
-  # ...
-end
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Calling Ectos&amp;#39;s &lt;code&gt;traverse_errors&lt;/code&gt; using the &lt;code&gt;translate_errors&lt;/code&gt; from the &lt;code&gt;ErrorHelpers&lt;/code&gt; module, returns the list of changeset errors we have described in the controller&amp;#39;s test. Let&amp;#39;s rerun the test task to verify that we are good to go:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;$ mix test test/landing_page_web/controllers/v1/lead_controller_test.exs
-..
-Finished in 0.1 seconds
-2 tests, 0 failures
-
-Randomized with seed 304229
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Awesome, all test are passing, and the controller is working as we initially planned. In regards to the back-end we have everything that we need, for now, so in the next part we will focus on the front-end side, install all dependencies that we need such as &lt;strong&gt;Elm&lt;/strong&gt; and &lt;strong&gt;Bulma&lt;/strong&gt;, building the basic layout and the subscription form to start saving the first leads. In the meantime, you can check out the source code of what we have done so far &lt;a href="https://github.com/bigardone/phoenix-and-elm-landing-page/tree/tutorial/part-1"&gt;here&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;Happy coding!&lt;/p&gt;
 </content>
   </entry>
 </feed>
