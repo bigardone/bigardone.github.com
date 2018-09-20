@@ -1877,7 +1877,7 @@ Randomized with seed 589379
     <link rel="alternate" href="http://codeloveandboards.com/blog/2018/06/09/elixir-and-phoenix-basic-passwordless-and-databaseless-authentication-pt-1/"/>
     <id>http://codeloveandboards.com/blog/2018/06/09/elixir-and-phoenix-basic-passwordless-and-databaseless-authentication-pt-1/</id>
     <published>2018-06-09T07:00:00Z</published>
-    <updated>2018-09-01T07:53:23+02:00</updated>
+    <updated>2018-09-20T08:27:49+02:00</updated>
     <author>
       <name>Article Author</name>
     </author>
@@ -2126,7 +2126,7 @@ iex(2)&amp;gt;
 
 &lt;p&gt;There is the map where we are going to store the authentication tokens. Let&amp;#39;s continue by adding some functionality to validate if an email is valid, save and fetch token values:&lt;/p&gt;
 
-&lt;pre&gt;&lt;code class="elixir"&gt;# apps/passwordless_auth/lib/passwordless_auth/application.ex
+&lt;pre&gt;&lt;code class="elixir"&gt;# apps/passwordless_auth/lib/passwordless_auth/repo.ex
 
 defmodule PasswordlessAuth.Application do
   use Application

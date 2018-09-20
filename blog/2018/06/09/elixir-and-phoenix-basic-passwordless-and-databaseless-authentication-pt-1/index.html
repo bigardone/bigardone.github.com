@@ -134,7 +134,7 @@ iex(1)&gt;
 iex(1)&gt; :sys.get_state PasswordlessAuth.Repo
 %{&quot;bar@email.com&quot; =&gt; nil, &quot;baz@email.com&quot; =&gt; nil, &quot;foo@email.com&quot; =&gt; nil}
 iex(2)&gt;
-</code></pre> <p>There is the map where we are going to store the authentication tokens. Let&#39;s continue by adding some functionality to validate if an email is valid, save and fetch token values:</p> <pre><code class="elixir"># apps/passwordless_auth/lib/passwordless_auth/application.ex
+</code></pre> <p>There is the map where we are going to store the authentication tokens. Let&#39;s continue by adding some functionality to validate if an email is valid, save and fetch token values:</p> <pre><code class="elixir"># apps/passwordless_auth/lib/passwordless_auth/repo.ex
 
 defmodule PasswordlessAuth.Application do
   use Application
