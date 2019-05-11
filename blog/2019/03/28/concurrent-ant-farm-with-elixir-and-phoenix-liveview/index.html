@@ -1,0 +1,361 @@
+<!DOCTYPE html> <!--[if lt IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8 lt-ie7" lang=en-us><![endif]--> <!--[if IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8" lang=en-us><![endif]--> <!--[if IE 8]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if IE 9]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if lt IE 10]><html class="no-js lt-ie10" lang=en-us><![endif]--> <!--[if !IE]>><![endif]--> <html class=no-js lang=en> <head> <title>Concurrent ant farm with Elixir and Phoenix LiveView - Code, Love & Boards</title> <meta charset=utf-8 content='text/html' http-equiv=content-type> <meta content='ie=edge,chrome=1' http-equiv=x-ua-compatible> <meta content='Building a concurrent ant farm with Elixir and Phoenix LiveView.' name=description> <meta content='Ricardo García Vega - http://twitter.com/bigardone' name=author> <meta content='elixir, phoenix, liveview' name=keywords> <meta content='initial-scale=1.0,user-scalable=no,maximum-scale=1,width=device-width' name=viewport> <link href='//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css' rel=stylesheet> <link href="//fonts.googleapis.com/css?family=Montserrat:400,700|Lora:400,700" media=screen rel=stylesheet /> <link href="../../../../../stylesheets/blog-82c14d7c.css" media=all rel=stylesheet /> <link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/tomorrow.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js'></script> <script src='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/elixir.min.js'></script> <script src='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/elm.min.js'></script> <link href='/images/apple-touch-icon-57x57-6e598dc4.png' rel=apple-touch-icon sizes=57x57> <link href='/images/apple-touch-icon-114x114-5be964ba.png' rel=apple-touch-icon sizes=114x114> <link href='/images/apple-touch-icon-72x72-70084a85.png' rel=apple-touch-icon sizes=72x72> <link href='/images/apple-touch-icon-144x144-1dbb56c1.png' rel=apple-touch-icon sizes=144x144> <link href='/images/apple-touch-icon-60x60-d05a5ea9.png' rel=apple-touch-icon sizes=60x60> <link href='/images/apple-touch-icon-120x120-5dafce59.png' rel=apple-touch-icon sizes=120x120> <link href='/images/apple-touch-icon-76x76-b2c0d784.png' rel=apple-touch-icon sizes=76x76> <link href='/images/apple-touch-icon-152x152-45595360.png' rel=apple-touch-icon sizes=152x152> <link href='/images/favicon-160x160-944ce76e.png' rel=icon sizes=160x160 type='image/png'> <link href='/images/favicon-96x96-b7e4e089.png' rel=icon sizes=96x96 type='image/png'> <link href='/images/favicon-32x32-b7f34a79.png' rel=icon sizes=32x32 type='image/png'> <link href='/images/favicon-16x16-2712c528.png' rel=icon sizes=16x16 type='image/png'> <meta content='#9f00a7' name=msapplication-TileColor> <meta content='/images/mstile-144x144-028d4c4c.png' name=msapplication-TileImage> <script>
+  var _StatHat = _StatHat || [];
+  _StatHat.push(['_setUser', 'NzIzMCDaNaL5bvEP1HQkMYwfYsQe']);
+  (function() {
+          var sh = document.createElement('script'); sh.type = 'text/javascript';
+          sh.async = true;
+          sh.src = '//www.stathat.com/javascripts/api.js';
+          var s = document.getElementsByTagName('script')[0];
+          s.parentNode.insertBefore(sh, s);
+  })();
+</script> <link href='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.js'></script> <script>
+  window.addEventListener("load", function(){
+  window.cookieconsent.initialise({
+    "palette": {
+      "popup": {
+        "background": "#252e39"
+      },
+      "button": {
+        "background": "#217dbb"
+      }
+    },
+    "theme": "classic",
+    "position": "bottom-right"
+  })});
+</script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Concurrent ant farm with Elixir and Phoenix LiveView</h1> <h3></h3> <div class=meta-data> <hr> posted Mar 28, 2019 on <a class=tag href="/blog/tags/elixir.html">elixir</a> <a class=tag href="/blog/tags/phoenix.html">phoenix</a> <a class=tag href="/blog/tags/liveview.html">liveview</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <p>A couple of years ago, I worked on an <strong>Elixir</strong> personal project which consisted of a virtual ant farm, where every ant was a GenServer process, simulating a basic AI behavior. What initially was going to be something straightforward; it ended up being much bigger and not working as planned, and eventually forgotten. When Chris Maccord announced <a href="https://github.com/phoenixframework/phoenix_live_view">Phoenix LiveView</a>, I thought to myself that I wouldn&#39;t use it for now, because I enjoy too much writing front-end in <strong>Elm</strong>. However, I also love <strong>Elixir</strong> and <strong>Phoenix</strong>, so I couldn&#39;t resist giving it a try, and giving the ant farm another go, this time using <strong>Elixir</strong> only, and trying to invest the less time possible. So I rolled up my sleeves, and surprisingly, four or five hours later I had the ant farm working, and this is how I did it:</p> <h3>Disclaimer</h3> <p>Before continuing, take this small experiment with a grain of salt. I don&#39;t know anything about AI behaviors, nor SVG animations, so there is plenty of room for improvement. However, this is what worked fine after the first try, and I didn&#39;t want to expend more than an evening on it. This being said, let&#39;s get cracking!</p> <h3>Setting up the project with LiveView</h3> <p>Creating the project and adding <strong>LiveView</strong> was pretty straight forward. There are already several tutorials over the Internet about how to add <strong>LiveView</strong> to a <strong>Phoenix</strong> application, so I jumped into <a href="https://elixirschool.com/blog/phoenix-live-view/">this great post</a> from <a href="https://elixirschool.com/blog">Elixir School Blog</a>and followed the instructions, which are very clear and easy to implement. Some minutes later, I had the project up and running.</p> <h3>Bringing ants to life</h3> <p>After having all the necessary project boilerplate, I started by defining what an ant is, and creating a simple module to define the data structure to represent its state:</p> <pre><code class="elixir"># lib/ant_farm/ant/state.ex
+
+defmodule AntFarm.Ant.State do
+  alias __MODULE__
+
+  @type position :: {integer, integer}
+  @type velocity :: {integer, integer}
+  @type state :: :walking | :resting | :panicking
+
+  @type t :: %State{
+          id: String.t(),
+          position: position,
+          velocity: velocity,
+          focus: non_neg_integer,
+          state: state,
+          speed: float
+        }
+
+  defstruct [:id, :position, :velocity, :focus, :state, :speed]
+
+  def new(id) do
+    state = random_state()
+
+    %State{
+      id: id,
+      position: random_position(),
+      velocity: random_velocity(),
+      focus: random_focus(state),
+      state: state,
+      speed: @speed
+    }
+  end
+end
+</code></pre> <p>It has the following properties:</p> <ul> <li><code>id</code> to identify uniquely every ant.</li> <li><code>position</code> which represents its current <code>{X, Y}</code> coordinates.</li> <li><code>velocity</code> which represents its movement direction, being <code>{1 | 0 | -1, 1 | 0 | -1}</code>.</li> <li><code>focus</code> which determines when it gets bored with its current behavior.</li> <li><code>state</code> which represents its current behavior, and can be one of <code>:walking</code>, <code>:resting</code> or <code>:panicking</code>.</li> <li><code>speed</code> which represents its current speed.</li> </ul> <p>I also added a <code>new/1</code> helper function which returns a state struct with random values.</p> <p>Having this state defined, I moved on to creating the ant process definition:</p> <pre><code class="elixir"># lib/ant_farm/ant.ex
+
+defmodule AntFarm.Ant do
+  use GenServer
+
+  alias __MODULE__.{State, Behaviour}
+  @timeout 60
+
+  @doc false
+  def start_link(opts) do
+    id = Keyword.fetch!(opts, :id)
+
+    GenServer.start_link(__MODULE__, id, name: name(id))
+  end
+
+  def get_state(pid), do: GenServer.call(pid, :get_state)
+
+  @impl true
+  def init(id) do
+    schedule()
+    {:ok, State.new(id)}
+  end
+
+  @impl true
+  def handle_call(:get_state, _from, state) do
+    {:reply, state, state}
+  end
+
+  @impl true
+  def handle_info(:perform_actions, state) do
+    state = Behaviour.process(state)
+    schedule()
+
+    {:noreply, state}
+  end
+
+  defp name(id), do: String.to_atom(&quot;ant::&quot; &lt;&gt; id)
+
+  defp schedule do
+    Process.send_after(self(), :perform_actions, @timeout)
+  end
+end
+</code></pre> <p>This is a basic <code>GenServer</code> implementation that starts a new named process, which state is a <code>AntFarm.Ant.State</code> struct. To emulate some random behavior, every 60 milliseconds it process its state with the <code>AntFarm.Ant.Behaviour.process/1</code> function, which returns the new state to set.</p> <pre><code class="elixir"># lib/ant_farm/ant/behaviour.ex
+
+defmodule AntFarm.Ant.Behaviour do
+  alias AntFarm.Ant.State
+
+  @max_width Application.get_env(:ant_farm, :colony)[:width]
+  @max_height Application.get_env(:ant_farm, :colony)[:height]
+
+  def process(%State{state: :resting, focus: 0} = state) do
+    State.start_walking(state)
+  end
+
+  def process(%State{state: :resting} = state) do
+    State.keep_resting(state)
+  end
+
+  def process(%State{state: :walking, focus: 0} = state) do
+    State.start_resting(state)
+  end
+
+  def process(%State{state: :walking, speed: speed, position: {x, y}} = state) do
+    {vx, vy} = velocity = calculate_velocity(state)
+    position = {x + vx * speed, y + vy * speed}
+
+    state
+    |&gt; State.keep_walking()
+    |&gt; State.set_velocity(velocity)
+    |&gt; State.set_position(position)
+  end
+
+  # ...
+  # ...
+  # ...
+end
+</code></pre> <p>The <code>process/1</code> function receives an ant state, and returns a new one depending on its current properties and applying some of the following logic:</p> <ul> <li>If the current <code>state</code> is <code>:resting</code> and <code>focus</code> is 0, it forces the ant to start walking.</li> <li>On the other hand, if <code>state</code> is <code>:resting</code> but it is still focusing on resting, then the ant keeps resting (which subtracts 1 to the current <code>focus</code> value).</li> <li>If the current <code>state</code> is <code>:walking</code> and <code>focus</code> is 0, the ant gets tired and starts resting.</li> <li>But if <code>state</code> is <code>:walking</code> and it is still focusing on it, then it keeps walking calculating its new velocity (in case it hits the ant farm boundaries) and position.</li> </ul> <p>This is just an example of how to implement some basic logic to emulate behavior depending on a current state. To see all the details check out the <a href="https://github.com/bigardone/phoenix-liveview-ant-farm/blob/master/lib/ant_farm/ant/behaviour.ex">AntFarm.Ant.Behaviour</a> source code.</p> <p>At this point I had defined an ant&#39;s structure and behavior, so the next thing I needed was a way to spawn new ants on demand, and <strong>Elixir</strong>&#39;s <a href="https://hexdocs.pm/elixir/DynamicSupervisor.html">DynamicSupervisor</a> was the right tool for it:</p> <pre><code class="elixir"># lib/ant_farm/ant/supervisor.ex
+
+defmodule AntFarm.Ant.Supervisor do
+  use DynamicSupervisor
+
+  alias AntFarm.Ant
+
+  def start_link(arg) do
+    DynamicSupervisor.start_link(__MODULE__, arg, name: __MODULE__)
+  end
+
+  def start_child do
+    spec = {Ant, id: generate_id()}
+    DynamicSupervisor.start_child(__MODULE__, spec)
+  end
+
+  def populate(count \\ 1) do
+    for _ &lt;- 1..count, do: start_child()
+  end
+
+  def ants do
+    __MODULE__
+    |&gt; DynamicSupervisor.which_children()
+    |&gt; Task.async_stream(&amp;get_ant_state/1)
+    |&gt; Enum.map(fn {:ok, state} -&gt; state end)
+  end
+
+  @impl true
+  def init(_arg) do
+    DynamicSupervisor.init(strategy: :one_for_one)
+  end
+
+  # ...
+  # ...
+end
+</code></pre> <p>The <code>start_child</code> function makes the supervisor spawn a new <code>Ant</code> process with a random <code>id</code>. I also added an <code>ants</code> function which returns all its children state. Last but not least, the <code>populate/1</code> function spawns a given number of ant processes, which is going to become handy to spawn some ants once the application starts. For this purpose, I also created a small populator module:</p> <pre><code class="elixir"># lib/ant_farm/ant/supervisor/populator.ex
+
+defmodule AntFarm.Ant.Supervisor.Populator do
+  alias AntFarm.Ant.Supervisor, as: AntSupervisor
+
+  @population Application.get_env(:ant_farm, :colony)[:population]
+
+  def child_spec(opts) do
+    %{
+      id: __MODULE__,
+      start: {__MODULE__, :start_link, [opts]},
+      type: :worker,
+      restart: :permanent,
+      shutdown: 500
+    }
+  end
+
+  def start_link(_opts \\ []) do
+    AntSupervisor.populate(@population)
+    :ignore
+  end
+end
+</code></pre> <p>To spawn the ants once the application starts, and moreover, once the <code>AntFarm.Ant.Supervisor</code> has started, we only need to add it to the main supervision tree like so:</p> <pre><code class="elixir"># lib/ant_farm/application.ex
+
+defmodule AntFarm.Application do
+  use Application
+
+  def start(_type, _args) do
+    children = [
+      AntFarm.Ant.Supervisor,
+      AntFarm.Ant.Supervisor.Populator,
+      AntFarmWeb.Endpoint
+    ]
+
+    opts = [strategy: :one_for_one, name: AntFarm.Supervisor]
+    Supervisor.start_link(children, opts)
+  end
+
+  def config_change(changed, _new, removed) do
+    AntFarmWeb.Endpoint.config_change(changed, removed)
+    :ok
+  end
+end
+</code></pre> <p>This is how the application looked like the first time I started it, spawning only ten ant processes:</p> <p><img class=center src="/images/blog/liveview-ant-farm/tree-ddb15ec2.jpg"/></p> <h3>Rendering the ant farm</h3> <p>Now that I had a bunch of ants doing their ant things, it was time for some <strong>LiveView</strong> fun, and displaying them in the browser. The first step was to render the basic template from the main controller:</p> <pre><code class="elixir"># lib/ant_farm_web/templates/page/index.html.eex
+
+&lt;div class=&quot;container&quot;&gt;
+  &lt;header class=&quot;main-header&quot;&gt;
+    &lt;h1&gt;Phoenix LiveView Ant Farm&lt;/h1&gt;
+  &lt;/header&gt;
+  &lt;%= live_render(@conn, AntFarmWeb.AntFarmLiveView, session: nil) %&gt;
+  &lt;p&gt;
+    Crafted with ♥ by &lt;a target=&quot;_blank&quot; href=&quot;https://github.com/bigardone&quot;&gt;bigardone&lt;/a&gt; |
+    Check out the &lt;a target=&quot;_blank&quot; href=&quot;https://github.com/bigardone/phoenix-liveview-ant-farm&quot;&gt;source code&lt;/a&gt;
+  &lt;/p&gt;
+&lt;/div&gt;
+</code></pre> <p>Here comes the tricky part. Calling <code>live_render/3</code> renders the <strong>LiveView</strong>, which is the content that is going to be changing periodically to animate the ants. Let&#39;s take a look at the <code>AntFarmWeb.AntFarmLiveView</code> module:</p> <pre><code class="elixir"># lib/ant_farm_web/live/ant_farm_live_view.ex
+
+defmodule AntFarmWeb.AntFarmLiveView do
+  use Phoenix.LiveView
+
+  alias AntFarm.Ant.Supervisor, as: Colony
+
+  @timeout 60
+
+  @impl true
+  def mount(_session, socket) do
+    if connected?(socket), do: schedule()
+    ants = Colony.ants()
+    {:ok, assign(socket, ants: ants)}
+  end
+
+  @impl true
+  def render(assigns) do
+    AntFarmWeb.PageView.render(&quot;ant_farm.html&quot;, assigns)
+  end
+
+  def handle_info(:tick, socket) do
+    schedule()
+    ants = Colony.ants()
+    {:noreply, assign(socket, ants: ants)}
+  end
+
+  defp schedule do
+    Process.send_after(self(), :tick, @timeout)
+  end
+end
+</code></pre> <p>When rendering the template for the first time, the <code>mount/2</code> function gets called, assigning the existing ants to the connection, rendering the first static HTML and making the JS client connect to the socket. Only then, it creates the stateful view, invoking <code>mount/2</code> again with the signed session, and calling the private <code>schedule/0</code> function, which sends the tick message to the <strong>LiveView</strong> process every sixty milliseconds, retrieving the new ant states and assigning it to the socket forcing a new render of the <code>ant_farm.html</code> template.</p> <p>The only thing left was creating the <code>ant_farm.html</code> template:</p> <pre><code class="elixir"># lib/ant_farm_web/templates/page/ant_farm.html.leex
+
+&lt;div class=&quot;main-content&quot;&gt;
+  &lt;h2&gt;Rendering &lt;%= length(@ants) %&gt; concurrent ants&lt;/h2&gt;
+  &lt;svg viewbox=&quot;0 0 1024 600&quot;&gt;
+    &lt;rect width=&quot;1024&quot; height=&quot;600&quot; fill=&quot;#00b349&quot;/&gt;
+    &lt;%= for %{position: {x, y}} &lt;- @ants do %&gt;
+      &lt;rect width=&quot;2&quot; height=&quot;2&quot; fill=&quot;#000000&quot; x=&quot;&lt;%= x %&gt;&quot; y=&quot;&lt;%= y %&gt;&quot;/&gt;
+    &lt;% end %&gt;
+  &lt;/svg&gt;
+&lt;/div&gt;
+</code></pre> <p>This is what I saw when I went to the browser:</p> <p><img class=center src="/images/blog/liveview-ant-farm/ants-75337413.gif"/></p> <p>My ants were finally alive, yay!</p> <h3>Do not tap on glass</h3> <p>After having all the ants walking around the screen, I wanted to add some interactivity with them, and the most reasonable to me was clicking on the farm box. <strong>LiveView</strong> comes with some event handling support out of the box, so I went back to the documentation and implemented the <code>phx-click</code> binding in the <code>ant_farm.html</code> template:</p> <pre><code class="elixir"># lib/ant_farm_web/templates/page/ant_farm.html.leex
+
+# ...
+# ...
+
+  &lt;svg class=&quot;panic&lt;%= @panic %&gt;&quot; phx-click=&quot;tap&quot; viewbox=&quot;0 0 1024 600&quot;&gt;
+    # ...
+    # ...
+  &lt;/svg&gt;
+
+# ...
+</code></pre> <p>Adding the <code>phx-click=&quot;tap&quot;</code> attribute, makes the <strong>LiveView</strong> JS client send a <code>tap</code> message through the socket every time a user clicks on the <code>svg</code> element. Therefore, the <code>AntFarmWeb.AntFarmLiveView</code> needs to handle it:</p> <pre><code class="elixir"># lib/ant_farm_web/live/ant_farm_live_view.ex
+
+defmodule AntFarmWeb.AntFarmLiveView do
+  use Phoenix.LiveView
+
+  # ...
+
+  @impl true
+  def mount(_session, socket) do
+    if connected?(socket), do: schedule()
+    ants = Colony.ants()
+    {:ok, assign(socket, panic: false, ants: ants)}
+  end
+
+  # ...
+
+  @impl true
+  def handle_event(&quot;tap&quot;, _value, socket) do
+    Colony.panic()
+    Process.send_after(self(), :chill, 1000)
+    {:noreply, assign(socket, panic: true)}
+  end
+
+  def handle_info(:chill, socket) do
+    {:noreply, assign(socket, panic: false)}
+  end
+
+  # ...
+end
+</code></pre> <p>The tap event handler calls <code>Colony.panick/0</code> which makes all ants go crazy, sets its assign <code>panic</code> value to <code>true</code> and after a second sends a <code>:chill</code> message, which sets the <code>panic</code> assign value back to <code>false</code>. This is a trick I did, to toggle a particular class to the SVG DOM element, which adds a vibration animation. Let&#39;s take a look at the <code>Colony.panic/0</code> function:</p> <pre><code class="elixir"># lib/ant_farm/ant/supervisor.ex
+
+defmodule AntFarm.Ant.Supervisor do
+  use DynamicSupervisor
+
+  # ...
+
+  def panic do
+    __MODULE__
+    |&gt; DynamicSupervisor.which_children()
+    |&gt; Enum.each(&amp;do_panic/1)
+  end
+
+  defp do_panic({_, pid, _, _}), do: Ant.panic(pid)
+end
+</code></pre> <p>It takes all of its children PIDs and calls <code>Ant.panic/1</code> with each of them:</p> <pre><code class="elixir"># lib/ant_farm/ant.ex
+
+defmodule AntFarm.Ant do
+  use GenServer
+
+  # ...
+
+  def panic(pid), do: GenServer.cast(pid, :panic)
+
+  # ...
+
+  @impl true
+  def handle_cast(:panic, %State{state: :panicking} = state) do
+    {:noreply, state}
+  end
+
+  def handle_cast(:panic, state) do
+    {:noreply, State.start_panicking(state)}
+  end
+end
+</code></pre> <p>The <code>panic/1</code> function sends a <code>:panic</code> message to the given PID, which takes the current <code>state</code> and makes the ant go crazy for a random number of ticks, only if it&#39;s not already panicking though. The result is quite nice as you can see in <a href="https://phoenix-liveview-ant-farm.herokuapp.com">the demo</a> :)</p> <p>And, this is pretty much it. In a single evening, I managed to code the project and deploy it into Heroku. I was amazed about how easy was adding <strong>LiveView</strong> to the project, how well it worked and the overall result. I&#39;m definitely keeping an eye on <strong>LiveView</strong> updates and how it evolves to use it in future projects. Don&#39;t forget to check out the demo and the final repository in the links below.</p> <p>Happy coding!</p> <div class=btn-wrapper> <a href="https://phoenix-liveview-ant-farm.herokuapp.com/" target=_blank class=btn><i class="fa fa-cloud"></i> Live demo</a> <a href="https://github.com/bigardone/phoenix-liveview-ant-farm" target=_blank class=btn><i class="fa fa-github"></i> Source code</a> </div> <div id=disqus_thread></div> <script>
+  /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+  var disqus_shortname = 'codeloveandboards'; // required: replace example with your forum shortname
+  
+  /* * * DON'T EDIT BELOW THIS LINE * * */
+  (function() {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script> <noscript> Please enable JavaScript to view the <a href='//disqus.com/?ref_noscript'>comments powered by Disqus.</a> </noscript> <a class=dsq-brlink href='//disqus.com'> comments powered by <span class=logo-disqus>Disqus</span> </a> </article> </section> </div> </section> <footer id=main_footer> <ul class=article-nav> <li class=previous> <a href="/blog/2018/09/09/elm-and-web-components/"><h4>previous post</h4> <h3> Elm and Web Components </h3> <div class=meta-data> <hr> posted Sep 9, 2018 on elm, web components </div> </a> </li> <li class=next> </li> </ul> <section> <div class=container> <div class=center> <ul> <li> <a href='/blog'>Archives</a> </li> <li> <a href='//feeds.feedburner.com/CodeLoveAndBoards' target=_blank>RSS</a> </li> </ul> Copyright © 2019 - Ricardo García Vega - Code, Love & Boards! </div> </div> </section> </footer> <script src="../../../../../javascripts/blog-7993bef0.js"></script> <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  
+  ga('create', 'UA-37802122-1', 'codeloveandboards.com');
+  ga('send', 'pageview');
+</script> <script>
+  _StatHat.push(["_trackCount", "g2pcD9xou7DlR0DtndiwvSBBYU5k", 1.0]);
+</script> </body> </html>

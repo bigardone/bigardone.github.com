@@ -5,10 +5,451 @@
   <id>http://codeloveandboards.com/blog</id>
   <link href="http://codeloveandboards.com/blog"/>
   <link href="http://codeloveandboards.com/feed.xml" rel="self"/>
-  <updated>2018-09-09T08:35:00Z</updated>
+  <updated>2019-03-28T07:00:00Z</updated>
   <author>
     <name>Blog Author</name>
   </author>
+  <entry>
+    <title>Concurrent ant farm with Elixir and Phoenix LiveView</title>
+    <link rel="alternate" href="http://codeloveandboards.com/blog/2019/03/28/concurrent-ant-farm-with-elixir-and-phoenix-liveview/"/>
+    <id>http://codeloveandboards.com/blog/2019/03/28/concurrent-ant-farm-with-elixir-and-phoenix-liveview/</id>
+    <published>2019-03-28T07:00:00Z</published>
+    <updated>2019-05-11T08:44:31+02:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;A couple of years ago, I worked on an &lt;strong&gt;Elixir&lt;/strong&gt; personal project which consisted of a virtual ant farm, where every ant was a GenServer process, simulating a basic AI behavior. What initially was going to be something straightforward; it ended up being much bigger and not working as planned, and eventually forgotten. When Chris Maccord announced &lt;a href="https://github.com/phoenixframework/phoenix_live_view"&gt;Phoenix LiveView&lt;/a&gt;, I thought to myself that I wouldn&amp;#39;t use it for now, because I enjoy too much writing front-end in &lt;strong&gt;Elm&lt;/strong&gt;. However, I also love &lt;strong&gt;Elixir&lt;/strong&gt; and &lt;strong&gt;Phoenix&lt;/strong&gt;, so I couldn&amp;#39;t resist giving it a try, and giving the ant farm another go, this time using &lt;strong&gt;Elixir&lt;/strong&gt; only, and trying to invest the less time possible. So I rolled up my sleeves, and surprisingly, four or five hours later I had the ant farm working, and this is how I did it:&lt;/p&gt;
+
+&lt;h3&gt;Disclaimer&lt;/h3&gt;
+
+&lt;p&gt;Before continuing, take this small experiment with a grain of salt. I don&amp;#39;t know anything about AI behaviors, nor SVG animations, so there is plenty of room for improvement. However, this is what worked fine after the first try, and I didn&amp;#39;t want to expend more than an evening on it. This being said, let&amp;#39;s get cracking!&lt;/p&gt;
+
+&lt;h3&gt;Setting up the project with LiveView&lt;/h3&gt;
+
+&lt;p&gt;Creating the project and adding &lt;strong&gt;LiveView&lt;/strong&gt; was pretty straight forward. There are already several tutorials over the Internet about how to add &lt;strong&gt;LiveView&lt;/strong&gt; to a &lt;strong&gt;Phoenix&lt;/strong&gt; application, so I jumped into &lt;a href="https://elixirschool.com/blog/phoenix-live-view/"&gt;this great post&lt;/a&gt; from &lt;a href="https://elixirschool.com/blog"&gt;Elixir School Blog&lt;/a&gt;and followed the instructions, which are very clear and easy to implement. Some minutes later, I had the project up and running.&lt;/p&gt;
+
+&lt;h3&gt;Bringing ants to life&lt;/h3&gt;
+
+&lt;p&gt;After having all the necessary project boilerplate, I started by defining what an ant is, and creating a simple module to define the data structure to represent its state:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/ant_farm/ant/state.ex
+
+defmodule AntFarm.Ant.State do
+  alias __MODULE__
+
+  @type position :: {integer, integer}
+  @type velocity :: {integer, integer}
+  @type state :: :walking | :resting | :panicking
+
+  @type t :: %State{
+          id: String.t(),
+          position: position,
+          velocity: velocity,
+          focus: non_neg_integer,
+          state: state,
+          speed: float
+        }
+
+  defstruct [:id, :position, :velocity, :focus, :state, :speed]
+
+  def new(id) do
+    state = random_state()
+
+    %State{
+      id: id,
+      position: random_position(),
+      velocity: random_velocity(),
+      focus: random_focus(state),
+      state: state,
+      speed: @speed
+    }
+  end
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It has the following properties:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;id&lt;/code&gt; to identify uniquely every ant.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;position&lt;/code&gt; which represents its current &lt;code&gt;{X, Y}&lt;/code&gt; coordinates.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;velocity&lt;/code&gt; which represents its movement direction, being &lt;code&gt;{1 | 0 | -1, 1 | 0 | -1}&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;focus&lt;/code&gt; which determines when it gets bored with its current behavior.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;state&lt;/code&gt; which represents its current behavior, and can be one of &lt;code&gt;:walking&lt;/code&gt;, &lt;code&gt;:resting&lt;/code&gt; or &lt;code&gt;:panicking&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;speed&lt;/code&gt; which represents its current speed.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;I also added a &lt;code&gt;new/1&lt;/code&gt; helper function which returns a state struct with random values.&lt;/p&gt;
+
+&lt;p&gt;Having this state defined, I moved on to creating the ant process definition:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/ant_farm/ant.ex
+
+defmodule AntFarm.Ant do
+  use GenServer
+
+  alias __MODULE__.{State, Behaviour}
+  @timeout 60
+
+  @doc false
+  def start_link(opts) do
+    id = Keyword.fetch!(opts, :id)
+
+    GenServer.start_link(__MODULE__, id, name: name(id))
+  end
+
+  def get_state(pid), do: GenServer.call(pid, :get_state)
+
+  @impl true
+  def init(id) do
+    schedule()
+    {:ok, State.new(id)}
+  end
+
+  @impl true
+  def handle_call(:get_state, _from, state) do
+    {:reply, state, state}
+  end
+
+  @impl true
+  def handle_info(:perform_actions, state) do
+    state = Behaviour.process(state)
+    schedule()
+
+    {:noreply, state}
+  end
+
+  defp name(id), do: String.to_atom(&amp;quot;ant::&amp;quot; &amp;lt;&amp;gt; id)
+
+  defp schedule do
+    Process.send_after(self(), :perform_actions, @timeout)
+  end
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is a basic &lt;code&gt;GenServer&lt;/code&gt; implementation that starts a new named process, which state is a &lt;code&gt;AntFarm.Ant.State&lt;/code&gt; struct. To emulate some random behavior, every 60 milliseconds it process its state with the &lt;code&gt;AntFarm.Ant.Behaviour.process/1&lt;/code&gt; function, which returns the new state to set.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/ant_farm/ant/behaviour.ex
+
+defmodule AntFarm.Ant.Behaviour do
+  alias AntFarm.Ant.State
+
+  @max_width Application.get_env(:ant_farm, :colony)[:width]
+  @max_height Application.get_env(:ant_farm, :colony)[:height]
+
+  def process(%State{state: :resting, focus: 0} = state) do
+    State.start_walking(state)
+  end
+
+  def process(%State{state: :resting} = state) do
+    State.keep_resting(state)
+  end
+
+  def process(%State{state: :walking, focus: 0} = state) do
+    State.start_resting(state)
+  end
+
+  def process(%State{state: :walking, speed: speed, position: {x, y}} = state) do
+    {vx, vy} = velocity = calculate_velocity(state)
+    position = {x + vx * speed, y + vy * speed}
+
+    state
+    |&amp;gt; State.keep_walking()
+    |&amp;gt; State.set_velocity(velocity)
+    |&amp;gt; State.set_position(position)
+  end
+
+  # ...
+  # ...
+  # ...
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;process/1&lt;/code&gt; function receives an ant state, and returns a new one depending on its current properties and applying some of the following logic:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;If the current &lt;code&gt;state&lt;/code&gt; is &lt;code&gt;:resting&lt;/code&gt; and &lt;code&gt;focus&lt;/code&gt; is 0, it forces the ant to start walking.&lt;/li&gt;
+&lt;li&gt;On the other hand, if &lt;code&gt;state&lt;/code&gt; is &lt;code&gt;:resting&lt;/code&gt; but it is still focusing on resting, then the ant keeps resting (which subtracts 1 to the current &lt;code&gt;focus&lt;/code&gt; value).&lt;/li&gt;
+&lt;li&gt;If the current &lt;code&gt;state&lt;/code&gt; is &lt;code&gt;:walking&lt;/code&gt; and &lt;code&gt;focus&lt;/code&gt; is 0, the ant gets tired and starts resting.&lt;/li&gt;
+&lt;li&gt;But if &lt;code&gt;state&lt;/code&gt; is &lt;code&gt;:walking&lt;/code&gt; and it is still focusing on it, then it keeps walking calculating its new velocity (in case it hits the ant farm boundaries) and position.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;This is just an example of how to implement some basic logic to emulate behavior depending on a current state. To see all the details check out the &lt;a href="https://github.com/bigardone/phoenix-liveview-ant-farm/blob/master/lib/ant_farm/ant/behaviour.ex"&gt;AntFarm.Ant.Behaviour&lt;/a&gt; source code.&lt;/p&gt;
+
+&lt;p&gt;At this point I had defined an ant&amp;#39;s structure and behavior, so the next thing I needed was a way to spawn new ants on demand, and &lt;strong&gt;Elixir&lt;/strong&gt;&amp;#39;s &lt;a href="https://hexdocs.pm/elixir/DynamicSupervisor.html"&gt;DynamicSupervisor&lt;/a&gt; was the right tool for it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/ant_farm/ant/supervisor.ex
+
+defmodule AntFarm.Ant.Supervisor do
+  use DynamicSupervisor
+
+  alias AntFarm.Ant
+
+  def start_link(arg) do
+    DynamicSupervisor.start_link(__MODULE__, arg, name: __MODULE__)
+  end
+
+  def start_child do
+    spec = {Ant, id: generate_id()}
+    DynamicSupervisor.start_child(__MODULE__, spec)
+  end
+
+  def populate(count \\ 1) do
+    for _ &amp;lt;- 1..count, do: start_child()
+  end
+
+  def ants do
+    __MODULE__
+    |&amp;gt; DynamicSupervisor.which_children()
+    |&amp;gt; Task.async_stream(&amp;amp;get_ant_state/1)
+    |&amp;gt; Enum.map(fn {:ok, state} -&amp;gt; state end)
+  end
+
+  @impl true
+  def init(_arg) do
+    DynamicSupervisor.init(strategy: :one_for_one)
+  end
+
+  # ...
+  # ...
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;start_child&lt;/code&gt; function makes the supervisor spawn a new &lt;code&gt;Ant&lt;/code&gt; process with a random &lt;code&gt;id&lt;/code&gt;. I also added an &lt;code&gt;ants&lt;/code&gt; function which returns all its children state. Last but not least, the &lt;code&gt;populate/1&lt;/code&gt; function spawns a given number of ant processes, which is going to become handy to spawn some ants once the application starts. For this purpose, I also created a small populator module:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/ant_farm/ant/supervisor/populator.ex
+
+defmodule AntFarm.Ant.Supervisor.Populator do
+  alias AntFarm.Ant.Supervisor, as: AntSupervisor
+
+  @population Application.get_env(:ant_farm, :colony)[:population]
+
+  def child_spec(opts) do
+    %{
+      id: __MODULE__,
+      start: {__MODULE__, :start_link, [opts]},
+      type: :worker,
+      restart: :permanent,
+      shutdown: 500
+    }
+  end
+
+  def start_link(_opts \\ []) do
+    AntSupervisor.populate(@population)
+    :ignore
+  end
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To spawn the ants once the application starts, and moreover, once the &lt;code&gt;AntFarm.Ant.Supervisor&lt;/code&gt; has started, we only need to add it to the main supervision tree like so:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/ant_farm/application.ex
+
+defmodule AntFarm.Application do
+  use Application
+
+  def start(_type, _args) do
+    children = [
+      AntFarm.Ant.Supervisor,
+      AntFarm.Ant.Supervisor.Populator,
+      AntFarmWeb.Endpoint
+    ]
+
+    opts = [strategy: :one_for_one, name: AntFarm.Supervisor]
+    Supervisor.start_link(children, opts)
+  end
+
+  def config_change(changed, _new, removed) do
+    AntFarmWeb.Endpoint.config_change(changed, removed)
+    :ok
+  end
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is how the application looked like the first time I started it, spawning only ten ant processes:&lt;/p&gt;
+
+&lt;p&gt;&lt;img class="center" src="/images/blog/liveview-ant-farm/tree.jpg"/&gt;&lt;/p&gt;
+
+&lt;h3&gt;Rendering the ant farm&lt;/h3&gt;
+
+&lt;p&gt;Now that I had a bunch of ants doing their ant things, it was time for some &lt;strong&gt;LiveView&lt;/strong&gt; fun, and displaying them in the browser. The first step was to render the basic template from the main controller:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/ant_farm_web/templates/page/index.html.eex
+
+&amp;lt;div class=&amp;quot;container&amp;quot;&amp;gt;
+  &amp;lt;header class=&amp;quot;main-header&amp;quot;&amp;gt;
+    &amp;lt;h1&amp;gt;Phoenix LiveView Ant Farm&amp;lt;/h1&amp;gt;
+  &amp;lt;/header&amp;gt;
+  &amp;lt;%= live_render(@conn, AntFarmWeb.AntFarmLiveView, session: nil) %&amp;gt;
+  &amp;lt;p&amp;gt;
+    Crafted with ♥ by &amp;lt;a target=&amp;quot;_blank&amp;quot; href=&amp;quot;https://github.com/bigardone&amp;quot;&amp;gt;bigardone&amp;lt;/a&amp;gt; |
+    Check out the &amp;lt;a target=&amp;quot;_blank&amp;quot; href=&amp;quot;https://github.com/bigardone/phoenix-liveview-ant-farm&amp;quot;&amp;gt;source code&amp;lt;/a&amp;gt;
+  &amp;lt;/p&amp;gt;
+&amp;lt;/div&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here comes the tricky part. Calling &lt;code&gt;live_render/3&lt;/code&gt; renders the &lt;strong&gt;LiveView&lt;/strong&gt;, which is the content that is going to be changing periodically to animate the ants. Let&amp;#39;s take a look at the &lt;code&gt;AntFarmWeb.AntFarmLiveView&lt;/code&gt; module:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/ant_farm_web/live/ant_farm_live_view.ex
+
+defmodule AntFarmWeb.AntFarmLiveView do
+  use Phoenix.LiveView
+
+  alias AntFarm.Ant.Supervisor, as: Colony
+
+  @timeout 60
+
+  @impl true
+  def mount(_session, socket) do
+    if connected?(socket), do: schedule()
+    ants = Colony.ants()
+    {:ok, assign(socket, ants: ants)}
+  end
+
+  @impl true
+  def render(assigns) do
+    AntFarmWeb.PageView.render(&amp;quot;ant_farm.html&amp;quot;, assigns)
+  end
+
+  def handle_info(:tick, socket) do
+    schedule()
+    ants = Colony.ants()
+    {:noreply, assign(socket, ants: ants)}
+  end
+
+  defp schedule do
+    Process.send_after(self(), :tick, @timeout)
+  end
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;When rendering the template for the first time, the &lt;code&gt;mount/2&lt;/code&gt; function gets called, assigning the existing ants to the connection, rendering the first static HTML and making the JS client connect to the socket. Only then, it creates the stateful view, invoking &lt;code&gt;mount/2&lt;/code&gt; again with the signed session, and calling the private &lt;code&gt;schedule/0&lt;/code&gt; function, which sends the tick message to the &lt;strong&gt;LiveView&lt;/strong&gt; process every sixty milliseconds, retrieving the new ant states and assigning it to the socket forcing a new render of the &lt;code&gt;ant_farm.html&lt;/code&gt; template.&lt;/p&gt;
+
+&lt;p&gt;The only thing left was creating the &lt;code&gt;ant_farm.html&lt;/code&gt; template:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/ant_farm_web/templates/page/ant_farm.html.leex
+
+&amp;lt;div class=&amp;quot;main-content&amp;quot;&amp;gt;
+  &amp;lt;h2&amp;gt;Rendering &amp;lt;%= length(@ants) %&amp;gt; concurrent ants&amp;lt;/h2&amp;gt;
+  &amp;lt;svg viewbox=&amp;quot;0 0 1024 600&amp;quot;&amp;gt;
+    &amp;lt;rect width=&amp;quot;1024&amp;quot; height=&amp;quot;600&amp;quot; fill=&amp;quot;#00b349&amp;quot;/&amp;gt;
+    &amp;lt;%= for %{position: {x, y}} &amp;lt;- @ants do %&amp;gt;
+      &amp;lt;rect width=&amp;quot;2&amp;quot; height=&amp;quot;2&amp;quot; fill=&amp;quot;#000000&amp;quot; x=&amp;quot;&amp;lt;%= x %&amp;gt;&amp;quot; y=&amp;quot;&amp;lt;%= y %&amp;gt;&amp;quot;/&amp;gt;
+    &amp;lt;% end %&amp;gt;
+  &amp;lt;/svg&amp;gt;
+&amp;lt;/div&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is what I saw when I went to the browser:&lt;/p&gt;
+
+&lt;p&gt;&lt;img class="center" src="/images/blog/liveview-ant-farm/ants.gif"/&gt;&lt;/p&gt;
+
+&lt;p&gt;My ants were finally alive, yay!&lt;/p&gt;
+
+&lt;h3&gt;Do not tap on glass&lt;/h3&gt;
+
+&lt;p&gt;After having all the ants walking around the screen, I wanted to add some interactivity with them, and the most reasonable to me was clicking on the farm box. &lt;strong&gt;LiveView&lt;/strong&gt; comes with some event handling support out of the box, so I went back to the documentation and implemented the &lt;code&gt;phx-click&lt;/code&gt; binding in the &lt;code&gt;ant_farm.html&lt;/code&gt; template:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/ant_farm_web/templates/page/ant_farm.html.leex
+
+# ...
+# ...
+
+  &amp;lt;svg class=&amp;quot;panic&amp;lt;%= @panic %&amp;gt;&amp;quot; phx-click=&amp;quot;tap&amp;quot; viewbox=&amp;quot;0 0 1024 600&amp;quot;&amp;gt;
+    # ...
+    # ...
+  &amp;lt;/svg&amp;gt;
+
+# ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Adding the &lt;code&gt;phx-click=&amp;quot;tap&amp;quot;&lt;/code&gt; attribute, makes the &lt;strong&gt;LiveView&lt;/strong&gt; JS client send a &lt;code&gt;tap&lt;/code&gt; message through the socket every time a user clicks on the &lt;code&gt;svg&lt;/code&gt; element. Therefore, the &lt;code&gt;AntFarmWeb.AntFarmLiveView&lt;/code&gt; needs to handle it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/ant_farm_web/live/ant_farm_live_view.ex
+
+defmodule AntFarmWeb.AntFarmLiveView do
+  use Phoenix.LiveView
+
+  # ...
+
+  @impl true
+  def mount(_session, socket) do
+    if connected?(socket), do: schedule()
+    ants = Colony.ants()
+    {:ok, assign(socket, panic: false, ants: ants)}
+  end
+
+  # ...
+
+  @impl true
+  def handle_event(&amp;quot;tap&amp;quot;, _value, socket) do
+    Colony.panic()
+    Process.send_after(self(), :chill, 1000)
+    {:noreply, assign(socket, panic: true)}
+  end
+
+  def handle_info(:chill, socket) do
+    {:noreply, assign(socket, panic: false)}
+  end
+
+  # ...
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The tap event handler calls &lt;code&gt;Colony.panick/0&lt;/code&gt; which makes all ants go crazy, sets its assign &lt;code&gt;panic&lt;/code&gt; value to &lt;code&gt;true&lt;/code&gt; and after a second sends a &lt;code&gt;:chill&lt;/code&gt; message, which sets the &lt;code&gt;panic&lt;/code&gt; assign value back to &lt;code&gt;false&lt;/code&gt;. This is a trick I did, to toggle a particular class to the SVG DOM element, which adds a vibration animation. Let&amp;#39;s take a look at the &lt;code&gt;Colony.panic/0&lt;/code&gt; function:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/ant_farm/ant/supervisor.ex
+
+defmodule AntFarm.Ant.Supervisor do
+  use DynamicSupervisor
+
+  # ...
+
+  def panic do
+    __MODULE__
+    |&amp;gt; DynamicSupervisor.which_children()
+    |&amp;gt; Enum.each(&amp;amp;do_panic/1)
+  end
+
+  defp do_panic({_, pid, _, _}), do: Ant.panic(pid)
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;It takes all of its children PIDs and calls &lt;code&gt;Ant.panic/1&lt;/code&gt; with each of them:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/ant_farm/ant.ex
+
+defmodule AntFarm.Ant do
+  use GenServer
+
+  # ...
+
+  def panic(pid), do: GenServer.cast(pid, :panic)
+
+  # ...
+
+  @impl true
+  def handle_cast(:panic, %State{state: :panicking} = state) do
+    {:noreply, state}
+  end
+
+  def handle_cast(:panic, state) do
+    {:noreply, State.start_panicking(state)}
+  end
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;panic/1&lt;/code&gt; function sends a &lt;code&gt;:panic&lt;/code&gt; message to the given PID, which takes the current &lt;code&gt;state&lt;/code&gt; and makes the ant go crazy for a random number of ticks, only if it&amp;#39;s not already panicking though. The result is quite nice as you can see in &lt;a href="https://phoenix-liveview-ant-farm.herokuapp.com"&gt;the demo&lt;/a&gt; :)&lt;/p&gt;
+
+&lt;p&gt;And, this is pretty much it. In a single evening, I managed to code the project and deploy it into Heroku. I was amazed about how easy was adding &lt;strong&gt;LiveView&lt;/strong&gt; to the project, how well it worked and the overall result. I&amp;#39;m definitely keeping an eye on &lt;strong&gt;LiveView&lt;/strong&gt; updates and how it evolves to use it in future projects. Don&amp;#39;t forget to check out the demo and the final repository in the links below.&lt;/p&gt;
+
+&lt;p&gt;Happy coding!&lt;/p&gt;
+
+&lt;div class="btn-wrapper"&gt;
+  &lt;a href="https://phoenix-liveview-ant-farm.herokuapp.com/" target="_blank" class="btn"&gt;&lt;i class="fa fa-cloud"&gt;&lt;/i&gt; Live demo&lt;/a&gt;
+  &lt;a href="https://github.com/bigardone/phoenix-liveview-ant-farm" target="_blank" class="btn"&gt;&lt;i class="fa fa-github"&gt;&lt;/i&gt; Source code&lt;/a&gt;
+&lt;/div&gt;
+</content>
+  </entry>
   <entry>
     <title>Elm and Web Components</title>
     <link rel="alternate" href="http://codeloveandboards.com/blog/2018/09/09/elm-and-web-components/"/>
@@ -3451,956 +3892,6 @@ next time, and don&amp;#39;t forget to check the code from this part
 &lt;a href="https://github.com/bigardone/phoenix-and-elm-landing-page/tree/tutorial/part-3"&gt;here&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;Happy coding!&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <title>Phoenix &amp; Elm landing page (pt.2)</title>
-    <link rel="alternate" href="http://codeloveandboards.com/blog/2017/12/23/phoenix-elm-landing-page-pt-2/"/>
-    <id>http://codeloveandboards.com/blog/2017/12/23/phoenix-elm-landing-page-pt-2/</id>
-    <published>2017-12-24T07:44:00Z</published>
-    <updated>2018-04-12T17:19:06+02:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;div class="index"&gt;
-  &lt;p&gt;This post belongs to the &lt;strong&gt;Phoenix &amp; Elm landing page&lt;/strong&gt; series.&lt;/p&gt;
-  &lt;ol&gt;
-    &lt;li&gt;&lt;a href="/blog/2017/12/02/phoenix-elm-landing-page-pt-1/"&gt;Bootstrapping the project and the basic API functionality to save our first leads&lt;/a&gt;&lt;/li&gt;
-    &lt;li&gt;&lt;a href="/blog/2017/12/23/phoenix-elm-landing-page-pt-2/"&gt;Building the landing page UI and the basic Elm subscription form&lt;/a&gt;&lt;/li&gt;
-    &lt;li&gt;&lt;a href="/blog/2018/01/06/phoenix-elm-landing-page-pt-3/"&gt;Adding Google reCAPTCHA support to avoid spambots&lt;/a&gt;&lt;/li&gt;
-  &lt;/ol&gt;
-
-  &lt;a href="https://github.com/bigardone/phoenix-and-elm-landing-page" target="_blank"&gt;&lt;i class="fa fa-github"&gt;&lt;/i&gt; Source code&lt;/a&gt;
-&lt;/div&gt;
-
-&lt;p&gt;In the &lt;a href="/blog/2017/12/01/phoenix-elm-landing-page-pt-1/"&gt;previous part&lt;/a&gt; of the series we created the project for our
-brand new landing page, we generated the migration for the leads table, we
-implemented the logic for saving them into the database, and we also added
-some tests to ensure that everything was working fine. Now we can focus on
-the front-end side of the project, which consists of a &lt;strong&gt;Phoenix&lt;/strong&gt; template,
-an &lt;strong&gt;Elm&lt;/strong&gt; form, and some &lt;strong&gt;Sass&lt;/strong&gt; love. Let&amp;#39;s do this!&lt;/p&gt;
-
-&lt;h2&gt;A little bit of clean up&lt;/h2&gt;
-
-&lt;p&gt;Before going any further, let&amp;#39;s do a clean up emptying or removing some of
-the files generated by &lt;strong&gt;Phoenix&lt;/strong&gt;. These changes include:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;Removing &lt;code&gt;assets/css/phoenix.css&lt;/code&gt;.&lt;/li&gt;
-&lt;li&gt;Removing &lt;code&gt;assets/js/socket.js&lt;/code&gt; as we are not using sockets this time.&lt;/li&gt;
-&lt;li&gt;Removing &lt;code&gt;assets/static/images/phoenix.png&lt;/code&gt;.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Apart from removing these extra files that we do not need anymore, we are
-also going to edit some of the existing ones. First of all, let&amp;#39;s update
-the main layout template and remove all the default &lt;strong&gt;Phoenix&lt;/strong&gt; HTML elements:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="eex"&gt;# lib/landing_page_web/templates/layout/app.html.eex
-
-&amp;lt;!DOCTYPE html&amp;gt;
-&amp;lt;html lang=&amp;quot;en&amp;quot;&amp;gt;
-  &amp;lt;head&amp;gt;
-    &amp;lt;meta charset=&amp;quot;utf-8&amp;quot;&amp;gt;
-    &amp;lt;meta http-equiv=&amp;quot;X-UA-Compatible&amp;quot; content=&amp;quot;IE=edge&amp;quot;&amp;gt;
-    &amp;lt;meta name=&amp;quot;viewport&amp;quot; content=&amp;quot;width=device-width, initial-scale=1&amp;quot;&amp;gt;
-    &amp;lt;meta name=&amp;quot;description&amp;quot; content=&amp;quot;&amp;quot;&amp;gt;
-    &amp;lt;meta name=&amp;quot;author&amp;quot; content=&amp;quot;&amp;quot;&amp;gt;
-
-    &amp;lt;title&amp;gt;Hello Landing Page!&amp;lt;/title&amp;gt;
-    &amp;lt;link rel=&amp;quot;stylesheet&amp;quot; href=&amp;quot;&amp;lt;%= static_path(@conn, &amp;quot;/css/app.css&amp;quot;) %&amp;gt;&amp;quot;&amp;gt;
-  &amp;lt;/head&amp;gt;
-
-  &amp;lt;body class=&amp;quot;landing-page&amp;quot;&amp;gt;
-    &amp;lt;%= render(@view_module, @view_template, assigns) %&amp;gt;
-    &amp;lt;script src=&amp;quot;&amp;lt;%= static_path(@conn, &amp;quot;/js/app.js&amp;quot;) %&amp;gt;&amp;quot;&amp;gt;&amp;lt;/script&amp;gt;
-  &amp;lt;/body&amp;gt;
-&amp;lt;/html&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Next, we have to edit the &lt;code&gt;index.html&lt;/code&gt; template to add the basic structure
-of the landing page:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="eex"&gt;# lib/landing_page_web/templates/page/index.html.eex
-
-&amp;lt;div class=&amp;quot;main-wrapper&amp;quot;&amp;gt;
-  &amp;lt;div class=&amp;quot;left&amp;quot;&amp;gt;
-    &amp;lt;div class=&amp;quot;hero&amp;quot;&amp;gt;
-      &amp;lt;h1 class=&amp;quot;title&amp;quot;&amp;gt;Phoenix &amp;amp; Elm landing page&amp;lt;/h1&amp;gt;
-      &amp;lt;p class=&amp;quot;subtitle&amp;quot;&amp;gt;
-        Real use case of building a landing page using &amp;lt;strong&amp;gt;Phoenix&amp;lt;/strong&amp;gt; and &amp;lt;strong&amp;gt;Elm&amp;lt;/strong&amp;gt;,
-        following some common patterns and best practices.
-      &amp;lt;/p&amp;gt;
-    &amp;lt;/div&amp;gt;
-    &amp;lt;div class=&amp;quot;scroll-to&amp;quot;&amp;gt;
-      &amp;lt;a class=&amp;quot;icon&amp;quot;&amp;gt;
-        &amp;lt;i class=&amp;quot;fa fa-chevron-down&amp;quot;&amp;gt;&amp;lt;/i&amp;gt;
-      &amp;lt;/a&amp;gt;
-    &amp;lt;/div&amp;gt;
-  &amp;lt;/div&amp;gt;
-  &amp;lt;div class=&amp;quot;right&amp;quot; id=&amp;quot;subscribe_form&amp;quot;&amp;gt;
-    &amp;lt;section class=&amp;quot;section&amp;quot;&amp;gt;
-      &amp;lt;div class=&amp;quot;container is-fluid&amp;quot;&amp;gt;
-        &amp;lt;div id=&amp;quot;form_container&amp;quot;&amp;gt;&amp;lt;/div&amp;gt;
-      &amp;lt;/div&amp;gt;
-    &amp;lt;/section&amp;gt;
-  &amp;lt;/div&amp;gt;
-&amp;lt;/div&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Having deleted all the extra files and the layout template ready, we are
-in a good position to add some styling.&lt;/p&gt;
-
-&lt;h2&gt;Adding styles with Sass and Bulma&lt;/h2&gt;
-
-&lt;p&gt;I have started using &lt;a href="https://bulma.io/"&gt;Bulma&lt;/a&gt; like a month ago, and
-I love the results so far. It is a pretty slick looking CSS framework,
-based on &lt;strong&gt;flexbox&lt;/strong&gt; and which is very easy to customize using &lt;strong&gt;Sass&lt;/strong&gt;.
-Let&amp;#39;s install everything we need to use &lt;strong&gt;Bulma&lt;/strong&gt; and &lt;strong&gt;Sass&lt;/strong&gt; with
-&lt;strong&gt;Brunch&lt;/strong&gt;:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="bash"&gt;$ cd assets
-$ npm install node-sass sass-brunch --save-dev
-...
-...
-$ npm install bulma normalize-scss --save
-...
-...
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;After installing the needed modules, we have to edit Brunch&amp;#39;s
-configuration file to add support for Sass:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="js"&gt;// assets/brunch-config.js
-
-exports.config = {
-  // See http://brunch.io/#documentation for docs.
-  // ...
-
-  // Configure your plugins
-  plugins: {
-    // ...
-
-    sass: {
-      mode: &amp;#39;native&amp;#39;,
-      sourceMapEmbed: true,
-      options: {
-        includePaths: [
-          &amp;#39;node_modules/normalize-scss/sass/&amp;#39;,
-          &amp;#39;node_modules/bulma/&amp;#39;,
-        ],
-      },
-    },
-  },
-
-//...
-}
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Another tool that I often use to organize my styles files is
-&lt;a href="https://github.com/jasonreece/css-burrito"&gt;css-burrito&lt;/a&gt;, which generates
-a very convenient structure of &lt;strong&gt;Sass&lt;/strong&gt; files to help you have a well and
-organized &lt;strong&gt;Sass&lt;/strong&gt; architecture based on modules. I am not going to dive
-deeper into the implementation details, but here you
-can find the resulting files. After adding the style files, and restarting
-the &lt;strong&gt;Phoenix&lt;/strong&gt; server, we can visit
-&lt;a href="http://localhost:4000"&gt;http://localhost:4000&lt;/a&gt; and see the following:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="/images/blog/phoenix-elm-landing-page/plain-html.jpg"
-alt="Navigation flow" style="background: #fff;" /&gt;&lt;/p&gt;
-
-&lt;p&gt;Not looking bad at all! However, what about the subscription form?&lt;/p&gt;
-
-&lt;h2&gt;Adding Elm support&lt;/h2&gt;
-
-&lt;p&gt;Adding &lt;strong&gt;Elm&lt;/strong&gt; to the project is pretty straightforward. Before going any
-further, make sure you visit &lt;a href="http://elm-lang.org/"&gt;Elm&amp;#39;s official site&lt;/a&gt;
-and follow the install instructions for your current platform. Once you
-have sorted that out, let&amp;#39;s continue by adding &lt;strong&gt;Elm&lt;/strong&gt;, and its &lt;strong&gt;Brunch&lt;/strong&gt;
-support to the project:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="sh"&gt;$ cd assets
-$ mkdir elm
-$ cd elm
-$ elm package install elm-lang/html -y
-.
-..
-...
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;The last command installs the basic &lt;strong&gt;Elm&lt;/strong&gt; packages and generates the initial
-file structure and configuration file that we need to update to make it
-look like the following:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="json"&gt;// assets/elm/elm-package.json
-
-{
-  &amp;quot;version&amp;quot;: &amp;quot;1.0.0&amp;quot;,
-  &amp;quot;summary&amp;quot;: &amp;quot;Repo for my Phoenix and Elm landing page series&amp;quot;,
-  &amp;quot;repository&amp;quot;: &amp;quot;https://github.com/bigardone/phoenix-and-elm-landing-page.git&amp;quot;,
-  &amp;quot;license&amp;quot;: &amp;quot;BSD3&amp;quot;,
-  &amp;quot;source-directories&amp;quot;: [&amp;quot;src&amp;quot;],
-  &amp;quot;exposed-modules&amp;quot;: [],
-  &amp;quot;dependencies&amp;quot;: {
-    &amp;quot;elm-lang/core&amp;quot;: &amp;quot;5.1.1 &amp;lt;= v &amp;lt; 6.0.0&amp;quot;,
-    &amp;quot;elm-lang/html&amp;quot;: &amp;quot;2.0.0 &amp;lt;= v &amp;lt; 3.0.0&amp;quot;
-  },
-  &amp;quot;elm-version&amp;quot;: &amp;quot;0.18.0 &amp;lt;= v &amp;lt; 0.19.0&amp;quot;
-}
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;We also need to install &lt;strong&gt;Brunch&amp;#39;s Elm&lt;/strong&gt; package:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="bash"&gt;$ cd assets
-$ npm install --save-dev elm-brunch
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;When working with &lt;strong&gt;Elm&lt;/strong&gt;, something that I usually do is to create an src
-folder inside &lt;code&gt;assets/elm&lt;/code&gt; where I put there all my &lt;strong&gt;Elm&lt;/strong&gt; source files. The
-reason for this is that I sometimes install third-party libraries, and
-I like to separate them from my source files, so I place them in an
-&lt;code&gt;assets/elm/vendor&lt;/code&gt; folder. Therefore, don&amp;#39;t forget to change the
-&lt;code&gt;&amp;quot;source-directories&amp;quot;: [&amp;quot;src&amp;quot;]&lt;/code&gt; line, otherwise your &lt;strong&gt;Elm&lt;/strong&gt; files are not going
-to compile at all. We still have to make &lt;strong&gt;Brunch&lt;/strong&gt; detect and build &lt;strong&gt;Elm&lt;/strong&gt;
-files, so let&amp;#39;s edit the &lt;strong&gt;Brunch&lt;/strong&gt; configuration file once more:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="js"&gt;// assets/brunch-config.js
-
-exports.config = {
-  // See http://brunch.io/#documentation for docs.
-  // ...
-
-  // Phoenix paths configuration
-  paths: {
-    // Dependencies and current project directories to watch
-    watched: [&amp;#39;static&amp;#39;, &amp;#39;css&amp;#39;, &amp;#39;js&amp;#39;, &amp;#39;vendor&amp;#39;, &amp;#39;elm&amp;#39;],
-    // ...
-  },
-
-  // Configure your plugins
-  plugins: {
-    // ...
-
-    elmBrunch: {
-      mainModules: [&amp;#39;src/Main.elm&amp;#39;],
-      elmFolder: &amp;#39;elm&amp;#39;,
-      outputFolder: &amp;#39;../js/elm&amp;#39;,
-      makeParameters: [&amp;#39;--warn&amp;#39;, &amp;#39;--debug&amp;#39;],
-    },
-  },
-
-//...
-}
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;To test that everything is working fine, let&amp;#39;s create simple main Elm
-module:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- assets/elm/src/Main.elm
-
-module Main exposing (main)
-
-import Html exposing (Html)
-
-
-main : Html msg
-main =
-    Html.text &amp;quot;Hello, Elm&amp;quot;
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Lastly, we have to embed the generated javascript by &lt;strong&gt;Elm&lt;/strong&gt; in the
-&lt;code&gt;index.html&lt;/code&gt; template, so let&amp;#39;s edit the main &lt;code&gt;app.js&lt;/code&gt; file:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="js"&gt;// assets/js/app.js
-
-import Elm from &amp;#39;./elm/main&amp;#39;;
-
-const elmContainer = document.querySelector(&amp;#39;#form_container&amp;#39;);
-
-if (elmContainer) {
-  const app = Elm.Main.embed(elmContainer);
-}
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;After &lt;strong&gt;Brunch&lt;/strong&gt; finishes compiling the assets, we can see the &lt;code&gt;Hello,
-Elm!&lt;/code&gt; message on the right section of the landing page, yay!&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="/images/blog/phoenix-elm-landing-page/hello-elm.jpg"
-alt="Navigation flow" style="background: #fff;" /&gt;&lt;/p&gt;
-
-&lt;h2&gt;The subscription form&lt;/h2&gt;
-
-&lt;p&gt;The subscription form we need consists of two fields, one for the lead&amp;#39;s
-full name and another one for the email. Knowing this, let&amp;#39;s start by
-defining any &lt;strong&gt;Elm&lt;/strong&gt; application core element, the model:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- assets/elm/src/Model.elm
-
-module Model exposing (..)
-
-import Dict exposing (Dict)
-
-
-type alias FormFields =
-    { fullName : String
-    , email : String
-    }
-
-
-type alias ValidationErrors =
-    Dict String (List String)
-
-
-type SubscribeForm
-    = Editing FormFields
-    | Saving FormFields
-    | Invalid FormFields ValidationErrors
-    | Errored FormFields String
-    | Success
-
-
-type alias Model =
-    { subscribeForm : SubscribeForm }
-
-
-extractFormFields : SubscribeForm -&amp;gt; FormFields
-extractFormFields subscribeForm =
-    case subscribeForm of
-        Editing ff -&amp;gt;
-            ff
-
-        Saving ff -&amp;gt;
-            ff
-
-        Invalid ff _ -&amp;gt;
-            ff
-
-        Errored ff _ -&amp;gt;
-            ff
-
-        Success -&amp;gt;
-            emptyFormFields
-
-
-emptyFormFields : FormFields
-emptyFormFields =
-    { fullName = &amp;quot;&amp;quot;
-    , email = &amp;quot;&amp;quot;
-    }
-
-
-extractValidationErrors : SubscribeForm -&amp;gt; ValidationErrors
-extractValidationErrors subscribeForm =
-    case subscribeForm of
-        Invalid _ validationErrors -&amp;gt;
-            validationErrors
-
-        _ -&amp;gt;
-            emptyValidationErrors
-
-
-emptyValidationErrors : ValidationErrors
-emptyValidationErrors =
-    Dict.empty
-
-
-initialModel : Model
-initialModel =
-    { subscribeForm = Editing emptyFormFields }
-
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;&lt;code&gt;Model&lt;/code&gt; consists of a record with a &lt;code&gt;subscribeForm&lt;/code&gt; key, which is
-a &lt;strong&gt;union type&lt;/strong&gt; representing the form&amp;#39;s current state which can be one of
-the following:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;Editing&lt;/code&gt; is the initial state when the user is typing on its controls.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;Saving&lt;/code&gt; is when the user submits the form, and the Http request with
-the data is sent to the backend.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;Invalid&lt;/code&gt; means that there are validation errors or something went wrong
-while saving the data.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;Errored&lt;/code&gt; for the cases where there is an error not related to
-validation.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;Success&lt;/code&gt; represents that everything went fine, and the lead&amp;#39;s data has
-been saved into the database.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Depending on the form&amp;#39;s current state, &lt;code&gt;SubscribeForm&lt;/code&gt; might have
-a &lt;code&gt;FormFields&lt;/code&gt; record with the current values inserted by the user, and
-a &lt;code&gt;ValidationErrors&lt;/code&gt; type, which consists of a &lt;code&gt;Dict&lt;/code&gt; of validation errors by
-field, or a &lt;code&gt;String&lt;/code&gt; containing an error message, which is the case of
-&lt;code&gt;Errored&lt;/code&gt;. But why are we defining the model like this? If you are new to
-&lt;strong&gt;Elm&lt;/strong&gt;, and not very familiar with &lt;strong&gt;union types&lt;/strong&gt;, you might have probably
-defined the model something like:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;type Status
-    = Editing
-    | Saving
-    | Invalid
-    | Errored
-    | Success
-
-type alias Model =
-    { formFields : FormFields
-    , validationErrors : Dict String (List String)
-    , error: String
-    , status : Status
-    }
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;This approach is completely fine, until you realize that it can drive to
-&lt;strong&gt;inconsistent states&lt;/strong&gt;, like having a &lt;code&gt;Success&lt;/code&gt; state with a nonempty &lt;code&gt;Dict&lt;/code&gt; of
-&lt;code&gt;validationErrors&lt;/code&gt; or with an error message string, and you have to make an
-extra effort to prevent the impossible states, or states that don&amp;#39;t make
-sense at all. Union types are a very convenient way of avoiding these
-situations by making the model data depend on the type, &lt;a href="https://www.youtube.com/watch?v=IcgmSRJHu_8"&gt;making impossible
-states impossible&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;Once the model is defined, let&amp;#39;s continue by implementing the view to
-represent the model:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- assets/elm/src/View.elm
-
-module View exposing (view)
-
-import Dict exposing (Dict)
-import Html exposing (Html, form)
-import Html.Attributes as Html
-import Html.Events as Html
-import Messages exposing (Msg(..))
-import Model exposing (..)
-
-
-view : Model -&amp;gt; Html Msg
-view { subscribeForm } =
-    case subscribeForm of
-        Success -&amp;gt;
-            Html.div
-                [ Html.class &amp;quot;success-message&amp;quot; ]
-                [ Html.div
-                    [ Html.class &amp;quot;icon is-large&amp;quot; ]
-                    [ Html.i
-                        [ Html.class &amp;quot;fa fa-3x fa-heart&amp;quot; ]
-                        []
-                    ]
-                , Html.h2
-                    []
-                    [ Html.text &amp;quot;You have subscribed with success&amp;quot; ]
-                , Html.p
-                    []
-                    [ Html.text &amp;quot;We will keep you updated with the latest news&amp;quot; ]
-                ]
-
-        _ -&amp;gt;
-            formView subscribeForm
-
-
-formView : SubscribeForm -&amp;gt; Html Msg
-formView subscribeForm =
-    let
-        { fullName, email } =
-            extractFormFields subscribeForm
-
-        saving =
-            case subscribeForm of
-                Saving _ -&amp;gt;
-                    True
-
-                _ -&amp;gt;
-                    False
-
-        invalid =
-            case subscribeForm of
-                Invalid _ _ -&amp;gt;
-                    True
-
-                _ -&amp;gt;
-                    False
-
-        buttonDisabled =
-            fullName == &amp;quot;&amp;quot; || email == &amp;quot;&amp;quot; || saving || invalid
-    in
-        Html.div
-            [ Html.class &amp;quot;content&amp;quot; ]
-            [ Html.h3
-                []
-                [ Html.text &amp;quot;Want to know more?&amp;quot; ]
-            , Html.p
-                []
-                [ Html.text &amp;quot;Subscribe to stay updated&amp;quot; ]
-            , formError subscribeForm
-            , form
-                [ Html.onSubmit HandleFormSubmit ]
-                [ Html.div
-                    [ Html.class &amp;quot;field&amp;quot; ]
-                    [ Html.div
-                        [ Html.class &amp;quot;control&amp;quot; ]
-                        [ Html.input
-                            [ Html.classList
-                                [ ( &amp;quot;input is-medium&amp;quot;, True )
-                                ]
-                            , Html.placeholder &amp;quot;My name is...&amp;quot;
-                            , Html.required True
-                            , Html.value fullName
-                            , Html.onInput HandleFullNameInput
-                            ]
-                            []
-                        ]
-                    ]
-                , Html.div
-                    [ Html.class &amp;quot;field&amp;quot; ]
-                    [ Html.div
-                        [ Html.class &amp;quot;control&amp;quot; ]
-                        [ Html.input
-                            [ Html.classList
-                                [ ( &amp;quot;input is-medium&amp;quot;, True )
-                                ]
-                            , Html.type_ &amp;quot;email&amp;quot;
-                            , Html.placeholder &amp;quot;My email address is...&amp;quot;
-                            , Html.required True
-                            , Html.value email
-                            , Html.onInput HandleEmailInput
-                            ]
-                            []
-                        ]
-                    ]
-                , Html.div
-                    [ Html.class &amp;quot;field&amp;quot; ]
-                    [ Html.div
-                        [ Html.class &amp;quot;control&amp;quot; ]
-                        [ Html.button
-                            [ Html.class &amp;quot;button is-primary is-medium&amp;quot;
-                            , Html.disabled buttonDisabled
-                            ]
-                            [ Html.span
-                                [ Html.class &amp;quot;icon&amp;quot; ]
-                                [ Html.i
-                                    [ Html.classList
-                                        [ ( &amp;quot;fa fa-check&amp;quot;, not saving )
-                                        , ( &amp;quot;fa fa-circle-o-notch fa-spin&amp;quot;, saving )
-                                        ]
-                                    ]
-                                    []
-                                ]
-                            , Html.span
-                                []
-                                [ Html.text &amp;quot;Subscribe me&amp;quot; ]
-                            ]
-                        ]
-                    ]
-                ]
-            ]
-
-
-formError : SubscribeForm -&amp;gt; Html Msg
-formError subscribeForm =
-    case subscribeForm of
-        Errored _ message -&amp;gt;
-            Html.div
-                [ Html.class &amp;quot;notification is-danger fade-in&amp;quot; ]
-                [ Html.text message ]
-
-        _ -&amp;gt;
-            Html.text &amp;quot;&amp;quot;
-
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;The &lt;code&gt;view&lt;/code&gt; function receives the &lt;code&gt;Model&lt;/code&gt; and depending on the value of
-&lt;code&gt;subscribeForm&lt;/code&gt; it renders a success message or the form using the
-&lt;code&gt;formView&lt;/code&gt; function. This function starts by extracting the
-current &lt;code&gt;formFields&lt;/code&gt; values and checking if the form is &lt;code&gt;saving&lt;/code&gt; or &lt;code&gt;invalid&lt;/code&gt;.
-With these four values, we define the &lt;code&gt;buttonDisabled&lt;/code&gt; value, to disable the
-submit button if any of the fields are empty or the form is currently
-invalid or saving the data. Inside the &lt;code&gt;in&lt;/code&gt; block, it renders the form,
-which has the following peculiarities which are worth mentioning:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;It sends a &lt;code&gt;HandleFormSubmit&lt;/code&gt; message when submitted.&lt;/li&gt;
-&lt;li&gt;It sends a &lt;code&gt;HandleFullNameInput&lt;/code&gt; message when the &lt;code&gt;fullName&lt;/code&gt; input
-changes.&lt;/li&gt;
-&lt;li&gt;Same happens for the &lt;code&gt;email&lt;/code&gt; input, but with a &lt;code&gt;HandleEmailInput&lt;/code&gt;
-message.&lt;/li&gt;
-&lt;li&gt;The submit button is styled and disabled depending on the current state
-of &lt;code&gt;subscribeForm&lt;/code&gt;.&lt;/li&gt;
-&lt;li&gt;The &lt;code&gt;formError&lt;/code&gt; function renders a message box with the error when the
-form state happens to be &lt;code&gt;Errored&lt;/code&gt;.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;We have not defined yet the messages that we are using in the view for
-handling input changes and the form submission, so let&amp;#39;s go ahead and
-create the messages module to define them:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- assets/elm/src/Messages.elm
-
-module Messages exposing (Msg(..))
-
-import Dict exposing (Dict)
-import Http
-
-
-type Msg
-    = HandleFullNameInput String
-    | HandleEmailInput String
-    | HandleFormSubmit
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Next, let&amp;#39;s create the update module, which handles messages updating the
-application model:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- assets/elm/src/Update.elm
-
-module Update exposing (update)
-
-import Messages exposing (Msg(..))
-import Model exposing (..)
-
-
-update : Msg -&amp;gt; Model -&amp;gt; ( Model, Cmd Msg )
-update msg model =
-    let
-        subscribeForm =
-            model.subscribeForm
-
-        formFields =
-            extractFormFields model.subscribeForm
-    in
-        case msg of
-            HandleFullNameInput value -&amp;gt;
-                { model | subscribeForm = Editing { formFields | fullName = value } } ! []
-
-            HandleEmailInput value -&amp;gt;
-                { model | subscribeForm = Editing { formFields | email = value } } ! []
-
-            HandleFormSubmit -&amp;gt;
-                { model | subscribeForm = Saving formFields } ! []
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;When the update function receives either a &lt;code&gt;HandleFullNameInput&lt;/code&gt; or
-a &lt;code&gt;HandleEmailInput&lt;/code&gt;, it sets the &lt;code&gt;subscribeForm&lt;/code&gt; to &lt;code&gt;Editing&lt;/code&gt; applying the
-current value of the corresponding input. This approach is going to be
-very convenient while dealing with validation errors as we are going to
-see in a minute. On the other hand, &lt;code&gt;HandleFormSubmit&lt;/code&gt; sets the state to
-&lt;code&gt;Saving&lt;/code&gt; which we are using in the &lt;code&gt;View&lt;/code&gt; module to add a spinner and disable
-the submit button.&lt;/p&gt;
-
-&lt;p&gt;Last but not least, let&amp;#39;s change the main module to tie everything
-together:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- assets/elm/src/Main.elm
-
-module Main exposing (main)
-
-import Html exposing (Html)
-import Messages exposing (Msg(..))
-import Model exposing (..)
-import Update exposing (update)
-import View exposing (view)
-
-
-main : Program Never Model Msg
-main =
-    Html.program
-        { init = init
-        , view = view
-        , update = update
-        , subscriptions = subscriptions
-        }
-
-
-init : ( Model, Cmd Msg )
-init =
-    initialModel ! []
-
-
-subscriptions : Model -&amp;gt; Sub Msg
-subscriptions model =
-    Sub.none
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Everything should be compiling successfully now, so jumping back to the
-browser we should see the subscription form rendering and ready to send
-leads subscriptions:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="/images/blog/phoenix-elm-landing-page/subscription-form.gif"
-alt="Subscription form" style="background: #fff;" /&gt;&lt;/p&gt;
-
-&lt;h2&gt;Form submission and error handling&lt;/h2&gt;
-
-&lt;p&gt;The form is submitted using an HTTP request, and for that, we need to
-install &lt;a href="http://package.elm-lang.org/packages/elm-lang/http/latest"&gt;Elm&amp;#39;s HTTP
-package&lt;/a&gt;:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="sh"&gt;$ cd assets/elm
-$ elm package install elm-lang/http -y
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;As an HTTP request involves &lt;strong&gt;side effects&lt;/strong&gt;, we have to manage them in Elm
-using &lt;code&gt;Commands&lt;/code&gt;, so let&amp;#39;s create the command for posting the form:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- assets/elm/src/Commands.elm
-
-import Http
-import Json.Decode as JD
-import Json.Encode as JE
-import Decoders exposing (responseDecoder)
-import Messages exposing (Msg(..))
-import Model exposing (SubscribeForm(..), FormFields)
-
-
-subscribe : SubscribeForm -&amp;gt; Cmd Msg
-subscribe subscribeForm =
-    case subscribeForm of
-        Saving formFields -&amp;gt;
-            Http.send SubscribeResponse (post formFields)
-
-        _ -&amp;gt;
-            Cmd.none
-
-
-post : FormFields -&amp;gt; Http.Request Bool
-post formFields =
-    Http.request
-        { method = &amp;quot;POST&amp;quot;
-        , headers = []
-        , url = &amp;quot;/api/v1/leads&amp;quot;
-        , body = Http.jsonBody (encodeModel formFields)
-        , expect = Http.expectJson responseDecoder
-        , timeout = Nothing
-        , withCredentials = False
-        }
-
-
-encodeModel : FormFields -&amp;gt; JD.Value
-encodeModel { fullName, email } =
-    JE.object
-        [ ( &amp;quot;lead&amp;quot;
-          , JE.object
-                [ ( &amp;quot;full_name&amp;quot;, JE.string fullName )
-                , ( &amp;quot;email&amp;quot;, JE.string email )
-                ]
-          )
-        ]
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;In the &lt;code&gt;subscribe&lt;/code&gt; function we can find another example of how convenient
-are union types. We want to post the data only when the form&amp;#39;s status is
-&lt;code&gt;Saving&lt;/code&gt; and not when there are validation errors for instance. &lt;code&gt;Http.send&lt;/code&gt;
-receives the &lt;code&gt;SubscribeForm&lt;/code&gt; message, used to handle the result and the post
-request. This request consists of a record that has all the details of the
-request, including the &lt;code&gt;JSON&lt;/code&gt; body which is the encoded form fields, and the
-logic to handle the expected response in the expect field, in our case
-a &lt;code&gt;JSON&lt;/code&gt; decoder &lt;code&gt;responseDecoder&lt;/code&gt; that we have to create:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- assets/elm/src/Decoders.elm
-
-module Decoders exposing (..)
-
-import Json.Decode as Decode
-import Model exposing (ValidationErrors)
-
-
-responseDecoder : Decode.Decoder Bool
-responseDecoder =
-    Decode.succeed True
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;As we do not care about the payload that the &lt;code&gt;LeadController&lt;/code&gt; is returning
-once the lead subscribes successfully, the &lt;code&gt;responseDecoder&lt;/code&gt; function
-decodes anything received into a &lt;code&gt;True&lt;/code&gt; value. Next step for handling the
-response is to add the &lt;code&gt;SubscribeResponse&lt;/code&gt; message to the &lt;code&gt;Messages&lt;/code&gt; module:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- assets/elm/src/Messages.elm
-
-module Messages exposing (Msg(..))
-
-import Dict exposing (Dict)
-import Http
-
-
-type Msg
-    = HandleFullNameInput String
-    | HandleEmailInput String
-    | HandleFormSubmit
-    | SubscribeResponse (Result Http.Error Bool)
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;And, of course, the necessary handle clause in the &lt;code&gt;Update.update&lt;/code&gt;
-function:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- assets/elm/src/Update.elm
-
-module Update exposing (update)
-
--- ...
-
-update : Msg -&amp;gt; Model -&amp;gt; ( Model, Cmd Msg )
-update msg model =
-    let
-        subscribeForm =
-            model.subscribeForm
-
-        formFields =
-            extractFormFields model.subscribeForm
-    in
-        case msg of
-            -- ...
-
-            SubscribeResponse (Ok result) -&amp;gt;
-                { model | subscribeForm = Success } ! []
-
-            SubscribeResponse (Err (BadStatus response)) -&amp;gt;
-                case Decode.decodeString validationErrorsDecoder response.body of
-                    Ok validationErrors -&amp;gt;
-                        { model | subscribeForm = Invalid formFields validationErrors } ! []
-
-                    Err error -&amp;gt;
-                        { model | subscribeForm = Errored formFields &amp;quot;Oops! Something went wrong!&amp;quot; } ! []
-
-            SubscribeResponse (Err error) -&amp;gt;
-                { model | subscribeForm = Errored formFields &amp;quot;Oops! Something went wrong!&amp;quot; } ! []
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;The &lt;code&gt;Result&lt;/code&gt; of the form post can be either an &lt;code&gt;Ok True&lt;/code&gt;, meaning that
-everything went fine setting the &lt;code&gt;subscribeForm&lt;/code&gt; to &lt;code&gt;Success&lt;/code&gt;, or an
-&lt;code&gt;Http.Error&lt;/code&gt;, which is another union type describing the reason for the
-error. In our case, we only want to handle validation errors, so it
-patterns matches against &lt;code&gt;BadStatus&lt;/code&gt; response, using the
-&lt;code&gt;validationErrorsDecoder&lt;/code&gt; to decode response which is the error list
-returned by the &lt;code&gt;LandingPageWeb.FallbackController&lt;/code&gt; that we created in the
-previous part. If there is any other sort of error, it sets the form to
-&lt;code&gt;Errored&lt;/code&gt; with a custom error message. To make it work properly, let&amp;#39;s
-implement the missing &lt;code&gt;validationErrorsDecoder&lt;/code&gt;:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- assets/elm/src/Decoders.elm
-
-module Decoders exposing (..)
-
-import Json.Decode as Decode
-import Model exposing (ValidationErrors)
-
--- ...
-
-validationErrorsDecoder : Decode.Decoder ValidationErrors
-validationErrorsDecoder =
-    Decode.dict &amp;lt;| Decode.list Decode.string
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;The new decoder transforms the response into a &lt;code&gt;ValidationErrors&lt;/code&gt; which is
-a &lt;code&gt;Dict&lt;/code&gt; where its keys are field names, and the values are a list of
-errors, that we can now render in the view:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- assets/elm/src/View.elm
-
-module View exposing (view)
-
--- ...
-
-formView : SubscribeForm -&amp;gt; Html Msg
-formView subscribeForm =
-    let
-        validationErrors =
-            extractValidationErrors subscribeForm
-
-        -- ...
-    in
-        -- ...
-
-        , form
-            [ Html.onSubmit HandleFormSubmit ]
-            [ Html.div
-                [ Html.class &amp;quot;field&amp;quot; ]
-                [ Html.div
-                    [ Html.class &amp;quot;control&amp;quot; ]
-                    [ Html.input
-                        [ Html.classList
-                            [ ( &amp;quot;input is-medium&amp;quot;, True )
-                            , ( &amp;quot;is-danger&amp;quot;, Dict.member &amp;quot;full_name&amp;quot; validationErrors )
-                            ]
-                        , Html.placeholder &amp;quot;My name is...&amp;quot;
-                        , Html.required True
-                        , Html.value fullName
-                        , Html.onInput HandleFullNameInput
-                        ]
-                        []
-                    , validationErrorView &amp;quot;full_name&amp;quot; validationErrors
-                    ]
-                ]
-            , Html.div
-                [ Html.class &amp;quot;field&amp;quot; ]
-                [ Html.div
-                    [ Html.class &amp;quot;control&amp;quot; ]
-                    [ Html.input
-                                [ Html.classList
-                                    [ ( &amp;quot;input is-medium&amp;quot;, True )
-                                    , ( &amp;quot;is-danger&amp;quot;, Dict.member &amp;quot;email&amp;quot; validationErrors )
-                                    ]
-                                , Html.type_ &amp;quot;email&amp;quot;
-                                , Html.placeholder &amp;quot;My email address is...&amp;quot;
-                                , Html.required True
-                                , Html.value email
-                                , Html.onInput HandleEmailInput
-                                ]
-                                []
-                            , validationErrorView &amp;quot;email&amp;quot; validationErrors
-                            ]
-                      ]
-
-                      -- ...
-
-
-validationErrorView : String -&amp;gt; ValidationErrors -&amp;gt; Html Msg
-validationErrorView key validationErrors =
-    case Dict.get key validationErrors of
-        Just error -&amp;gt;
-            error
-                |&amp;gt; List.map Html.text
-                |&amp;gt; Html.p
-                    [ Html.class &amp;quot;help is-danger&amp;quot; ]
-
-        Nothing -&amp;gt;
-            Html.text &amp;quot;&amp;quot;
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Using the &lt;code&gt;extractValidationErrors&lt;/code&gt; helper function from the &lt;code&gt;Model&lt;/code&gt; module,
-it gets the possible &lt;code&gt;validationErrors&lt;/code&gt; and not only sets an is-danger class
-to the fields when it happens to have errors but calls &lt;code&gt;validationErrorView&lt;/code&gt;
-to render them.&lt;/p&gt;
-
-&lt;h2&gt;The final result&lt;/h2&gt;
-
-&lt;p&gt;It is time to test out our work so far. Let&amp;#39;s jump back to the browser and
-try to subscribe using valid values:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="/images/blog/phoenix-elm-landing-page/success-message.gif"
-alt="Success message" style="background: #fff;" /&gt;&lt;/p&gt;
-
-&lt;p&gt;Submitting the form returns a &lt;code&gt;200&lt;/code&gt; success message which changes the
-&lt;code&gt;subscribeForm&lt;/code&gt; to &lt;code&gt;Success&lt;/code&gt;, displaying the success message. Next, let&amp;#39;s
-try subscribing again using the same email:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="/images/blog/phoenix-elm-landing-page/validation-error.gif"
-alt="Validation errors" style="background: #fff;" /&gt;&lt;/p&gt;
-
-&lt;p&gt;This time the server returns a &lt;code&gt;422&lt;/code&gt; unprocessable entity status, with an
-error message for the &lt;code&gt;email&lt;/code&gt; field, as it is already taken, cool!
-Finally, let&amp;#39;s try to stop the Phoenix server and submit the form once
-more to simulate an unexpected response:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="/images/blog/phoenix-elm-landing-page/unknown-error.gif"
-alt="Unknown error" style="background: #fff;" /&gt;&lt;/p&gt;
-
-&lt;p&gt;As the server is down, the request fails, rendering the generic error message
-that we have previously set for nonvalidation errors.&lt;/p&gt;
-
-&lt;p&gt;Our new landing page is looking pretty good so far, though we haven&amp;#39;t finished
-yet. In the next episode, we are going to add some protection against spam
-bots using &lt;a href="https://developers.google.com/recaptcha/"&gt;Googles reCAPTCHA&lt;/a&gt;,
-which not only implies using an external javascript library from our Elm
-code but consuming a third party API from our backend. In the meantime,
-you can check out the source code of the part
-&lt;a href="https://github.com/bigardone/phoenix-and-elm-landing-page/tree/tutorial/part-2"&gt;here&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;Merry Christmas and Happy New Coding Year!&lt;/p&gt;
 </content>
   </entry>
 </feed>
