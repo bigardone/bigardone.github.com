@@ -14,7 +14,7 @@
     <link rel="alternate" href="http://codeloveandboards.com/blog/2019/03/28/concurrent-ant-farm-with-elixir-and-phoenix-liveview/"/>
     <id>http://codeloveandboards.com/blog/2019/03/28/concurrent-ant-farm-with-elixir-and-phoenix-liveview/</id>
     <published>2019-03-28T07:00:00Z</published>
-    <updated>2019-05-11T08:44:31+02:00</updated>
+    <updated>2019-05-11T09:04:33+02:00</updated>
     <author>
       <name>Article Author</name>
     </author>
@@ -126,7 +126,7 @@ defmodule AntFarm.Ant do
 end
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;p&gt;This is a basic &lt;code&gt;GenServer&lt;/code&gt; implementation that starts a new named process, which state is a &lt;code&gt;AntFarm.Ant.State&lt;/code&gt; struct. To emulate some random behavior, every 60 milliseconds it process its state with the &lt;code&gt;AntFarm.Ant.Behaviour.process/1&lt;/code&gt; function, which returns the new state to set.&lt;/p&gt;
+&lt;p&gt;This is a basic &lt;code&gt;GenServer&lt;/code&gt; implementation that starts a new named process, which state is a &lt;code&gt;AntFarm.Ant.State&lt;/code&gt; struct. To emulate some random behavior, every 60 milliseconds it processes its state with the &lt;code&gt;AntFarm.Ant.Behaviour.process/1&lt;/code&gt; function, which returns the new state to set.&lt;/p&gt;
 
 &lt;pre&gt;&lt;code class="elixir"&gt;# lib/ant_farm/ant/behaviour.ex
 

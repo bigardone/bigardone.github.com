@@ -97,7 +97,7 @@ defmodule AntFarm.Ant do
     Process.send_after(self(), :perform_actions, @timeout)
   end
 end
-</code></pre> <p>This is a basic <code>GenServer</code> implementation that starts a new named process, which state is a <code>AntFarm.Ant.State</code> struct. To emulate some random behavior, every 60 milliseconds it process its state with the <code>AntFarm.Ant.Behaviour.process/1</code> function, which returns the new state to set.</p> <pre><code class="elixir"># lib/ant_farm/ant/behaviour.ex
+</code></pre> <p>This is a basic <code>GenServer</code> implementation that starts a new named process, which state is a <code>AntFarm.Ant.State</code> struct. To emulate some random behavior, every 60 milliseconds it processes its state with the <code>AntFarm.Ant.Behaviour.process/1</code> function, which returns the new state to set.</p> <pre><code class="elixir"># lib/ant_farm/ant/behaviour.ex
 
 defmodule AntFarm.Ant.Behaviour do
   alias AntFarm.Ant.State
