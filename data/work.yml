@@ -1,4 +1,11 @@
 projects:
+  ant_farm:
+    name: Phoenix LiveView ant farm
+    description: Concurrent ant farm with Elixir and LiveView
+    url: https://phoenix-liveview-ant-farm.herokuapp.com/
+    tags:
+      - Elixir
+      - Phoenix LiveView
   phxsockets:
     name: phxsockets.io
     description: Phoenix sockets and channels GUI client

@@ -256,11 +256,9 @@ iex(2)>
 There is the map where we are going to store the authentication tokens. Let's continue by adding some functionality to validate if an email is valid, save and fetch token values:
 
 ```elixir
-# apps/passwordless_auth/lib/passwordless_auth/application.ex
+# apps/passwordless_auth/lib/passwordless_auth/repo.ex
 
-defmodule PasswordlessAuth.Application do
-  use Application
-
+defmodule PasswordlessAuth.Repo do
   #...
 
   def exists?(pid \\ @name, email),
