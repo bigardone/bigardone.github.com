@@ -14,11 +14,11 @@
     <link rel="alternate" href="http://codeloveandboards.com/blog/2019/06/06/dynamic-base-path-for-an-elm-spa/"/>
     <id>http://codeloveandboards.com/blog/2019/06/06/dynamic-base-path-for-an-elm-spa/</id>
     <published>2019-06-06T07:00:00Z</published>
-    <updated>2019-06-15T11:23:58+02:00</updated>
+    <updated>2019-06-15T11:25:50+02:00</updated>
     <author>
       <name>Article Author</name>
     </author>
-    <content type="html">&lt;p&gt;While building an Elm SPA dashboard, I faced the following problem. In the local development environment, the URL to access it is &lt;code&gt;http://localhost:1234&lt;/code&gt;, which is Parcel&amp;#39;s default URL, and the Elm SPA gets mounted in &lt;code&gt;/&lt;/code&gt;, so Elm navigation handles as expected any internal routes like &lt;code&gt;/projects&lt;/code&gt; or &lt;code&gt;/tasks&lt;/code&gt;. The problem came while deploying it into production because the base URL didn&amp;#39;t match the root path. In other words, it looked something like &lt;code&gt;https://nifty-minsky-538aab.netlify.com/private/admin/a&lt;/code&gt; where &lt;code&gt;/private/admin/&lt;/code&gt; was the base path for the application, and this path could change depending on the environment, which made Elm navigation tricky, especially while parsing URLs to get the current route. I wanted to avoid using URL fragments, so this is how I solved it.&lt;/p&gt;
+    <content type="html">&lt;p&gt;While building an Elm SPA dashboard, I faced the following problem. In the local development environment, the URL to access it is &lt;code&gt;http://localhost:1234&lt;/code&gt;, which is Parcel&amp;#39;s default URL, and the Elm SPA gets mounted in &lt;code&gt;/&lt;/code&gt;, so Elm navigation handles as expected any internal routes like &lt;code&gt;/projects&lt;/code&gt; or &lt;code&gt;/tasks&lt;/code&gt;. The problem came while deploying it into production because the base URL didn&amp;#39;t match the root path. In other words, it looked something like &lt;a href="https://nifty-minsky-538aab.netlify.com/private/admin/"&gt;https://nifty-minsky-538aab.netlify.com/private/admin/&lt;/a&gt; where &lt;code&gt;/private/admin/&lt;/code&gt; was the base path for the application, and this path could change depending on the environment, which made Elm navigation tricky, especially while parsing URLs to get the current route. I wanted to avoid using URL fragments, so this is how I solved it.&lt;/p&gt;
 
 &lt;h3&gt;The &amp;lt;base&amp;gt; HTML element&lt;/h3&gt;
 
