@@ -14,7 +14,7 @@
     <link rel="alternate" href="http://codeloveandboards.com/blog/2019/06/06/dynamic-base-path-for-an-elm-spa/"/>
     <id>http://codeloveandboards.com/blog/2019/06/06/dynamic-base-path-for-an-elm-spa/</id>
     <published>2019-06-06T07:00:00Z</published>
-    <updated>2019-06-15T11:25:50+02:00</updated>
+    <updated>2019-06-15T11:31:45+02:00</updated>
     <author>
       <name>Article Author</name>
     </author>
@@ -23,6 +23,20 @@
 &lt;h3&gt;The &amp;lt;base&amp;gt; HTML element&lt;/h3&gt;
 
 &lt;p&gt;First of all, I needed a way to prepend the dynamic base URL to any of the internal Elm routes. After some research I found the handy &lt;a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base"&gt;&amp;lt;base&amp;gt;&lt;/a&gt; HTML element, which specifies the base URL to use for all relative URLs contained within a document. This means that if you set &lt;code&gt;&amp;lt;base href=&amp;quot;http://localhost:1234/private/admin/&amp;quot;&amp;gt;&lt;/code&gt;, any relative link I would add like &lt;code&gt;&amp;lt;a href=&amp;quot;projects&amp;quot;&amp;gt;Projects&amp;lt;/a&amp;gt;&lt;/code&gt;, automatically points to &lt;code&gt;http://localhost:1234/private/admin/projects&lt;/code&gt;, and that was exactly what I was looking for.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="html"&gt;&amp;lt;!DOCTYPE html&amp;gt;
+&amp;lt;html lang=&amp;quot;en&amp;quot;&amp;gt;
+  &amp;lt;head&amp;gt;
+    &amp;lt;base href=&amp;quot;{{ BASE_URL }}&amp;quot;&amp;gt;
+  &amp;lt;/head&amp;gt;
+  &amp;lt;body&amp;gt;
+    &amp;lt;main&amp;gt;&amp;lt;/main&amp;gt;
+    &amp;lt;script src=&amp;quot;./js/index.js&amp;quot;&amp;gt;&amp;lt;/script&amp;gt;
+  &amp;lt;/body&amp;gt;
+&amp;lt;/html&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Setting the &lt;code&gt;href&lt;/code&gt; value for the current environment is easy using environment variables, depending on the technology stack you are using.&lt;/p&gt;
 
 &lt;h3&gt;Passing the base path to the Elm application&lt;/h3&gt;
 
