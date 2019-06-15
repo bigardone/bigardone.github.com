@@ -5,10 +5,226 @@
   <id>http://codeloveandboards.com/blog</id>
   <link href="http://codeloveandboards.com/blog"/>
   <link href="http://codeloveandboards.com/feed.xml" rel="self"/>
-  <updated>2019-03-28T07:00:00Z</updated>
+  <updated>2019-06-07T05:30:00Z</updated>
   <author>
     <name>Blog Author</name>
   </author>
+  <entry>
+    <title>Dynamic base path for an Elm SPA</title>
+    <link rel="alternate" href="http://codeloveandboards.com/blog/2019/06/06/dynamic-base-path-for-an-elm-spa/"/>
+    <id>http://codeloveandboards.com/blog/2019/06/06/dynamic-base-path-for-an-elm-spa/</id>
+    <published>2019-06-07T05:30:00Z</published>
+    <updated>2019-06-15T11:09:39+02:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;p&gt;While building an Elm SPA dashboard, I faced the following problem. In the local development environment, the URL to access it is &lt;code&gt;http://localhost:1234&lt;/code&gt;, which is Parcel&amp;#39;s default URL, and the Elm SPA gets mounted in &lt;code&gt;/&lt;/code&gt;, so Elm navigation handles as expected any internal routes like &lt;code&gt;/projects&lt;/code&gt; or &lt;code&gt;/tasks&lt;/code&gt;. The problem came while deploying it into production because the base URL didn&amp;#39;t match the root path. In other words, it looked something like &lt;code&gt;https://nifty-minsky-538aab.netlify.com/private/admin/a&lt;/code&gt; where &lt;code&gt;/private/admin/&lt;/code&gt; was the base path for the application, and this path could change depending on the environment, which made Elm navigation tricky, especially while parsing URLs to get the current route. I wanted to avoid using URL fragments, so this is how I solved it.&lt;/p&gt;
+
+&lt;h3&gt;The &amp;lt;base&amp;gt; HTML element&lt;/h3&gt;
+
+&lt;p&gt;First of all, I needed a way to prepend the dynamic base URL to any of the internal Elm routes. After some research I found the handy &lt;a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base"&gt;&amp;lt;base&amp;gt;&lt;/a&gt; HTML element, which specifies the base URL to use for all relative URLs contained within a document. This means that if you set &lt;code&gt;&amp;lt;base href=&amp;quot;http://localhost:1234/private/admin/&amp;quot;&amp;gt;&lt;/code&gt;, any relative link I would add like &lt;code&gt;&amp;lt;a href=&amp;quot;projects&amp;quot;&amp;gt;Projects&amp;lt;/a&amp;gt;&lt;/code&gt;, automatically points to &lt;code&gt;http://localhost:1234/private/admin/projects&lt;/code&gt;, and that was exactly what I was looking for.&lt;/p&gt;
+
+&lt;h3&gt;Passing the base path to the Elm application&lt;/h3&gt;
+
+&lt;p&gt;Now that I had a way to set the base URL to all the internal links of the application, I needed a way to make Elm aware of this base path, which was pretty straightforward using flags and the &lt;a href="https://developer.mozilla.org/en-US/docs/Web/API/Node/baseURI"&gt;baseURI&lt;/a&gt; property:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="js"&gt;import { Elm } from &amp;#39;../src/Main.elm&amp;#39;;
+
+const basePath = new URL(document.baseURI).pathname;
+
+Elm.Main.init({
+  node: document.querySelector(&amp;#39;main&amp;#39;),
+  flags: { basePath },
+});
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;baseURI&lt;/code&gt; basically returns the document&amp;#39;s location, unless you set &lt;code&gt;&amp;lt;base&amp;gt;&lt;/code&gt; in which case it always returns the value set. I only needed the path, therefore taking it from &lt;code&gt;URL(document.baseURI).pathname&lt;/code&gt; and passing it to the &lt;code&gt;Elm.Main.init&lt;/code&gt; function as a flag.&lt;/p&gt;
+
+&lt;h3&gt;Elm routing and the base path&lt;/h3&gt;
+
+&lt;p&gt;I always like defining the application routes as soon as possible, which helps me understand how to structure it. Moreover, in this particular case, routing was the source of the issue and the solution ifself, so let&amp;#39;s have a look at the &lt;code&gt;Route&lt;/code&gt; module I implemented:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elm"&gt;-- src/Route.elm
+
+module Route exposing
+    ( Route(..)
+    , fromUrl
+    , toString
+    )
+
+import Url exposing (Url)
+import Url.Parser as Parser exposing (Parser)
+
+
+type Route
+    = Home
+    | Projects
+    | Tasks
+    | NotFound
+
+
+parser : Parser (Route -&amp;gt; b) b
+parser =
+    Parser.oneOf
+        [ Parser.map Home Parser.top
+        , Parser.map Projects (Parser.s &amp;quot;projects&amp;quot;)
+        , Parser.map Tasks (Parser.s &amp;quot;tasks&amp;quot;)
+        ]
+
+-- ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This is pretty much the standard way of defining routes and their parser in Elm, and there wasn&amp;#39;t any particular change I had to implement to make it work. However, both &lt;code&gt;fromUrl&lt;/code&gt; and &lt;code&gt;toString&lt;/code&gt; functions needed to be slightly different than usual:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elm"&gt;-- src/Route.elm
+
+-- ...
+
+
+fromUrl : String -&amp;gt; Url -&amp;gt; Route
+fromUrl basePath url =
+    { url | path = String.replace basePath &amp;quot;&amp;quot; url.path }
+        |&amp;gt; Parser.parse parser
+        |&amp;gt; Maybe.withDefault NotFound
+
+
+toString : Route -&amp;gt; String
+toString route =
+    case route of
+        Home -&amp;gt;
+            &amp;quot;&amp;quot;
+
+        Projects -&amp;gt;
+            &amp;quot;projects&amp;quot;
+
+        Tasks -&amp;gt;
+            &amp;quot;tasks&amp;quot;
+
+        NotFound -&amp;gt;
+            &amp;quot;not-found&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;fromUrl&lt;/code&gt; takes a &lt;code&gt;basePath&lt;/code&gt; and a &lt;code&gt;Url&lt;/code&gt; parameter and returns a &lt;code&gt;Route&lt;/code&gt;. The first parameter is the flag passed to the Elm application on its initialization, and to get the corresponding &lt;code&gt;Route&lt;/code&gt;, we only need to remove &lt;code&gt;basePath&lt;/code&gt; from its path and parse it as usually. Bear in mind, that this only works with URLs built using the &lt;code&gt;&amp;lt;base&amp;gt;&lt;/code&gt; element set in the document header. Last but not least, the &lt;code&gt;toString&lt;/code&gt; function offers a convenient way of building a relative path for a given &lt;code&gt;Route&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3&gt;Gluing it all together&lt;/h3&gt;
+
+&lt;p&gt;Having the parsing of URLs solved, building the rest of the application was quite simple. Let&amp;#39;s take a look at some of the implementation details:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elm"&gt;-- src/Main.elm
+
+module Main exposing (main)
+
+
+import Browser exposing (Document)
+import Browser.Navigation as Navigation
+import Html as Html exposing (Html)
+import Route exposing (Route)
+import Url exposing (Url)
+
+-- MODEL
+
+
+type alias Flags =
+    { basePath : String }
+
+
+type alias Model =
+    { flags : Flags
+    , navigation : Navigation
+    }
+
+
+type alias Navigation =
+    { key : Navigation.Key
+    , route : Route
+    }
+
+
+init : Flags -&amp;gt; Url -&amp;gt; Navigation.Key -&amp;gt; ( Model, Cmd Msg )
+init ({ basePath } as flags) url key =
+    ( { flags = flags
+      , navigation =
+            { key = key
+            , route = Route.fromUrl basePath url
+            }
+      }
+    , Cmd.none
+    )
+
+-- ...
+
+-- MAIN
+
+
+main : Program Flags Model Msg
+main =
+    Browser.application
+        { init = init
+        , update = update
+        , view = view
+        , subscriptions = subscriptions
+        , onUrlRequest = UrlRequested
+        , onUrlChange = UrlChange
+        }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;I usually store the flags passed to the application in the model using a custom type named &lt;code&gt;Flags&lt;/code&gt;, which in this particular example only contains &lt;code&gt;basePath&lt;/code&gt;. I also like to store a &lt;code&gt;Navigation&lt;/code&gt; custom element which contains a &lt;code&gt;Navigation.Key&lt;/code&gt;, necessary for navigating, and the current route. The &lt;code&gt;init&lt;/code&gt; function is using the previously defined &lt;code&gt;Route.fromUrl&lt;/code&gt; function to set the current route from the browser&amp;#39;s URL and the &lt;code&gt;basePath&lt;/code&gt; flag. However, it also needs to set it every time the URL changes:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elm"&gt;-- src/Main.elm
+
+-- ...
+
+-- UPDATE
+
+
+type Msg
+    = UrlRequested Browser.UrlRequest
+    | UrlChange Url
+
+
+update : Msg -&amp;gt; Model -&amp;gt; ( Model, Cmd Msg )
+update msg ({ flags, navigation } as model) =
+    case msg of
+        UrlRequested urlRequest -&amp;gt;
+-- ...
+
+        UrlChange url -&amp;gt;
+            ( { model
+                | navigation =
+                    { navigation
+                        | route = Route.fromUrl flags.basePath url
+                    }
+              }
+            , Cmd.none
+            )
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And this is how I created the navigation links using the &lt;code&gt;Route.toString&lt;/code&gt; function:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elm"&gt;Html.div
+    []
+    [ Html.a
+        [ Html.href &amp;lt;| Route.toString Route.Home ]
+        [ Html.text &amp;quot;Home&amp;quot; ]
+    , Html.a
+        [ Html.href &amp;lt;| Route.toString Route.Projects ]
+        [ Html.text &amp;quot;Projects&amp;quot; ]
+    , Html.a
+        [ Html.href &amp;lt;| Route.toString Route.Tasks ]
+        [ Html.text &amp;quot;Tasks&amp;quot; ]
+    ]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And that&amp;#39;s it; everything worked like a charm. Being honest, I tried different approaches before getting to this solution, including custom &lt;code&gt;Url&lt;/code&gt; parsers, which is something difficult to understand for me. Have you faced the same issue? If so, I hope this solution helps you on the next occasion, and if you have solved differently, please share it :)&lt;/p&gt;
+
+&lt;p&gt;Happy coding!&lt;/p&gt;
+
+&lt;div class="btn-wrapper"&gt;
+  &lt;a href="https://nifty-minsky-538aab.netlify.com/private/admin/" target="_blank" class="btn"&gt;&lt;i class="fa fa-cloud"&gt;&lt;/i&gt; Live demo&lt;/a&gt;
+  &lt;a href="https://github.com/bigardone/elm-dynamic-base-path" target="_blank" class="btn"&gt;&lt;i class="fa fa-github"&gt;&lt;/i&gt; Source code&lt;/a&gt;
+&lt;/div&gt;
+</content>
+  </entry>
   <entry>
     <title>Concurrent ant farm with Elixir and Phoenix LiveView</title>
     <link rel="alternate" href="http://codeloveandboards.com/blog/2019/03/28/concurrent-ant-farm-with-elixir-and-phoenix-liveview/"/>
@@ -3002,894 +3218,6 @@ Randomized with seed 291795
 &lt;div class="btn-wrapper"&gt;
   &lt;a href="https://github.com/bigardone/passwordless-auth" target="_blank" class="btn"&gt;&lt;i class="fa fa-github"&gt;&lt;/i&gt; Source code&lt;/a&gt;
 &lt;/div&gt;
-
-&lt;p&gt;Happy coding!&lt;/p&gt;
-</content>
-  </entry>
-  <entry>
-    <title>Phoenix &amp; Elm landing page (pt.3)</title>
-    <link rel="alternate" href="http://codeloveandboards.com/blog/2018/01/06/phoenix-elm-landing-page-pt-3/"/>
-    <id>http://codeloveandboards.com/blog/2018/01/06/phoenix-elm-landing-page-pt-3/</id>
-    <published>2018-01-07T07:06:00Z</published>
-    <updated>2018-01-14T08:27:17+01:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;div class="index"&gt;
-  &lt;p&gt;This post belongs to the &lt;strong&gt;Phoenix &amp; Elm landing page&lt;/strong&gt; series.&lt;/p&gt;
-  &lt;ol&gt;
-    &lt;li&gt;&lt;a href="/blog/2017/12/02/phoenix-elm-landing-page-pt-1/"&gt;Bootstrapping the project and the basic API functionality to save our first leads&lt;/a&gt;&lt;/li&gt;
-    &lt;li&gt;&lt;a href="/blog/2017/12/23/phoenix-elm-landing-page-pt-2/"&gt;Building the landing page UI and the basic Elm subscription form&lt;/a&gt;&lt;/li&gt;
-    &lt;li&gt;&lt;a href="/blog/2018/01/06/phoenix-elm-landing-page-pt-3/"&gt;Adding Google reCAPTCHA support to avoid spambots&lt;/a&gt;&lt;/li&gt;
-  &lt;/ol&gt;
-
-  &lt;a href="https://github.com/bigardone/phoenix-and-elm-landing-page" target="_blank"&gt;&lt;i class="fa fa-github"&gt;&lt;/i&gt; Source code&lt;/a&gt;
-&lt;/div&gt;
-
-&lt;p&gt;In the &lt;a href="/blog/2017/12/23/phoenix-elm-landing-page-pt-2/&amp;amp;lt;Paste"&gt;previous part&lt;/a&gt; of the series, we created the landing page main
-layout and implemented the Elm subscription form, which lets visitors
-subscribe, saving their name and email in the leads database table. We do
-not want spambots to subscribe, therefore, in this part we are going
-to add a protective layer to the subscription process using &lt;a href="https://developers.google.com/recaptcha/"&gt;Google&amp;#39;s
-reCAPTCHA&lt;/a&gt;, which consists of two different steps:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;Adding the &lt;strong&gt;reCAPTCHA&lt;/strong&gt; widget to the Elm subscription form, and sending
-the user&amp;#39;s response along with the name and email.&lt;/li&gt;
-&lt;li&gt;Verifying in the server-side the user&amp;#39;s response against &lt;strong&gt;Google&amp;#39;s RECAPTCHA API&lt;/strong&gt; to verify whether is valid or not&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Without further ado, let&amp;#39;s do this!&lt;/p&gt;
-
-&lt;h3&gt;Adding the reCAPTCHA widget to the form&lt;/h3&gt;
-
-&lt;p&gt;First of all, we need to head to &lt;a href="https://www.google.com/recaptcha/admin"&gt;Google&amp;#39;s reCAPTCHA admin
-site&lt;/a&gt; and register our website,
-using localhost as the domain, to get the necessary keys that we need.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="/images/blog/phoenix-elm-landing-page/recaptcha-admin.jpg"
-alt="Navigation flow" style="background: #fff;" /&gt;&lt;/p&gt;
-
-&lt;p&gt;Next, we have to add &lt;strong&gt;Google&amp;#39;s reCAPTCHA&lt;/strong&gt; script in the main template, so
-let&amp;#39;s edit it:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# lib/landing_page_web/templates/layout/app.html.eex
-
-&amp;lt;!DOCTYPE html&amp;gt;
-&amp;lt;html lang=&amp;quot;en&amp;quot;&amp;gt;
-  &amp;lt;!--... --&amp;gt;
-
-  &amp;lt;body class=&amp;quot;landing-page&amp;quot;&amp;gt;
-    &amp;lt;!--... --&amp;gt;
-
-    &amp;lt;script src=&amp;quot;https://www.google.com/recaptcha/api.js?onload=onloadCallback&amp;amp;render=explicit&amp;quot; async defer&amp;gt;&amp;lt;/script&amp;gt;
-  &amp;lt;/body&amp;gt;
-&amp;lt;/html&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;We are not only adding the script but passing the &lt;code&gt;onload&lt;/code&gt; and &lt;code&gt;render&lt;/code&gt;
-parameters to render the widget explicitly and to call the
-&lt;code&gt;onloadCallback&lt;/code&gt; function once the script gets loaded. The plan is to
-render the widget inside the Elm form, and for that we need the script to
-be loaded before rendering it, so let&amp;#39;s edit the main &lt;code&gt;app.js&lt;/code&gt; file to
-achieve this:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="js"&gt;// assets/js/app.js
-
-import Elm from &amp;#39;./elm/main&amp;#39;;
-
-window.onloadCallback = () =&amp;gt; {
-  const formContainer = document.querySelector(&amp;#39;#form_container&amp;#39;);
-
-  if (formContainer) {
-    const app = Elm.Main.embed(formContainer);
-  }
-};
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Now that the &lt;strong&gt;Elm&lt;/strong&gt; program is embedded once the script is ready, we have to
-render the widget somehow using its internal API. Before continuing any
-further, let&amp;#39;s update the &lt;code&gt;View&lt;/code&gt; module and add a new div where we want to
-render the widget:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;# assets/elm/src/View.elm
-
-module View exposing (view)
-
--- ...
-
-formView : SubscribeForm -&amp;gt; Html Msg
-formView subscribeForm =
-        -- ...
-
-        , Html.div
-                [ Html.class &amp;quot;field&amp;quot; ]
-                [ Html.div
-                        [ Html.id &amp;quot;recaptcha&amp;quot; ]
-                        []
-                , validationErrorView &amp;quot;recaptcha_token&amp;quot; validationErrors
-                ]
-
-        -- ...
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;How can we tell the external &lt;strong&gt;reCAPTCHA&lt;/strong&gt; script that we want it to
-render the widget inside the div with &lt;code&gt;recaptcha&lt;/code&gt; id? In Elm, the proper way
-of communicating with external &lt;strong&gt;JavaScript&lt;/strong&gt; is by using &lt;strong&gt;ports&lt;/strong&gt;, so let&amp;#39;s go
-ahead and create a new module with a port to initialize the widget:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- assets/elm/src/Ports.elm
-
-port module Ports exposing (..)
-
--- OUT PORTS
-
-
-port initRecaptcha : String -&amp;gt; Cmd msg
-
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;The &lt;code&gt;initRecaptcha&lt;/code&gt; port function receives a string which is the id of the
-container where we want to render the widget and returns a command.
-Therefore, we can use it in the main &lt;code&gt;init&lt;/code&gt; function, and the port will get
-called once the program starts for the first time:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- assets/elm/src/Main.elm
-
-module Main exposing (main)
-
-import Ports
--- ...
-
-init : ( Model, Cmd Msg )
-init =
-    initialModel ! [ Ports.initRecaptcha &amp;quot;recaptcha&amp;quot; ]
-
--- ...
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Now we can go back to the &lt;code&gt;app.js&lt;/code&gt; script and subscribe to the
-&lt;code&gt;initRecaptcha&lt;/code&gt; port:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="js"&gt;// assets/javascript/app.js
-
-import Elm from &amp;#39;./elm/main&amp;#39;;
-
-window.onloadCallback = () =&amp;gt; {
-  const formContainer = document.querySelector(&amp;#39;#form_container&amp;#39;);
-
-  if (formContainer) {
-    const app = Elm.Main.embed(formContainer);
-    let recaptcha;
-
-    app.ports.initRecaptcha.subscribe(id =&amp;gt; {
-      window.requestAnimationFrame(() =&amp;gt; {
-        recaptcha = grecaptcha.render(id, {
-          sitekey: &amp;#39;YOUR_SITE_KEY&amp;#39;,
-        });
-      });
-    });
-  }
-};
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;&lt;code&gt;app.ports&lt;/code&gt; contains all the ports from the Elm program. By subscribing to
-any of them, we are making the passed function to get called anytime
-a port gets triggered by the Elm runtime. In our case, it is using
-&lt;strong&gt;Google&amp;#39;s reCAPTCHA&lt;/strong&gt; script to render the widget inside the specified id,
-using the &lt;code&gt;sitekey&lt;/code&gt; we created previously from the admin site. Also, note
-that we are wrapping the render function inside
-&lt;code&gt;window.requestAnimationFrame&lt;/code&gt;, forcing the script to initialize the widget
-immediately after the form renders for the first time. Not doing it like
-so may create race conditions between Elm programs and external JavaScript
-components, so don&amp;#39;t forget using it. Let&amp;#39;s jump to the browser and see
-the result:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="/images/blog/phoenix-elm-landing-page/landing-page.jpg" alt="Landing
-page" style="background: #fff;" /&gt;&lt;/p&gt;
-
-&lt;p&gt;The widget renders as expected, yay!&lt;/p&gt;
-
-&lt;h3&gt;Setting the reCAPTCHA token&lt;/h3&gt;
-
-&lt;p&gt;When a visitor clicks on the widget, it generates a token that we need to
-validate against Google reCAPTCHA API, so we need to send it to the server
-along with the &lt;code&gt;full_name&lt;/code&gt; and the &lt;code&gt;email&lt;/code&gt;. Before this, let&amp;#39;s edit the model
-module to add a new key in the &lt;code&gt;SubscribeForm&lt;/code&gt; so we can store the token:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- assets/elm/src/Model.elm
-
-module Model exposing (..)
-
-
-type alias FormFields =
-    { fullName : String
-    , email : String
-    , recaptchaToken : Maybe String
-    }
-
--- ...
-
-emptyFormFields : FormFields
-emptyFormFields =
-    { fullName = &amp;quot;&amp;quot;
-    , email = &amp;quot;&amp;quot;
-    , recaptchaToken = Nothing
-    }
-
--- ...
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;How can we store in it the token received from the external &lt;strong&gt;reCAPTCHA&lt;/strong&gt;
-widget? As sending messages to external &lt;strong&gt;JavaScript&lt;/strong&gt;, &lt;strong&gt;Elm&lt;/strong&gt; can also receive
-messages from the outer world by subscribing to incoming ports. Knowing
-this, let&amp;#39;s create a new port which receives the &lt;strong&gt;reCAPTCHA&lt;/strong&gt; token from the
-widget:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- assets/elm/src/Ports.elm
-
-port module Ports exposing (..)
-
--- ...
-
-
--- IN PORTS
-
-
-port setRecaptchaToken : (String -&amp;gt; msg) -&amp;gt; Sub msg
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;When &lt;strong&gt;Elm&lt;/strong&gt; receives the &lt;code&gt;setRecaptchaToken&lt;/code&gt; port, we want it to set the token
-in the model, and for that, we need to create a new message type:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- assets/elm/src/Messages.elm
-
-type Msg
-    = HandleFullNameInput String
-    -- ...
-    | SetRecaptchaToken String
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;We also need to handle this message in the &lt;code&gt;update&lt;/code&gt; function:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- assets/elm/src/Update.elm
-
-module Update exposing (update)
-
-update : Msg -&amp;gt; Model -&amp;gt; ( Model, Cmd Msg )
-update msg model =
-    -- ...
-
-    SetRecaptchaToken token -&amp;gt;
-        { model | subscribeForm = Editing { formFields | recaptchaToken = Just token } } ! []
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;As mentioned before, &lt;strong&gt;Elm&lt;/strong&gt; needs to subscribe to incoming ports, so let&amp;#39;s go
-ahead and define the &lt;code&gt;subscriptions&lt;/code&gt; function to put all the pieces together:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- assets/elm/src/Main.elm
-
--- ...
-
-subscriptions : Model -&amp;gt; Sub Msg
-subscriptions model =
-    Ports.setRecaptchaToken SetRecaptchaToken
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;The only thing left is sending the token from &lt;strong&gt;JavaScript&lt;/strong&gt;:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="js"&gt;// assets/javascript/app.js
-
-import Elm from &amp;#39;./elm/main&amp;#39;;
-
-window.onloadCallback = () =&amp;gt; {
-  // ...
-
-    app.ports.initRecaptcha.subscribe(id =&amp;gt; {
-      window.requestAnimationFrame(() =&amp;gt; {
-        recaptcha = grecaptcha.render(id, {
-          sitekey: &amp;#39;YOUR_SITE_KEY&amp;#39;,
-          callback: app.ports.setRecaptchaToken.send, // &amp;lt;- CHECK THIS OUT
-        });
-      });
-    });
-
-  // ...
-};
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;The &lt;strong&gt;reCAPTCHA&lt;/strong&gt; widget has a callback option which is a function that gets
-called after checking the visitor&amp;#39;s response and which contains the token,
-and which we can use to send the &lt;code&gt;setRecaptchaToken&lt;/code&gt; port message to &lt;strong&gt;Elm&lt;/strong&gt;.
-Let&amp;#39;s check that everything is working as expected:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="/images/blog/phoenix-elm-landing-page/settoken-port.gif"
-alt="Navigation flow" style="background: #fff;" /&gt;&lt;/p&gt;
-
-&lt;p&gt;Using &lt;strong&gt;Elm&amp;#39;s debugger&lt;/strong&gt;, we can verify that when we click on the &lt;strong&gt;reCAPTCHA
-widget&lt;/strong&gt;, ELm handles the &lt;code&gt;SetRecaptchaToken&lt;/code&gt; message, setting the
-&lt;code&gt;recaptchaToken&lt;/code&gt; received through the &lt;code&gt;setRecaptchaToken&lt;/code&gt; port in the model.
-The only thing left, for now, is preventing sending the form while the
-&lt;code&gt;recaptchaToken&lt;/code&gt; is not set, so let&amp;#39;s fix this in the view module:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- assets/elm/src/View.elm
-
-module View exposing (view)
-
--- ...
-
-formView : SubscribeForm -&amp;gt; Html Msg
-formView subscribeForm =
-    let
-        { fullName, email, recaptchaToken } =
-            extractFormFields subscribeForm
-
-
-        -- ...
-
-        buttonDisabled =
-            fullName
-                == &amp;quot;&amp;quot;
-                || email
-                == &amp;quot;&amp;quot;
-                || recaptchaToken
-                == Nothing
-                || recaptchaToken
-                == Just &amp;quot;&amp;quot;
-                || saving
-                || invalid
-
-        -- ...
-    in
-        -- ...
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Finally, we have to include the &lt;code&gt;recaptchaToken&lt;/code&gt; value to the HTTP request body:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- assets/elm/src/Commands.elm
-
-module Commands exposing (subscribe)
-
--- ...
-
-encodeModel : FormFields -&amp;gt; JD.Value
-encodeModel { fullName, email, recaptchaToken } =
-    JE.object
-        [ ( &amp;quot;lead&amp;quot;
-          , JE.object
-                -- ...
-
-                , ( &amp;quot;recaptcha_token&amp;quot;, JE.string &amp;quot;foo&amp;quot; )
-                ]
-          )
-        ]
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h3&gt;Server-side reCAPTCHA token validation&lt;/h3&gt;
-
-&lt;p&gt;Now that the form is sending the token, we can implement the second step
-of the process, which is validating it against &lt;strong&gt;Google&amp;#39;s API&lt;/strong&gt;. Although we
-are somehow forcing the &lt;code&gt;recaptcha_token&lt;/code&gt; value to have a non-empty value,
-let&amp;#39;s add a validation check on the backend, so no leads with empty tokens
-can get saved. As we only need to validate it, and not save it, we can add
-a virtual field to the &lt;code&gt;Lead&lt;/code&gt; schema:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# lib/landing_page/marketing/lead.ex
-
-defmodule LandingPage.Marketing.Lead do
-  use Ecto.Schema
-  import Ecto.Changeset
-  alias LandingPage.Marketing.Lead
-
-  @derive {Poison.Encoder, only: [:full_name, :email]}
-
-  schema &amp;quot;leads&amp;quot; do
-    field(:email, :string)
-    field(:full_name, :string)
-
-    field(:recaptcha_token, :string, virtual: true)
-
-    timestamps()
-  end
-
-  @fields ~w(full_name email recaptcha_token)a
-
-  @doc false
-  def changeset(%Lead{} = lead, attrs) do
-    lead
-    |&amp;gt; cast(attrs, @fields)
-    |&amp;gt; validate_required(@fields)
-    |&amp;gt; unique_constraint(:email)
-  end
-end
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;This change breaks the tests, so let&amp;#39;s go ahead and fix them:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# test/landing_page/marketing/marketing_test.exs
-
-defmodule LandingPage.MarketingTest do
-  use LandingPage.DataCase
-
-  # ...
-
-  @valid_attrs %{
-    &amp;quot;email&amp;quot; =&amp;gt; &amp;quot;some email&amp;quot;,
-    &amp;quot;full_name&amp;quot; =&amp;gt; &amp;quot;some full_name&amp;quot;,
-    &amp;quot;recaptcha_token&amp;quot; =&amp;gt; &amp;quot;foo&amp;quot;
-  }
-  @invalid_attrs %{email: nil, full_name: nil, recaptcha_token: nil}
-
-  # ...
-end
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# test/landing_page_web/controllers/v1/lead_controller_test.exs
-
-defmodule LandingPageWeb.V1.LeadControllerTest do
-  use LandingPageWeb.ConnCase
-
-  # ...
-
-
-  describe &amp;quot;POST /api/v1/leads&amp;quot; do
-    test &amp;quot;returns error response with invalid params&amp;quot;, %{conn: conn} do
-      conn = post(conn, lead_path(conn, :create), %{&amp;quot;lead&amp;quot; =&amp;gt; %{}})
-
-      assert json_response(conn, 422) == %{
-               &amp;quot;full_name&amp;quot; =&amp;gt; [&amp;quot;can&amp;#39;t be blank&amp;quot;],
-               &amp;quot;email&amp;quot; =&amp;gt; [&amp;quot;can&amp;#39;t be blank&amp;quot;],
-               &amp;quot;recaptcha_token&amp;quot; =&amp;gt; [&amp;quot;can&amp;#39;t be blank&amp;quot;]
-             }
-    end
-
-    test &amp;quot;returns success response with valid params&amp;quot;, %{conn: conn} do
-      params = %{
-        &amp;quot;lead&amp;quot; =&amp;gt; %{&amp;quot;full_name&amp;quot; =&amp;gt; &amp;quot;John&amp;quot;, &amp;quot;email&amp;quot; =&amp;gt; &amp;quot;foo@bar.com&amp;quot;, &amp;quot;recaptcha_token&amp;quot; =&amp;gt; &amp;quot;foo&amp;quot;}
-      }
-
-      conn = post(conn, lead_path(conn, :create), params)
-      assert json_response(conn, 200) == %{&amp;quot;full_name&amp;quot; =&amp;gt; &amp;quot;John&amp;quot;, &amp;quot;email&amp;quot; =&amp;gt; &amp;quot;foo@bar.com&amp;quot;}
-    end
-  end
-end
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;If we now run the test suite, we can see that every test is passing now:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="bash"&gt;➜ mix test
-...........
-
-Finished in 0.1 seconds
-11 tests, 0 failures
-
-Randomized with seed 66361
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;To check whether Google has verified the user, we have to send an HTTP
-request to &lt;code&gt;https://www.google.com/recaptcha/api/siteverify&lt;/code&gt; with the
-token. For that we first need to install an HTTP client like
-&lt;a href="https://github.com/edgurgel/httpoison"&gt;HTTPoison&lt;/a&gt;, so let&amp;#39; go ahead and add
-it to the dependencies list:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# mix.exs
-
-# ...
-
-  defp deps do
-    [
-      # ...
-      {:httpoison, &amp;quot;~&amp;gt; 0.13&amp;quot;}
-    ]
-  end
-
-# ...
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;After running the necessary &lt;code&gt;mix deps.get&lt;/code&gt; task, we are ready to implement
-our &lt;strong&gt;Google&amp;#39;s HTTP client&lt;/strong&gt;, so let&amp;#39;s create the following module:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# lib/landing_page/clients/google/recaptcha_http.ex
-
-defmodule LandingPage.Clients.GoogleRecaptchaHttp do
-  use HTTPoison.Base
-
-  @secret_key Application.get_env(:landing_page, :google_recaptcha)[:secret_key]
-
-  def verify(token) do
-    params = %{
-      secret: @secret_key,
-      response: token
-    }
-
-    &amp;quot;/siteverify&amp;quot;
-    |&amp;gt; get!([], params: params)
-    |&amp;gt; case do
-         %{status_code: 200, body: body} -&amp;gt;
-           {:ok, body}
-
-         response -&amp;gt;
-           {:error, response}
-       end
-  end
-
-  def process_url(url) do
-    &amp;quot;https://www.google.com/recaptcha/api&amp;quot; &amp;lt;&amp;gt; url
-  end
-
-  def process_response_body(body), do: Poison.decode!(body, keys: :atoms)
-end
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Using &lt;code&gt;HTTPoison.Base&lt;/code&gt; gives us mostly all the functionality that we need
-out of the box. The &lt;code&gt;verify/1&lt;/code&gt; function receives a token and sends an HTTP
-request against the specified URL, with the &lt;code&gt;secret_key&lt;/code&gt; and the user&amp;#39;s
-token. Depending on the result, it returns a tuple with the &lt;code&gt;:ok&lt;/code&gt; atom and
-the processed body using the &lt;code&gt;process_response_body/1&lt;/code&gt; function, or one
-containing &lt;code&gt;:error&lt;/code&gt; and the response. To finish the client, we need to set
-the value of &lt;code&gt;@secret_key&lt;/code&gt; in the application&amp;#39;s config:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# config/config.exs
-
-# ...
-
-config :landing_page,
-  google_recaptcha: [
-    secret_key: &amp;quot;SET_HERE_YOUR_SECRET_KEY&amp;quot;
-  ]
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Jumping back to the &lt;a href="https://developers.google.com/recaptcha/docs/verify"&gt;reCAPTCHA
-docs&lt;/a&gt;, we can see that
-the response body looks like the following:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="json"&gt;{
-  &amp;quot;success&amp;quot;: true|false,
-  &amp;quot;challenge_ts&amp;quot;: timestamp,  // timestamp of the challenge load (ISO format yyyy-MM-dd&amp;#39;T&amp;#39;HH:mm:ssZZ)
-  &amp;quot;hostname&amp;quot;: string,         // the hostname of the site where the reCAPTCHA was solved
-  &amp;quot;error-codes&amp;quot;: [...]        // optional
-}
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Having this in mind, we can go ahead and create a new function in the
-&lt;code&gt;Marketing&lt;/code&gt; module to subscribe and create new leads:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# lib/landing_page/marketing/marketing.ex
-
-alias LandingPage.Clients.GoogleRecaptchaHttp
-# ...
-
-defmodule LandingPage.Marketing do
-  # ...
-
-  def subscribe(lead_params) do
-    token = Map.get(lead_params, &amp;quot;recaptcha_token&amp;quot;)
-
-    with %Ecto.Changeset{valid?: true} = changeset &amp;lt;- Lead.changeset(%Lead{}, lead_params),
-         {:ok, %{success: true}} &amp;lt;- GoogleRecaptchaHttp.verify(token),
-         {:ok, lead} &amp;lt;- Repo.insert(changeset) do
-      {:ok, lead}
-    else
-      {:ok, %{success: false}} -&amp;gt;
-        {:error, :invalid_recaptcha_token}
-
-      {:error, response} -&amp;gt;
-        {:error, response}
-
-      other -&amp;gt;
-        {:error, other}
-    end
-  end
-end
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;So, if everything goes as expected, &lt;code&gt;subscribe/1&lt;/code&gt; receives the
-&lt;code&gt;lead_params&lt;/code&gt; and validates them against a lead changeset, verifying the
-token using the client, inserting the lead and returning a tuple
-containing it. On the other hand, if the token validation returns &lt;code&gt;{:ok,
-    %{success: false}}&lt;/code&gt;, which means that is not valid, it returns a &lt;code&gt;{:error,
-:invalid_recaptcha_token}&lt;/code&gt; tuple.&lt;/p&gt;
-
-&lt;p&gt;Let&amp;#39; write some tests to check that everything is currently behaving as it
-should:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# test/landing_page/marketing/marketing_test.exs
-
-defmodule LandingPage.MarketingTest do
-  use LandingPage.DataCase
-
-  # ...
-
-  describe &amp;quot;leads&amp;quot; do
-    # ...
-
-    test &amp;quot;subscribe/1 with valid data and token creates a lead&amp;quot; do
-      assert {:ok, %Lead{}} = Marketing.subscribe(@valid_attrs)
-    end
-
-    test &amp;quot;subscribe/1 with invalid token returns error changeset&amp;quot; do
-      params = %{@valid_attrs | &amp;quot;recaptcha_token&amp;quot; =&amp;gt; &amp;quot;invalid&amp;quot;}
-      assert {:error, :invalid_recaptcha_token} = Marketing.subscribe(params)
-    end
-  end
-end
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Before running the test, let&amp;#39;s think about our current solution for
-a second. Every time that we run the tests, the &lt;code&gt;GoogleRecaptchaHttp&lt;/code&gt; client
-is going to be sending requests, slowing down the test suite, and we do
-not really want that. Moreover, knowing beforehand what the Google&amp;#39;s API
-returns, we no longer need to send a real request to test what we need.
-There are many ways of implementing a workaround for this, but one of my
-favorite ones is creating a mock client, which returns fake responses,
-based on the API specification, and use either of the clients depending on
-the environment. Let&amp;#39;s stick to this approach, and create a new mock
-client:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# lib/landing_page/clients/google/recaptcha_mock.ex
-
-defmodule LandingPage.Clients.GoogleRecaptchaMock do
-  def verify(&amp;quot;invalid&amp;quot;), do: {:ok, %{success: false}}
-  def verify(_token), do: {:ok, %{success: true}}
-end
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;To use a specific client depending on the current environment that the
-application is running in, we can just set the module we want to use in
-that environment configuration file:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# config/config.exs
-
-# ...
-
-config :landing_page,
-  google_recaptcha: [
-    secret_key: &amp;quot;SET_HERE_YOUR_SECRET_KEY&amp;quot;,
-    client: LandingPage.Clients.GoogleRecaptchaHttp
-  ]
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# config/test.exs
-
-# ...
-
-config :landing_page,
-  google_recaptcha: [
-    client: LandingPage.Clients.GoogleRecaptchaMock
-  ]
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Finally, let&amp;#39;s refactor the &lt;code&gt;Marketing&lt;/code&gt; module to use the client set in the
-environment:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# lib/landing_page/marketing/marketing.ex
-
-alias LandingPage.Clients.GoogleRecaptchaHttp
-# ...
-
-@google_recaptcha_client Application.get_env(:landing_page, :google_recaptcha)[:client]
-
-defmodule LandingPage.Marketing do
-  # ...
-
-  def subscribe(lead_params) do
-    token = Map.get(lead_params, &amp;quot;recaptcha_token&amp;quot;)
-
-    with %Ecto.Changeset{valid?: true} = changeset &amp;lt;- Lead.changeset(%Lead{}, lead_params),
-         {:ok, %{success: true}} &amp;lt;- @google_recaptcha_client.verify(token),
-         {:ok, lead} &amp;lt;- Repo.insert(changeset) do
-      {:ok, lead}
-    else
-      # ...
-end
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;&lt;code&gt;@google_recaptcha_client&lt;/code&gt; contains the client module, which in the test
-environment is the mock client, so we can non safely run the tests:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;➜ mix test test/landing_page/marketing/marketing_test.exs
-....
-
-Finished in 0.1 seconds
-4 tests, 0 failures
-
-Randomized with seed 506123
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;And they all pass, yay!&lt;/p&gt;
-
-&lt;p&gt;We are still missing an important part though. We need to update the
-&lt;code&gt;LeadController&lt;/code&gt; module to use the new &lt;code&gt;subscribe&lt;/code&gt; function we just
-created:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# lib/landing_page_web/controllers/v1/lead_controller.ex
-
-defmodule LandingPageWeb.V1.LeadController do
-  use LandingPageWeb, :controller
-
-  alias LandingPage.Marketing
-
-  plug(:scrub_params, &amp;quot;lead&amp;quot;)
-
-  def create(conn, %{&amp;quot;lead&amp;quot; =&amp;gt; params}) do
-    with {:ok, lead} &amp;lt;- Marketing.subscribe(params) do
-      json(conn, lead)
-    end
-  end
-end
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;We also need to handle in the &lt;code&gt;FallbackController&lt;/code&gt; module the &lt;code&gt;{:error,
-:invalid_recaptcha_token}&lt;/code&gt; response resulting from an invalid token check:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# lib/landing_page_web/controllers/fallback_controller.ex
-
-defmodule LandingPageWeb.FallbackController do
-  use LandingPageWeb, :controller
-
-  # ...
-
-  def call(conn, {:error, :invalid_recaptcha_token}) do
-    conn
-    |&amp;gt; put_status(:unprocessable_entity)
-    |&amp;gt; render(LandingPageWeb.ErrorView, &amp;quot;invalid_recaptcha_token.json&amp;quot;)
-  end
-end
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Finally, let&amp;#39;s edit the &lt;code&gt;ErrorView&lt;/code&gt; module in order to add the
-necessary render function:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# lib/landing_page_web/views/error_view.ex
-
-defmodule LandingPageWeb.ErrorView do
-  # ...
-
-  def render(&amp;quot;invalid_recaptcha_token.json&amp;quot;, _) do
-    %{recaptcha_token: [&amp;quot;the response is invalid&amp;quot;]}
-  end
-
-  # ...
-end
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Following the same convention for validation errors, we return a map with
-the error we want to render below the &lt;strong&gt;reCAPTCHA widget&lt;/strong&gt;. Let&amp;#39;s add a test
-to check that it works:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# test/landing_page_web/controllers/v1/lead_controller_test.exs
-
-defmodule LandingPageWeb.V1.LeadControllerTest do
-  use LandingPageWeb.ConnCase
-
-  describe &amp;quot;POST /api/v1/leads&amp;quot; do
-    # ...
-
-    test &amp;quot;returns error response with invalid token&amp;quot;, %{conn: conn} do
-      params = %{
-        &amp;quot;lead&amp;quot; =&amp;gt; %{
-          &amp;quot;full_name&amp;quot; =&amp;gt; &amp;quot;John&amp;quot;,
-          &amp;quot;email&amp;quot; =&amp;gt; &amp;quot;foo@bar.com&amp;quot;,
-          &amp;quot;recaptcha_token&amp;quot; =&amp;gt; &amp;quot;invalid&amp;quot;
-        }
-      }
-
-      conn = post(conn, lead_path(conn, :create), params)
-
-      assert json_response(conn, 422) == %{
-               &amp;quot;recaptcha_token&amp;quot; =&amp;gt; [&amp;quot;the response is invalid&amp;quot;]
-             }
-    end
-  end
-end
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;pre&gt;&lt;code&gt;➜ mix test  test/landing_page_web/controllers/v1/lead_controller_test.exs
-...
-
-Finished in 0.1 seconds
-3 tests, 0 failures
-
-Randomized with seed 723440
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;To test it in the browser, we can edit the Elm &lt;code&gt;Commands&lt;/code&gt; module and
-simply set a hardcoded value for the &lt;code&gt;recaptcha_token&lt;/code&gt; parameter:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="/images/blog/phoenix-elm-landing-page/token-error.gif"
-alt="Token error" style="background: #fff;" /&gt;&lt;/p&gt;
-
-&lt;p&gt;However, wait a minute. If the token is invalid, there is no current way
-of resetting the widget again, so the user is not able to resubmit the
-form. Let&amp;#39;s fix this.&lt;/p&gt;
-
-&lt;h3&gt;Resetting the token on error&lt;/h3&gt;
-
-&lt;p&gt;Luckily for us, the widget has a &lt;code&gt;reset&lt;/code&gt; function and we
-can call it through an Elm port. Let&amp;#39;s edit the &lt;code&gt;Ports&lt;/code&gt; module and add
-a new outgoing port:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- assets/elm/src/Ports.elm
-
-port module Ports exposing (..)
-
--- OUT PORTS
-
-
--- ...
-
-
-port resetRecaptcha : () -&amp;gt; Cmd msg
-
-
--- ...
-
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Next, we have to subscribe to the new port and call the widget&amp;#39;s &lt;code&gt;reset&lt;/code&gt;
-function:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="js"&gt;// assets/javascript/app.js
-
-import Elm from &amp;#39;./elm/main&amp;#39;;
-
-window.onloadCallback = () =&amp;gt; {
-  const formContainer = document.querySelector(&amp;#39;#form_container&amp;#39;);
-
-  if (formContainer) {
-    const app = Elm.Main.embed(formContainer);
-    let recaptcha;
-
-    // ...
-
-    app.ports.resetRecaptcha.subscribe(() =&amp;gt; {
-      grecaptcha.reset(recaptcha);
-    });
-  }
-};
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;And finally, we have to trigger the &lt;code&gt;resetRecaptcha&lt;/code&gt; wherever we need, so
-let&amp;#39;s do it on any response error that we receive from the server:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- assets/elm/src/Update.elm
-
-module Update exposing (update)
-
-update : Msg -&amp;gt; Model -&amp;gt; ( Model, Cmd Msg )
-update msg model =
-    -- ...
-
-      SubscribeResponse (Err (BadStatus response)) -&amp;gt;
-          case Decode.decodeString validationErrorsDecoder response.body of
-              Ok validationErrors -&amp;gt;
-                  { model | subscribeForm = Invalid { formFields | recaptchaToken = Nothing } validationErrors } ! [ Ports.resetRecaptcha () ]
-
-              Err error -&amp;gt;
-                  { model | subscribeForm = Errored { formFields | recaptchaToken = Nothing } &amp;quot;Oops! Something went wrong!&amp;quot; } ! [ Ports.resetRecaptcha () ]
-
-      SubscribeResponse (Err error) -&amp;gt;
-          { model | subscribeForm = Errored { formFields | recaptchaToken = Nothing } &amp;quot;Oops! Something went wrong!&amp;quot; } ! [ Ports.resetRecaptcha () ]
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Let&amp;#39;s jump back to the browser and check that it actually is working fine:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="/images/blog/phoenix-elm-landing-page/token-reset.gif"
-alt="Token reset" style="background: #fff;" /&gt;&lt;/p&gt;
-
-&lt;p&gt;The widget is reset as expected, allowing the user to click it again.
-Let&amp;#39;s remove the hardcoded value from the &lt;code&gt;recaptcha_token&lt;/code&gt; on the post
-parameters and test that everything works fine and the lead subscribes
-successfully:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="/images/blog/phoenix-elm-landing-page/final-result.gif"
-alt="Final result" style="background: #fff;" /&gt;&lt;/p&gt;
-
-&lt;p&gt;And there we go. Our very basic landing page is ready for deployment and
-subscribing new leads, without making us worry about spambots. I hope you
-have enjoyed these series as much as I have enjoyed doing them. See you
-next time, and don&amp;#39;t forget to check the code from this part
-&lt;a href="https://github.com/bigardone/phoenix-and-elm-landing-page/tree/tutorial/part-3"&gt;here&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;Happy coding!&lt;/p&gt;
 </content>
