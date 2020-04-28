@@ -1,0 +1,45 @@
+<!DOCTYPE html> <!--[if lt IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8 lt-ie7" lang=en-us><![endif]--> <!--[if IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8" lang=en-us><![endif]--> <!--[if IE 8]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if IE 9]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if lt IE 10]><html class="no-js lt-ie10" lang=en-us><![endif]--> <!--[if !IE]>><![endif]--> <html class=no-js lang=en> <head> <title>elmcsspatterns.io - Code, Love & Boards</title> <meta charset=utf-8 content='text/html' http-equiv=content-type> <meta content='ie=edge,chrome=1' http-equiv=x-ua-compatible> <meta content='Common CSS patterns done in elm and elm-css' name=description> <meta content='Ricardo García Vega - http://twitter.com/bigardone' name=author> <meta content=elm name=keywords> <meta content='initial-scale=1.0,user-scalable=no,maximum-scale=1,width=device-width' name=viewport> <link href='//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css' rel=stylesheet> <link href="//fonts.googleapis.com/css?family=Montserrat:400,700|Lora:400,700" media=screen rel=stylesheet /> <link href="../../../../../stylesheets/blog-82c14d7c.css" media=all rel=stylesheet /> <link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/tomorrow.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js'></script> <script src='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/elixir.min.js'></script> <script src='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/elm.min.js'></script> <link href='/images/apple-touch-icon-57x57-6e598dc4.png' rel=apple-touch-icon sizes=57x57> <link href='/images/apple-touch-icon-114x114-5be964ba.png' rel=apple-touch-icon sizes=114x114> <link href='/images/apple-touch-icon-72x72-70084a85.png' rel=apple-touch-icon sizes=72x72> <link href='/images/apple-touch-icon-144x144-1dbb56c1.png' rel=apple-touch-icon sizes=144x144> <link href='/images/apple-touch-icon-60x60-d05a5ea9.png' rel=apple-touch-icon sizes=60x60> <link href='/images/apple-touch-icon-120x120-5dafce59.png' rel=apple-touch-icon sizes=120x120> <link href='/images/apple-touch-icon-76x76-b2c0d784.png' rel=apple-touch-icon sizes=76x76> <link href='/images/apple-touch-icon-152x152-45595360.png' rel=apple-touch-icon sizes=152x152> <link href='/images/favicon-160x160-944ce76e.png' rel=icon sizes=160x160 type='image/png'> <link href='/images/favicon-96x96-b7e4e089.png' rel=icon sizes=96x96 type='image/png'> <link href='/images/favicon-32x32-b7f34a79.png' rel=icon sizes=32x32 type='image/png'> <link href='/images/favicon-16x16-2712c528.png' rel=icon sizes=16x16 type='image/png'> <meta content='#9f00a7' name=msapplication-TileColor> <meta content='/images/mstile-144x144-028d4c4c.png' name=msapplication-TileImage> <script>
+  var _StatHat = _StatHat || [];
+  _StatHat.push(['_setUser', 'NzIzMCDaNaL5bvEP1HQkMYwfYsQe']);
+  (function() {
+          var sh = document.createElement('script'); sh.type = 'text/javascript';
+          sh.async = true;
+          sh.src = '//www.stathat.com/javascripts/api.js';
+          var s = document.getElementsByTagName('script')[0];
+          s.parentNode.insertBefore(sh, s);
+  })();
+</script> <link href='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.js'></script> <script>
+  window.addEventListener("load", function(){
+  window.cookieconsent.initialise({
+    "palette": {
+      "popup": {
+        "background": "#252e39"
+      },
+      "button": {
+        "background": "#217dbb"
+      }
+    },
+    "theme": "classic",
+    "position": "bottom-right"
+  })});
+</script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>elmcsspatterns.io</h1> <h3></h3> <div class=meta-data> <hr> posted Apr 27, 2020 on <a class=tag href="/blog/tags/elm.html">elm</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <h2>The inspiration</h2> <p>A couple of weeks ago, while searching for a convenient CSS pattern that I needed to implement in one of my elm projects, I stumbled upon <a href="https://csslayout.io/">csslayout.io</a> and felt in love with it instantly. His author, <a href="https://dev.to/phuocng">phuocng</a>, has done a fantastic job not only collecting such a massive collection of patterns but making them easy to find and implement.</p> <h2>The motivation</h2> <p><a href="https://csslayout.io/">csslayout.io</a> is the kind of resource that I like to keep handy while working on my front-end, as I tend to write my styles without using any CSS framework whatsoever. Moreover, for the last year, I only use <a href="https://github.com/rtfeldman/elm-css">elm-css</a> to generate the CSS, which feels to me like <a href="https://sass-lang.com/">Sass</a> but functional and statically typed, which is just awesome. Unfortunately, there aren&#39;t any similar resources for <a href="https://github.com/rtfeldman/elm-css">elm-css</a> that I&#39;m aware of, so I couldn&#39;t resist writing my version, collecting and sharing the common patterns that I often use.</p> <p>On the other hand, I&#39;ve been looking for an excuse to play around with <a href="https://github.com/ryannhg/elm-spa">elm-spa</a> lately, which I think is going to be one of the next big things in the elm ecosystem. If you are not familiar with <a href="https://github.com/ryannhg/elm-spa">elm-spa</a>, it basically consists of an elm library and a JS client, which automagically takes care of generating all the boilerplate regarding elm single-page applications, letting you focus on the fun part. His author, <a href="https://github.com/ryannhg">ryannhg</a>, is doing an excellent job, keep it up!</p> <h2>The result</h2> <p>So having <a href="https://csslayout.io/">csslayout.io</a> as inspiration, and <a href="https://github.com/rtfeldman/elm-css">elm-css</a> + <a href="https://github.com/ryannhg/elm-spa">elm-spa</a> as motivation, I have started working on <a href="https://elmcsspatterns.io/">elmcsspatterns.io</a>. It is still an early version, and I will probably change everything now and then, but if you are into <strong>elm</strong> and <strong>elm-css</strong> I hope you find it useful, and if not, I hope it makes you want to try them :)</p> <p><a href="https://elmcsspatterns.io/" target=_blank class=btn> <img class=center src="/images/blog/elmcsspatterns/home-a20df10f.png"/> </a></p> <p>Happy coding!</p> <div class=btn-wrapper> <a href="https://elmcsspatterns.io/" target=_blank class=btn><i class="fa fa-cloud"></i> Site</a> <a href="https://github.com/bigardone/elm-css-patterns" target=_blank class=btn><i class="fa fa-github"></i> Source code</a> </div> <div id=disqus_thread></div> <script>
+  /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+  var disqus_shortname = 'codeloveandboards'; // required: replace example with your forum shortname
+  
+  /* * * DON'T EDIT BELOW THIS LINE * * */
+  (function() {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script> <noscript> Please enable JavaScript to view the <a href='//disqus.com/?ref_noscript'>comments powered by Disqus.</a> </noscript> <a class=dsq-brlink href='//disqus.com'> comments powered by <span class=logo-disqus>Disqus</span> </a> </article> </section> </div> </section> <footer id=main_footer> <ul class=article-nav> <li class=previous> <a href="/blog/2019/06/06/dynamic-base-path-for-an-elm-spa/"><h4>previous post</h4> <h3> Dynamic base path for an Elm SPA </h3> <div class=meta-data> <hr> posted Jun 6, 2019 on elm </div> </a> </li> <li class=next> </li> </ul> <section> <div class=container> <div class=center> <ul> <li> <a href='/blog'>Archives</a> </li> <li> <a href='//feeds.feedburner.com/CodeLoveAndBoards' target=_blank>RSS</a> </li> </ul> Copyright © 2020 - Ricardo García Vega - Code, Love & Boards! </div> </div> </section> </footer> <script src="../../../../../javascripts/blog-5ddb0520.js"></script> <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  
+  ga('create', 'UA-37802122-1', 'codeloveandboards.com');
+  ga('send', 'pageview');
+</script> <script>
+  _StatHat.push(["_trackCount", "g2pcD9xou7DlR0DtndiwvSBBYU5k", 1.0]);
+</script> </body> </html>
