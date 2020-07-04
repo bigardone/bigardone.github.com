@@ -14,7 +14,7 @@
     <link rel="alternate" href="http://codeloveandboards.com/blog/2020/07/02/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-1/"/>
     <id>http://codeloveandboards.com/blog/2020/07/02/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-1/</id>
     <published>2020-07-03T05:19:00Z</published>
-    <updated>2020-07-04T10:15:58+02:00</updated>
+    <updated>2020-07-04T10:27:07+02:00</updated>
     <author>
       <name>Article Author</name>
     </author>
@@ -40,7 +40,7 @@
 
 &lt;p&gt;But why do we need such a service? The main reason is that we want to externalize the content of our website and the management of it by our users, letting us focus only on building the presentation layer, which is a simple Phoenix application. And Airtable is perfect for that.&lt;/p&gt;
 
-&lt;p&gt;&lt;a href="https://airtable.com/shribMafJ0mAR7nic/tblLCFjonKFPr4yiN/viwgxDq0PyWSRs8N4?blocks=hide"&gt;Here you can find the base&lt;/a&gt; that the we are using for this tutorial, which consists of two tables:&lt;/p&gt;
+&lt;p&gt;&lt;a href="https://airtable.com/shribMafJ0mAR7nic/tblLCFjonKFPr4yiN/viwgxDq0PyWSRs8N4?blocks=hide"&gt;Here you can find the base&lt;/a&gt; that we are using for this tutorial, which consists of two tables:&lt;/p&gt;
 
 &lt;h4&gt;The contents table&lt;/h4&gt;
 
