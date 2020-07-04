@@ -14,7 +14,7 @@
     <link rel="alternate" href="http://codeloveandboards.com/blog/2020/07/02/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-1/"/>
     <id>http://codeloveandboards.com/blog/2020/07/02/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-1/</id>
     <published>2020-07-03T05:19:00Z</published>
-    <updated>2020-07-04T10:27:07+02:00</updated>
+    <updated>2020-07-04T10:39:52+02:00</updated>
     <author>
       <name>Article Author</name>
     </author>
@@ -84,7 +84,7 @@
 
 &lt;p&gt;The presentation layer of our CMS is a Phoenix application which supervision tree looks something like this:&lt;/p&gt;
 
-&lt;p&gt;&lt;img class="center" src="/images/blog/phoenix-cms-1/app-diagram.svg"/&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img class="center" src="/images/blog/phoenix-cms-1/app-diagram.png"/&gt;&lt;/p&gt;
 
 &lt;p&gt;Let&amp;#39;s have a closer look at some of its components.&lt;/p&gt;
 
