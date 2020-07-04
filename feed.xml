@@ -5,10 +5,121 @@
   <id>http://codeloveandboards.com/blog</id>
   <link href="http://codeloveandboards.com/blog"/>
   <link href="http://codeloveandboards.com/feed.xml" rel="self"/>
-  <updated>2020-04-27T07:00:00Z</updated>
+  <updated>2020-07-03T05:19:00Z</updated>
   <author>
     <name>Blog Author</name>
   </author>
+  <entry>
+    <title>Headless CMS fun with Phoenix LiveView and Airtable (pt. 1)</title>
+    <link rel="alternate" href="http://codeloveandboards.com/blog/2020/07/02/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-1/"/>
+    <id>http://codeloveandboards.com/blog/2020/07/02/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-1/</id>
+    <published>2020-07-03T05:19:00Z</published>
+    <updated>2020-07-04T09:55:25+02:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;div class="index"&gt;
+  &lt;p&gt;This post belongs to the &lt;strong&gt;Headless CMS fun with Phoenix LiveView and Airtable&lt;/strong&gt; series.&lt;/p&gt;
+  &lt;ol&gt;
+    &lt;li&gt;&lt;a href="/blog/2020/07/02/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-1"&gt;Introduction&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;Coming soon...&lt;/li&gt;
+  &lt;/ol&gt;
+
+  &lt;a href="https://github.com/bigardone/passwordless-auth" target="_blank"&gt;&lt;i class="fa fa-github"&gt;&lt;/i&gt; Source code&lt;/a&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Last year, I built a static website for a friend of mine who has an Italian restaurant, which has been vital for her business since then. The first year the site performed really well businesswise. However, issues have started to appear as my friend needed to change the site&amp;#39;s content to showcase the new season products, menu, and schedule. I started implementing the changes by hand, but we suddenly realized that this was not convenient at all, since she needed to change the content on the fly without having to rely on me. After considering many different possibilities, I solved the problem by implementing a simple solution in a single weekend, thanks to &lt;a href="https://www.phoenixframework.org/"&gt;Phoenix&lt;/a&gt; and &lt;a href="https://airtable.com/"&gt;Airtable&lt;/a&gt;. Here&amp;#39;s who I did it.&lt;/p&gt;
+
+&lt;h2&gt;Introduction&lt;/h2&gt;
+
+&lt;p&gt;In this new tutorial, we are going to be building a headless content management system consisting of two main elements, which are an Airtable base and a Phoenix application powered by LiveView. Let&amp;#39;s take a more in-depth look at them:&lt;/p&gt;
+
+&lt;h3&gt;Airtable&lt;/h3&gt;
+
+&lt;p&gt;Airtable is a really cool service based on spreadsheets grouped in bases, that act as a database. Using a very intuitive and friendly UI, it lets you design your own data structures, add attachments, handle relationships between different tables, design different data views for your tables, and much more. It also exposes all the data through a very convenient API, which is crucial for this tutorial.&lt;/p&gt;
+
+&lt;p&gt;But why do we need such a service? The main reason is that we want to externalize the content of our website and the management of it by our users, letting us focus only on building the presentation layer, which is a simple Phoenix application. And Airtable is perfect for that.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href="https://airtable.com/shribMafJ0mAR7nic/tblLCFjonKFPr4yiN/viwgxDq0PyWSRs8N4?blocks=hide"&gt;Here you can find the base&lt;/a&gt; that the we are using for this tutorial, which consists of two tables:&lt;/p&gt;
+
+&lt;h4&gt;The contents table&lt;/h4&gt;
+
+&lt;p&gt;&lt;img class="center" src="/images/blog/phoenix-cms-1/airtable-1.png"/&gt;&lt;/p&gt;
+
+&lt;p&gt;This table stores the sections of the main page. Its structure is straightforward, structuring the data with the following fields:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;id&lt;/code&gt;: the ID of the section.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;position&lt;/code&gt;: An auto-increment number that specifies the order of the section within the page.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;type&lt;/code&gt;: the type of the section, which can have three different values:
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;hero&lt;/code&gt;: for a hero section containing a big title and subtitle.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;text_and_image&lt;/code&gt;: for sections that have some text and an image.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;feature&lt;/code&gt;: for a section that has a list of items with some text and an icon.&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;title&lt;/code&gt;: the title of the section.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;content&lt;/code&gt;: the main content of the section. It can store HTML.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;image&lt;/code&gt;: the main image of the section. Stored as an attachment.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;styles&lt;/code&gt;: any additional styles that we want to add to the section.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4&gt;The articles table&lt;/h4&gt;
+
+&lt;p&gt;&lt;img class="center" src="/images/blog/phoenix-cms-1/airtable-2.png"/&gt;&lt;/p&gt;
+
+&lt;p&gt;This table stores all the blog articles of our website, and each article consists of the following attributes:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;slug&lt;/code&gt;: the SEO friendly slug for the article.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;title&lt;/code&gt;: the main title of the article.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;description&lt;/code&gt;: the article&amp;#39;s excerpt.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;image&lt;/code&gt;: the main image of the article. Stored as an attachment.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;content&lt;/code&gt;: the main content of the article. It can store HTML.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;author&lt;/code&gt;: the email of the article&amp;#39;s author.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;published_at&lt;/code&gt;: the publication date of the article.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3&gt;The Phoenix application&lt;/h3&gt;
+
+&lt;p&gt;The presentation layer of our CMS is a Phoenix application which supervision tree looks something like this:&lt;/p&gt;
+
+&lt;p&gt;&lt;img class="center" src="/images/blog/phoenix-cms-1/app-diagram.svg"/&gt;&lt;/p&gt;
+
+&lt;p&gt;Let&amp;#39;s have a closer look at some of its components.&lt;/p&gt;
+
+&lt;h4&gt;Cache&lt;/h4&gt;
+
+&lt;p&gt;Airtable has a limit of fiAirtable has a limit of five requests per second for free accounts, so we can&amp;#39;t just send requests on every page visit, because if we have a lot of users, the API is likely going to start returning rate limit errors. Using Erlang&amp;#39;s &lt;a href="https://erlang.org/doc/man/ets.html"&gt;ETS&lt;/a&gt; to store successful responses from the API helps to prevent rate limiting issues. Once a page is mounted, the data is taken from the cache instead of performing an HTTP request. However, this is not enough, because we need to keep the cache data synced with the latest changes in Airtable.&lt;/p&gt;
+
+&lt;h4&gt;Synchronizer&lt;/h4&gt;
+
+&lt;p&gt;To keep the cache data in sync with Airtable, it spawns a &lt;a href="https://hexdocs.pm/elixir/GenServer.html"&gt;GenServer&lt;/a&gt; process, which periodically makes requests to the API every second, updating its stored data if needed and broadcasting the new data to the live views using &lt;a href="https://hexdocs.pm/phoenix_pubsub/Phoenix.PubSub.html"&gt;PubSub&lt;/a&gt;. This way, we limit the number of interactions with the API to two requests per second, no matter the number of users are currently visiting our site.&lt;/p&gt;
+
+&lt;h4&gt;LiveView&lt;/h4&gt;
+
+&lt;p&gt;Instead of using regular views and templates, the application takes advantage of Phoenix &lt;a href="https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html"&gt;LiveView&lt;/a&gt;, subscribing to specific PubSub topics, updating its data when needed, and refreshing its content on the browser without requiring a reload from the user.&lt;/p&gt;
+
+&lt;p&gt;Here you can see the three views that it has:&lt;/p&gt;
+
+&lt;p&gt;&lt;img class="center" src="/images/blog/phoenix-cms-1/site.jpg"/&gt;&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;A main landing page that renders the sections stored in the contents table. These sections are the main hero section, some image and text sections, and a feature list section.&lt;/li&gt;
+&lt;li&gt;A blog page, listing all the articles stored in the articles table.&lt;/li&gt;
+&lt;li&gt;An article detail page that renders a complete article.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;And I think this is all for the introduction. In the next part, we will start building the Phoenix application and implementing an HTTP client to retrieve the data stored in Airtable. In the meantime, you can check the end result here, or have a look at the source code.&lt;/p&gt;
+
+&lt;p&gt;Happy coding!&lt;/p&gt;
+
+&lt;div class="btn-wrapper"&gt;
+  &lt;a href="https://phoenixcms.herokuapp.com/" target="_blank" class="btn"&gt;&lt;i class="fa fa-cloud"&gt;&lt;/i&gt; Live demo&lt;/a&gt;
+  &lt;a href="https://github.com/bigardone/phoenix-cms" target="_blank" class="btn"&gt;&lt;i class="fa fa-github"&gt;&lt;/i&gt; Source code&lt;/a&gt;
+&lt;/div&gt;
+</content>
+  </entry>
   <entry>
     <title>elmcsspatterns.io</title>
     <link rel="alternate" href="http://codeloveandboards.com/blog/2020/04/27/elmcsspatterns-io/"/>
@@ -2203,379 +2314,6 @@ end
 &lt;div class="btn-wrapper"&gt;
   &lt;a href="https://github.com/bigardone/passwordless-auth" target="_blank" class="btn"&gt;&lt;i class="fa fa-github"&gt;&lt;/i&gt; Source code&lt;/a&gt;
 &lt;/div&gt;
-</content>
-  </entry>
-  <entry>
-    <title>Elixir and Phoenix basic passwordless and databaseless authentication (pt.2)</title>
-    <link rel="alternate" href="http://codeloveandboards.com/blog/2018/06/20/elixir-and-phoenix-basic-passwordless-and-databaseless-authentication-pt-2/"/>
-    <id>http://codeloveandboards.com/blog/2018/06/20/elixir-and-phoenix-basic-passwordless-and-databaseless-authentication-pt-2/</id>
-    <published>2018-06-20T07:00:00Z</published>
-    <updated>2018-09-01T07:53:25+02:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;div class="index"&gt;
-  &lt;p&gt;This post belongs to the &lt;strong&gt;Elixir and Phoenix basic passwordless and databaseless authentication&lt;/strong&gt; series.&lt;/p&gt;
-  &lt;ol&gt;
-    &lt;li&gt;&lt;a href="/blog/2018/06/09/elixir-and-phoenix-basic-passwordless-and-databaseless-authentication-pt-1"&gt;Project setup and the initial functionality for storing and verifying authentication tokens&lt;/a&gt;&lt;/li&gt;
-    &lt;li&gt;&lt;a href="/blog/2018/06/20/elixir-and-phoenix-basic-passwordless-and-databaseless-authentication-pt-2"&gt;Sending authentication link emails and the user socket connection&lt;/a&gt;&lt;/li&gt;
-    &lt;li&gt;&lt;a href="/blog/2018/09/01/elixir-and-phoenix-basic-passwordless-and-databaseless-authentication-pt-3"&gt;Setting up webpack as our asset bundler and the Elm single-page application&lt;/a&gt;&lt;/li&gt;
-  &lt;/ol&gt;
-
-  &lt;a href="https://github.com/bigardone/passwordless-auth" target="_blank"&gt;&lt;i class="fa fa-github"&gt;&lt;/i&gt; Source code&lt;/a&gt;
-&lt;/div&gt;
-
-&lt;p&gt;In the &lt;a href="/blog/2018/06/09/elixir-and-phoenix-basic-passwordless-and-databaseless-authentication-pt-1"&gt;previous part&lt;/a&gt; of the series, we set up the umbrella application for our new project and created the necessary modules for storing and generating authentication tokens. Having this done, the next step is sending emails to valid users, containing the sign-in link that will authenticate them into the system once clicked.&lt;/p&gt;
-
-&lt;p&gt;&lt;img alt="Final result" src="https://monosnap.com/image/5VUT424b4Hu9ITi8r1SGae7HQleCPT.png" /&gt;&lt;/p&gt;
-
-&lt;h3&gt;Sending emails&lt;/h3&gt;
-
-&lt;p&gt;To send emails in an Elixir application I usually rely on &lt;a href="https://github.com/thoughtbot/bamboo"&gt;Bamboo&lt;/a&gt; from the awesome team at &lt;a href="https://thoughtbot.com/"&gt;thoughtbot&lt;/a&gt;, which is not only simple and powerful, but very customizable as well. Let&amp;#39;s go ahead and add the dependency to the project, under the &lt;code&gt;PasswordlessAuthWeb&lt;/code&gt; application:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# apps/passwordless_auth_web/mix.exs
-
-defmodule PasswordlessAuthWeb.Mixfile do
-  use Mix.Project
-
-  # ...
-
-  defp deps do
-    [
-      {:phoenix, &amp;quot;~&amp;gt; 1.3.2&amp;quot;},
-      {:phoenix_pubsub, &amp;quot;~&amp;gt; 1.0&amp;quot;},
-      {:phoenix_html, &amp;quot;~&amp;gt; 2.10&amp;quot;},
-      {:phoenix_live_reload, &amp;quot;~&amp;gt; 1.0&amp;quot;, only: :dev},
-      {:gettext, &amp;quot;~&amp;gt; 0.11&amp;quot;},
-      {:passwordless_auth, in_umbrella: true},
-      {:cowboy, &amp;quot;~&amp;gt; 1.0&amp;quot;},
-      {:bamboo, &amp;quot;~&amp;gt; 0.8&amp;quot;}
-    ]
-  end
-
-  # ...
-end
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Don&amp;#39;t forget to run the necessary &lt;code&gt;deps.get&lt;/code&gt; mix task in order to install it. Next step is configuring Bamboo:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# apps/passwordless_auth_web/config/config.exs
-
-use Mix.Config
-
-# ...
-
-# Bamboo mailer configuration
-config :passwordless_auth_web,
-       PasswordlessAuthWeb.Service.Mailer,
-       adapter: Bamboo.LocalAdapter
-
-# ...
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;In the configuration we are specifying two things:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;The name of the module we are going to use as an interface with &lt;code&gt;Bamboo&lt;/code&gt;&amp;#39;s functionality.&lt;/li&gt;
-&lt;li&gt;The adapter we want to use to send emails.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;For our particular case and while developing the project, we are going to take advantage of the &lt;a href="https://hexdocs.pm/bamboo/Bamboo.LocalAdapter.html"&gt;LocalAdapter&lt;/a&gt; which stores sent emails in memory and offers us a small inbox application where we can view them. In order to have access to this inbox application, we need to mount a new route it in the router, which will be only accessible in the &lt;code&gt;:dev&lt;/code&gt; environment:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# apps/passwordless_auth_web/lib/passwordless_auth_web/router.ex
-
-defmodule PasswordlessAuthWeb.Router do
-  use PasswordlessAuthWeb, :router
-
-  if Mix.env() == :dev, do: forward(&amp;quot;/sent_emails&amp;quot;, Bamboo.EmailPreviewPlug)
-
-  # ...
-end
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;The only part we are missing is creating the &lt;code&gt;Mailer&lt;/code&gt; module, so let&amp;#39;s go ahead and add it:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# apps/passwordless_auth_web/lib/passwordless_auth_web/service/mailer.ex
-
-defmodule PasswordlessAuthWeb.Service.Mailer do
-  use Bamboo.Mailer, otp_app: :passwordless_auth_web
-end
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;If we start the Phoenix server at this point and visit &lt;a href="http://localhost:4000/sent_emails"&gt;http://localhost:4000/sent_emails&lt;/a&gt;, we should see the following message:&lt;/p&gt;
-
-&lt;p&gt;&lt;img alt="Empty inbox" src="https://monosnap.com/image/gB604OQdzH4yWfhptA9PyaxD16M3AD.png" /&gt;&lt;/p&gt;
-
-&lt;p&gt;This is completely fine, as we haven&amp;#39;t sent any emails yet, so let&amp;#39;s go ahead and create the necessary functionality to build up an email containing the authentication link using an email address and a token:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# apps/passwordless_auth_web/lib/passwordless_auth_web/emails/auth_email.
-
-
-defmodule PasswordlessAuthWeb.Emails.AuthEmail do
-  import Bamboo.Email, only: [new_email: 1]
-  import PasswordlessAuthWeb.Router.Helpers, only: [page_url: 4]
-
-  @from &amp;quot;support@passwordlessauth.com&amp;quot;
-
-  def build(email, token) do
-    url = page_url(PasswordlessAuthWeb.Endpoint, :index, [], token: token)
-
-    new_email(
-      to: email,
-      from: @from,
-      subject: &amp;quot;Your authentication link&amp;quot;,
-      html_body: &amp;quot;&amp;quot;&amp;quot;
-      &amp;lt;p&amp;gt;Here is your authentication link:&amp;lt;/p&amp;gt;
-      &amp;lt;a href=&amp;quot;#{url}&amp;quot;&amp;gt;#{url}&amp;lt;/a&amp;gt;
-      &amp;lt;p&amp;gt;It is valid for 5 minutes.&amp;lt;/p&amp;gt;
-      &amp;quot;&amp;quot;&amp;quot;,
-      text_body: &amp;quot;&amp;quot;&amp;quot;
-      Here is your authentication link: \n
-      #{url}\n
-      It is valid for 5 minutes.
-      &amp;quot;&amp;quot;&amp;quot;
-    )
-  end
-end
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;With the token parameter and thanks to Phoenix&amp;#39;s route helpers, we build the new Bamboo email which has the authentication link in its body, and which addressee is the email parameter. For the time being, let&amp;#39;s use the default route that comes with Phoenix out of the box, and which points to &lt;code&gt;/&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;Let&amp;#39;s test this out by starting the Phoenix server again and sending a new email:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;$ iex -S mix phx.server
-Erlang/OTP 21 [erts-10.0] [source] [64-bit] [smp:8:8] [ds:8:8:10] [async-threads:1] [hipe]
-
-[info] Running PasswordlessAuthWeb.Endpoint with Cowboy using http://0.0.0.0:4000
-Interactive Elixir (1.6.6) - press Ctrl+C to exit (type h() ENTER for help)
-iex(1)&amp;gt; email = PasswordlessAuthWeb.Emails.AuthEmail.build(&amp;quot;foo@email.com&amp;quot;, &amp;quot;token&amp;quot;)
-%Bamboo.Email{
-  assigns: %{},
-  bcc: nil,
-  cc: nil,
-  from: &amp;quot;support@passwordlessauth.com&amp;quot;,
-  headers: %{},
-  html_body: &amp;quot;&amp;lt;p&amp;gt;Here is your authentication link:&amp;lt;/p&amp;gt;\n&amp;lt;a href=\&amp;quot;http://localhost:4000/?token=token\&amp;quot;&amp;gt;http://localhost:4000/?token=token&amp;lt;/a&amp;gt;\n&amp;lt;p&amp;gt;It is valid for 5 minutes.&amp;lt;/p&amp;gt;\n&amp;quot;,
-  private: %{},
-  subject: &amp;quot;Your authentication link&amp;quot;,
-  text_body: &amp;quot;Here is your authentication link: \n\nhttp://localhost:4000/?token=token\n\nIt is valid for 5 minutes.\n&amp;quot;,
-  to: &amp;quot;foo@email.com&amp;quot;
-}
-iex(2)&amp;gt; PasswordlessAuthWeb.Service.Mailer.deliver_later email
-[debug] Sending email with Bamboo.LocalAdapter:
-
-%Bamboo.Email{assigns: %{}, bcc: [], cc: [], from: {nil, &amp;quot;support@passwordlessauth.com&amp;quot;}, headers: %{}, html_body: &amp;quot;&amp;lt;p&amp;gt;Here is your authentication link:&amp;lt;/p&amp;gt;\n&amp;lt;a href=\&amp;quot;http://localhost:4000/?token=token\&amp;quot;&amp;gt;http://localhost:4000/?token=token&amp;lt;/a&amp;gt;\n&amp;lt;p&amp;gt;It is valid for 5 minutes.&amp;lt;/p&amp;gt;\n&amp;quot;, private: %{}, subject: &amp;quot;Your authentication link&amp;quot;, text_body: &amp;quot;Here is your authentication link: \n\nhttp://localhost:4000/?token=token\n\nIt is valid for 5 minutes.\n&amp;quot;, to: [nil: &amp;quot;foo@email.com&amp;quot;]}
-
-iex(3)&amp;gt;
-
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;If we revisit &lt;a href="http://localhost:4000/sent_emails"&gt;http://localhost:4000/sent_emails&lt;/a&gt;, we can see the email that we just sent:&lt;/p&gt;
-
-&lt;p&gt;&lt;img alt="Bamboo inbox" src="https://monosnap.com/image/PLsLxEljpZnc3KHuJLc7oR3Tl0CLPK.png" /&gt;&lt;/p&gt;
-
-&lt;p&gt;But, how are the users going to request the authentication email?&lt;/p&gt;
-
-&lt;h3&gt;The authentication controller&lt;/h3&gt;
-
-&lt;p&gt;Despite the admin site being an Elm single page application, that relies on a socket connection, we still need to provide a mechanism so users can request the authentication email. Let&amp;#39;s use a controller for this:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# apps/passwordless_auth_web/lib/passwordless_auth_web/controllers/authentication_controller.ex
-
-defmodule PasswordlessAuthWeb.AuthenticationController do
-  use PasswordlessAuthWeb, :controller
-
-  alias PasswordlessAuthWeb.{Emails.AuthEmail, Service.Mailer}
-
-  @email_regex ~r/^[A-Za-z0-9._%+-+&amp;#39;]+@[A-Za-z0-9.-]+\.[A-Za-z]+$/
-
-  def create(conn, params) do
-    with %{&amp;quot;email&amp;quot; =&amp;gt; email} &amp;lt;- params,
-         true &amp;lt;- valid_email?(email),
-         {:ok, token} &amp;lt;- PasswordlessAuth.provide_token_for(email) do
-      build_and_deliver_email(email, token)
-    end
-
-    json(conn, %{message: gettext(&amp;quot;auth.message&amp;quot;)})
-  end
-
-  def valid_email?(email), do: Regex.match?(@email_regex, email)
-
-  defp build_and_deliver_email(email, token) do
-    email
-    |&amp;gt; AuthEmail.build(token)
-    |&amp;gt; Mailer.deliver_later()
-  end
-end
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;If the received parameters contain the &lt;code&gt;email&lt;/code&gt; with a valid format, it provides a token, builds and delivers the authentication email. On the contrary, for security reasons we don&amp;#39;t want to give any clues to the user if the email provided has a wrong format or it does not exist, so it just returns the same success message. Let&amp;#39;s add a new route for this controller and action:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# apps/passwordless_auth_web/lib/passwordless_auth_web/router.ex
-
-defmodule PasswordlessAuthWeb.Router do
-  use PasswordlessAuthWeb, :router
-
-    if Mix.env() == :dev, do: forward(&amp;quot;/sent_emails&amp;quot;, Bamboo.EmailPreviewPlug)
-
-    # ...
-
-    pipeline :api do
-        plug(:accepts, [&amp;quot;json&amp;quot;])
-    end
-
-    # ...
-
-    scope &amp;quot;/api&amp;quot;, PasswordlessAuthWeb do
-        pipe_through(:api)
-
-        post(&amp;quot;/auth&amp;quot;, AuthenticationController, :create)
-    end
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Finally, to check that everything works as we expect, let&amp;#39;s add a new test module for the controller:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# apps/passwordless_auth_web/test/passwordless_auth_web/controllers/authentication_controller_test.exs
-
-defmodule PasswordlessAuthWeb.AuthenticationControllerTest do
-  use PasswordlessAuthWeb.ConnCase
-  use Bamboo.Test
-
-  import PasswordlessAuthWeb.Gettext
-
-  alias PasswordlessAuth.Repo
-  alias PasswordlessAuthWeb.Emails.AuthEmail
-
-  describe &amp;quot;POST /api/auth&amp;quot; do
-    test &amp;quot;always returns success message no matter what parameters receives&amp;quot;, %{conn: conn} do
-      conn = post(conn, authentication_path(conn, :create), email: &amp;quot;foo@test.com&amp;quot;)
-      assert %{&amp;quot;message&amp;quot; =&amp;gt; _} = json_response(conn, 200)
-
-      conn = post(conn, authentication_path(conn, :create), %{})
-      assert assert %{&amp;quot;message&amp;quot; =&amp;gt; _} = json_response(conn, 200)
-    end
-
-    test &amp;quot;delivers the email only when valid email&amp;quot;, %{conn: conn} do
-      email = &amp;quot;#{__MODULE__}@email.com&amp;quot;
-      Repo.add_email(email)
-
-      post(conn, authentication_path(conn, :create), email: email)
-
-      {:ok, token} = Repo.fetch(email)
-
-      assert_delivered_email(AuthEmail.build(email, token))
-    end
-
-    test &amp;quot;does not deliver the email only when invalid email format&amp;quot;, %{conn: conn} do
-      email = &amp;quot;#{__MODULE__}emailcom&amp;quot;
-      Repo.add_email(email)
-
-      post(conn, authentication_path(conn, :create), email: email)
-
-      {:ok, token} = Repo.fetch(email)
-
-      refute_delivered_email(AuthEmail.build(email, token))
-    end
-  end
-end
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;If we run it, we can check that it is actually working fine:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="bash"&gt;$ mix test test/passwordless_auth_web/controllers/authentication_controller_test.exs
-==&amp;gt; passwordless_auth
-Test patterns did not match any file: test/passwordless_auth_web/controllers/authentication_controller_test.exs
-==&amp;gt; passwordless_auth_web
-...
-
-Finished in 0.1 seconds
-3 tests, 0 failures
-
-Randomized with seed 547795
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Yay! Now that we have the email generation and delivery sorted out, let&amp;#39;s move on the next important part of our application, the user socket.&lt;/p&gt;
-
-&lt;h3&gt;Authenticating the user socket connection&lt;/h3&gt;
-
-&lt;p&gt;Phoenix creates a default &lt;code&gt;UserSocket&lt;/code&gt; module while bootstrapping a new project, so let&amp;#39;s edit it to add the authentication logic:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# apps/passwordless_auth_web/lib/passwordless_auth_web/channels/user_socket.ex
-
-defmodule PasswordlessAuthWeb.UserSocket do
-  use Phoenix.Socket
-
-  alias PasswordlessAuth
-
-  ## Transports
-  transport(:websocket, Phoenix.Transports.WebSocket)
-
-  def connect(%{&amp;quot;token&amp;quot; =&amp;gt; token}, socket) do
-    case PasswordlessAuth.verify_token(token) do
-      {:ok, email} -&amp;gt;
-        {:ok, assign(socket, :user, %{email: email})}
-
-      _ -&amp;gt;
-        :error
-    end
-  end
-
-  def connect(_, _socket), do: :error
-
-  def id(socket), do: &amp;quot;user_socket:#{socket.assigns.user.email}&amp;quot;
-end
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;The &lt;code&gt;connect/2&lt;/code&gt; callback function receives a &lt;code&gt;token&lt;/code&gt; parameter, and using &lt;code&gt;PasswordlessAuth.verify_token/1&lt;/code&gt; checks whether this token is valid or not, assigning to the socket the corresponding email on success. On the other hand, if no &lt;code&gt;token&lt;/code&gt; parameter is received or the verification goes wrong, it returns &lt;code&gt;:error&lt;/code&gt; rejecting the connection. Let&amp;#39;s add some unit tests to ensure that it works as we expect:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# apps/passwordless_auth_web/test/passwordless_auth_web/channels/user_socket_test.exs
-
-defmodule PasswordlessAuthWeb.UserSocketTest do
-  use PasswordlessAuthWeb.ChannelCase, async: true
-
-  alias Phoenix.Socket
-  alias PasswordlessAuth.Repo
-  alias PasswordlessAuthWeb.UserSocket
-
-  describe &amp;quot;connect/2&amp;quot; do
-    test &amp;quot;errors when passing invalid params or token&amp;quot; do
-      assert :error = connect(UserSocket, %{})
-      assert :error = connect(UserSocket, %{&amp;quot;token&amp;quot; =&amp;gt; &amp;quot;invalid-token&amp;quot;})
-    end
-
-    test &amp;quot;joins when passing valid token&amp;quot; do
-      email = &amp;quot;foo@#{__MODULE__}.com&amp;quot;
-      :ok = Repo.add_email(email)
-      {:ok, token} = PasswordlessAuth.provide_token_for(email)
-
-      assert {:ok, %Socket{assigns: %{user: %{email: ^email}}}} =
-               connect(UserSocket, %{&amp;quot;token&amp;quot; =&amp;gt; token})
-    end
-  end
-end
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;And run them to check the result:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="bash"&gt;$ mix test test/passwordless_auth_web/channels/user_socket_test.exs
-==&amp;gt; passwordless_auth
-Test patterns did not match any file: test/passwordless_auth_web/channels/user_socket_test.exs
-==&amp;gt; passwordless_auth_web
-..
-
-Finished in 0.06 seconds
-2 tests, 0 failures
-
-Randomized with seed 589379
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Cool, it works! I think this is all for today. In the next part, we will work on the front end side, configuring &lt;a href="https://webpack.js.org/"&gt;webpack&lt;/a&gt; as our asset build tool of choice, adding Elm support to start building the admin single page application, using everything we have done until now to authenticate users. In the meantime, don&amp;#39;t forget to check out the source code with the final result:&lt;/p&gt;
-
-&lt;div class="btn-wrapper"&gt;
-  &lt;a href="https://github.com/bigardone/passwordless-auth" target="_blank" class="btn"&gt;&lt;i class="fa fa-github"&gt;&lt;/i&gt; Source code&lt;/a&gt;
-&lt;/div&gt;
-
-&lt;p&gt;Happy coding!&lt;/p&gt;
 </content>
   </entry>
 </feed>
