@@ -14,7 +14,7 @@
     <link rel="alternate" href="http://codeloveandboards.com/blog/2020/07/02/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-1/"/>
     <id>http://codeloveandboards.com/blog/2020/07/02/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-1/</id>
     <published>2020-07-03T05:19:00Z</published>
-    <updated>2020-07-04T09:55:25+02:00</updated>
+    <updated>2020-07-04T09:58:26+02:00</updated>
     <author>
       <name>Article Author</name>
     </author>
@@ -110,7 +110,7 @@
 &lt;li&gt;An article detail page that renders a complete article.&lt;/li&gt;
 &lt;/ol&gt;
 
-&lt;p&gt;And I think this is all for the introduction. In the next part, we will start building the Phoenix application and implementing an HTTP client to retrieve the data stored in Airtable. In the meantime, you can check the end result here, or have a look at the source code.&lt;/p&gt;
+&lt;p&gt;And I think this is all for the introduction. In the next part, we will start building the Phoenix application and implementing an HTTP client to retrieve the data stored in Airtable. In the meantime, you can check the end result &lt;a href="https://phoenixcms.herokuapp.com/"&gt;here&lt;/a&gt;, or have a look at the &lt;a href="https://github.com/bigardone/phoenix-cms"&gt;source code&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;Happy coding!&lt;/p&gt;
 
