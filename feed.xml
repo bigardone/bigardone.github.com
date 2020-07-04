@@ -14,7 +14,7 @@
     <link rel="alternate" href="http://codeloveandboards.com/blog/2020/07/02/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-1/"/>
     <id>http://codeloveandboards.com/blog/2020/07/02/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-1/</id>
     <published>2020-07-03T05:19:00Z</published>
-    <updated>2020-07-04T09:58:26+02:00</updated>
+    <updated>2020-07-04T10:15:58+02:00</updated>
     <author>
       <name>Article Author</name>
     </author>
@@ -90,7 +90,7 @@
 
 &lt;h4&gt;Cache&lt;/h4&gt;
 
-&lt;p&gt;Airtable has a limit of fiAirtable has a limit of five requests per second for free accounts, so we can&amp;#39;t just send requests on every page visit, because if we have a lot of users, the API is likely going to start returning rate limit errors. Using Erlang&amp;#39;s &lt;a href="https://erlang.org/doc/man/ets.html"&gt;ETS&lt;/a&gt; to store successful responses from the API helps to prevent rate limiting issues. Once a page is mounted, the data is taken from the cache instead of performing an HTTP request. However, this is not enough, because we need to keep the cache data synced with the latest changes in Airtable.&lt;/p&gt;
+&lt;p&gt;Airtable has a limit of five requests per second for free accounts, so we can&amp;#39;t just send requests on every page visit, because if we have a lot of users, the API is likely going to start returning rate limit errors. Using Erlang&amp;#39;s &lt;a href="https://erlang.org/doc/man/ets.html"&gt;ETS&lt;/a&gt; to store successful responses from the API helps to prevent rate limiting issues. Once a page is mounted, the data is taken from the cache instead of performing an HTTP request. However, this is not enough, because we need to keep the cache data synced with the latest changes in Airtable.&lt;/p&gt;
 
 &lt;h4&gt;Synchronizer&lt;/h4&gt;
 
