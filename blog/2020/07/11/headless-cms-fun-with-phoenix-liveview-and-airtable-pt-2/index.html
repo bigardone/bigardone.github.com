@@ -1,0 +1,482 @@
+<!DOCTYPE html> <!--[if lt IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8 lt-ie7" lang=en-us><![endif]--> <!--[if IE 7]><html class="no-js lt-ie10 lt-ie9 lt-ie8" lang=en-us><![endif]--> <!--[if IE 8]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if IE 9]><html class="no-js lt-ie10 lt-ie9" lang=en-us><![endif]--> <!--[if lt IE 10]><html class="no-js lt-ie10" lang=en-us><![endif]--> <!--[if !IE]>><![endif]--> <html class=no-js lang=en> <head> <title>Headless CMS fun with Phoenix LiveView and Airtable (pt. 2) - Code, Love & Boards</title> <meta charset=utf-8 content='text/html' http-equiv=content-type> <meta content='ie=edge,chrome=1' http-equiv=x-ua-compatible> <meta content='The project set up and the Airtable HTTP client.' name=description> <meta content='Ricardo García Vega - http://twitter.com/bigardone' name=author> <meta content='elixir, phoenix, liveview' name=keywords> <meta content='initial-scale=1.0,user-scalable=no,maximum-scale=1,width=device-width' name=viewport> <link href='//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css' rel=stylesheet> <link href="//fonts.googleapis.com/css?family=Montserrat:400,700|Lora:400,700" media=screen rel=stylesheet /> <link href="../../../../../stylesheets/blog-82c14d7c.css" media=all rel=stylesheet /> <link href='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/tomorrow.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js'></script> <script src='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/elixir.min.js'></script> <script src='//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/languages/elm.min.js'></script> <link href='/images/apple-touch-icon-57x57-6e598dc4.png' rel=apple-touch-icon sizes=57x57> <link href='/images/apple-touch-icon-114x114-5be964ba.png' rel=apple-touch-icon sizes=114x114> <link href='/images/apple-touch-icon-72x72-70084a85.png' rel=apple-touch-icon sizes=72x72> <link href='/images/apple-touch-icon-144x144-1dbb56c1.png' rel=apple-touch-icon sizes=144x144> <link href='/images/apple-touch-icon-60x60-d05a5ea9.png' rel=apple-touch-icon sizes=60x60> <link href='/images/apple-touch-icon-120x120-5dafce59.png' rel=apple-touch-icon sizes=120x120> <link href='/images/apple-touch-icon-76x76-b2c0d784.png' rel=apple-touch-icon sizes=76x76> <link href='/images/apple-touch-icon-152x152-45595360.png' rel=apple-touch-icon sizes=152x152> <link href='/images/favicon-160x160-944ce76e.png' rel=icon sizes=160x160 type='image/png'> <link href='/images/favicon-96x96-b7e4e089.png' rel=icon sizes=96x96 type='image/png'> <link href='/images/favicon-32x32-b7f34a79.png' rel=icon sizes=32x32 type='image/png'> <link href='/images/favicon-16x16-2712c528.png' rel=icon sizes=16x16 type='image/png'> <meta content='#9f00a7' name=msapplication-TileColor> <meta content='/images/mstile-144x144-028d4c4c.png' name=msapplication-TileImage> <script>
+  var _StatHat = _StatHat || [];
+  _StatHat.push(['_setUser', 'NzIzMCDaNaL5bvEP1HQkMYwfYsQe']);
+  (function() {
+          var sh = document.createElement('script'); sh.type = 'text/javascript';
+          sh.async = true;
+          sh.src = '//www.stathat.com/javascripts/api.js';
+          var s = document.getElementsByTagName('script')[0];
+          s.parentNode.insertBefore(sh, s);
+  })();
+</script> <link href='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.css' rel=stylesheet> <script src='//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.js'></script> <script>
+  window.addEventListener("load", function(){
+  window.cookieconsent.initialise({
+    "palette": {
+      "popup": {
+        "background": "#252e39"
+      },
+      "button": {
+        "background": "#217dbb"
+      }
+    },
+    "theme": "classic",
+    "position": "bottom-right"
+  })});
+</script> </head> <body class=blog> <header id=main_header> <div class=main-logo> <a href="/"><img src="../../../../../images/logo-cd52bd68.png"/> </a> </div> <div class=container> <section class=center> <h1>Headless CMS fun with Phoenix LiveView and Airtable (pt. 2)</h1> <h3></h3> <div class=meta-data> <hr> posted Jul 11, 2020 on <a class=tag href="/blog/tags/elixir.html">elixir</a> <a class=tag href="/blog/tags/phoenix.html">phoenix</a> <a class=tag href="/blog/tags/liveview.html">liveview</a> </div> </section> </div> </header> <section id=main_content> <div class=container> <section> <article> <div class=index> <p>This post belongs to the <strong>Headless CMS fun with Phoenix LiveView and Airtable</strong> series.</p> <ol> <li><a href="/blog/2020/07/02/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-1">Introduction.</a></li> <li><a href="/blog/2020/07/11/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-2">The project set up and implementing the repository pattern.</a></li> <li>Coming soon...</li> </ol> <a href="https://phoenixcms.herokuapp.com/" target=_blank class=btn><i class="fa fa-cloud"></i> Live demo</a> <a href="https://github.com/bigardone/phoenix-cms" target=_blank><i class="fa fa-github"></i> Source code</a> </div> <p>In the <a href="blog/2020/07/02/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-1">previous part</a> of these series, we talked about what we are going to be building and its two main parts. Today, we will focus on the Phoenix application, but you need the Airtable base to follow up on the tutorial. Therefore, if you don&#39;t have an Airtable account, <a href="https://airtable.com/invite/r/uJ5KeMkl">sign up</a>, and click on the <em>Copy base</em> link located at the top right corner of the source base. Once you have imported it into your workspace, we can continue creating the Phoenix application.</p> <p><img class=center src="/images/blog/phoenix-cms-1/site-9d4bf02d.jpg"/></p> <h2>Creating the Phoenix application</h2> <p>Before generating the project scaffold, let&#39;s install the latest version of <a href="https://hex.pm/packages/phx_new">phx_new</a>, which by the time I&#39;m writing this part is <code>v1.5.3</code>.</p> <pre><code class="console">mix archive.install hex phx_new 1.5.3
+</code></pre> <p>Now we can generate the project by running the <code>mix phx.new</code> with the following options:</p> <pre><code class="console">mix phx.new phoenix_cms --no-ecto --no-gettext --no-dashboard --live
+</code></pre> <p>If you are not familiar with the options that we are using, here&#39;s a quick description of them:</p> <ul> <li><code>--no-ecto</code>: we are not using any database connection, so let&#39;s get rid of the Ecto files and configuration.</li> <li><code>--no-gettext</code>: we can also remove any translation-related dependency and files.</li> <li><code>--no-dashboard</code>: Phoenix has a brand new <a href="https://github.com/phoenixframework/phoenix_live_dashboard">live dashboard</a> where you can see all the metrics related to your application. We are going to be installing it, later on, so let&#39;s remove it for now.</li> <li><code>--live</code>: includes support for <a href="https://github.com/phoenixframework/phoenix_live_view">Phoenix LiveView</a>, which is essential for this project.</li> </ul> <p>Once the task finishes generating the project files and installing the necessary dependencies, I like to do some cleanup, removing the extra content that the generator creates for you, usually these <a href="https://github.com/bigardone/phoenix-cms/commit/cc718f7e2fff17a4126ab2cb4ef643ee25023ce7">CSS files and HTML</a>.</p> <h2>The Airtable client</h2> <p>Before continuing any further, let&#39;s define our domain entities, which are going to map the data stored in Airtable, starting with the <code>Content</code> struct which represents a content section, from the <a href="https://airtable.com/shribMafJ0mAR7nic/tblLCFjonKFPr4yiN/viwgxDq0PyWSRs8N4?blocks=hide">contents table</a>:</p> <pre><code class="elixir"># lib/phoenix_cms/content.ex
+
+defmodule PhoenixCms.Content do
+  alias __MODULE__
+
+  @type t :: %Content{
+          id: String.t(),
+          position: non_neg_integer,
+          type: String.t(),
+          title: String.t(),
+          content: String.t(),
+          image: String.t(),
+          styles: String.t()
+        }
+
+  defstruct [:id, :position, :type, :title, :content, :image, :styles]
+end
+</code></pre> <p>Let&#39;s continue by defining the <code>Article</code> struct, corresponding to the blog posts stored in the <a href="https://airtable.com/shribMafJ0mAR7nic/tbli19sQuKyiKOwVL/viwbGrlrj6obHy0jl?blocks=hide">articles table</a>:</p> <pre><code class="elixir"># lib/phoenix_cms/article.ex
+
+defmodule PhoenixCms.Article do
+  alias __MODULE__
+
+  @type t :: %Article{
+          id: String.t(),
+          slug: String.t(),
+          title: String.t(),
+          description: String.t(),
+          image: String.t(),
+          content: String.t(),
+          author: String.t(),
+          published_at: Date.t()
+        }
+
+  defstruct [:id, :slug, :title, :description, :image, :content, :author, :published_at]
+end
+</code></pre> <p>The next step is to request the data to Airtable, taking advantage of its API, and convert the received data into the domain entities we have just defined. To implement the HTTP client, let&#39;s add <a href="https://hex.pm/packages/tesla">Tesla</a> to the project&#39;s dependencies, and install them running <code>mix deps.get</code>.</p> <pre><code class="elixir"># mix.exs
+
+defmodule PhoenixCms.MixProject do
+  use Mix.Project
+
+  # ...
+  # ...
+
+
+  defp deps do
+    [
+      # ...
+
+      # Http client
+      {:tesla, &quot;~&gt; 1.3&quot;},
+      {:hackney, &quot;~&gt; 1.16.0&quot;}
+    ]
+  end
+
+  # ...
+end
+</code></pre> <p>Tesla suggests setting <code>hackney</code> as its default adapter, so let&#39;s go ahead and do that:</p> <pre><code class="elixir"># config/config.exs
+
+use Mix.Config
+
+# ...
+
+# Tesla configuration
+config :tesla, adapter: Tesla.Adapter.Hackney
+
+# ...
+</code></pre> <p>Once we have everything ready we can start implementing the client. When I have to use external services, such as Airtable, I like to separate any related logic in a different namespace, such as <code>Services</code>:</p> <pre><code class="elixir"># lib/services/airtable.ex
+
+defmodule Services.Airtable do
+  # We are going to implement the public interface in a minute...
+
+  defp client do
+    middleware = [
+      {Tesla.Middleware.BaseUrl, api_url() &lt;&gt; base_id()},
+      Tesla.Middleware.JSON,
+      Tesla.Middleware.Logger,
+      {Tesla.Middleware.Headers, [{&quot;authorization&quot;, &quot;Bearer &quot; &lt;&gt; api_key()}]}
+    ]
+
+    Tesla.client(middleware)
+  end
+
+  defp do_get(path) do
+    client()
+    |&gt; Tesla.get(path)
+    |&gt; case do
+      {:ok, %{status: 200, body: body}} -&gt;
+        {:ok, body}
+
+      {:ok, %{status: status}} -&gt;
+        {:error, status}
+
+      other -&gt;
+        other
+    end
+  end
+
+  defp api_url, do: Application.get_env(:phoenix_cms, __MODULE__)[:api_url]
+
+  defp api_key, do: Application.get_env(:phoenix_cms, __MODULE__)[:api_key]
+
+  defp base_id, do: Application.get_env(:phoenix_cms, __MODULE__)[:base_id]
+end
+</code></pre> <p>The <code>client</code> function returns a <code>Tesla.Client</code> using the following middleware:</p> <ul> <li><code>Tesla.Middleware.BaseUrl</code>, which sets the base URL for all the requests.</li> <li><code>Tesla.Middleware.JSON</code>, which encodes requests and decodes responses as JSON.</li> <li><code>Tesla.Middleware.Logger</code>, which logs requests and responses.</li> <li><code>Tesla.Middleware.Headers</code>, which sets headers for all requests, and in this particular case, the <code>authorization</code> header with the bearer token from Airtable.</li> </ul> <p>For the base URL, we need to set both the <code>api_url</code> and <code>base_id</code> keys in the application&#39;s configuration. The same happens for <code>api_key</code>:</p> <pre><code class="elixir"># config/config.exs
+
+use Mix.Config
+
+# ...
+
+
+# Airtable configuration
+config :phoenix_cms, Services.Airtable,
+  api_key: &quot;YOUR API KEY&quot;,
+  base_id: &quot;YOUR BASE ID&quot;,
+  api_url: &quot;https://api.airtable.com/v0/&quot;
+</code></pre> <p>You can find your <code>api_key</code> in your Airtable account page, and the <code>base_id</code> in your API documentation page.</p> <p>The <code>do_get</code> function takes a <code>path</code> and performs a <code>GET</code> request using the client. Since we don&#39;t want to deal with anything related to Tesla outside this module, it returns either a <code>{:ok, body}</code> or a <code>{:error, reason}</code> tuple. There&#39;s one thing left: to add the public interface, so let&#39;s go ahead and add two functions, one for getting all records from a table and the other for getting a table record by its ID:</p> <pre><code class="elixir"># lib/services/airtable.ex
+
+defmodule Services.Airtable do
+  def all(table), do: do_get(&quot;/#{table}&quot;)
+
+  def get(table, record_id), do: do_get(&quot;/#{table}/#{record_id}&quot;)
+
+  # ...
+end
+</code></pre> <p>Let&#39;s jump into <code>iex</code> and test the client, limiting the response to a single record:</p> <pre><code class="console">➜ iex -S mix
+Erlang/OTP 23 [erts-11.0.2] [source] [64-bit] [smp:8:8] [ds:8:8:10] [async-threads:1]
+
+Interactive Elixir (1.10.4) - press Ctrl+C to exit (type h() ENTER for help)
+iex(1)&gt; Services.Airtable.all(&quot;contents?maxRecords=1&quot;)
+[info] GET https://api.airtable.com/v0/YOUR_TABLE_ID/contents?maxRecords=1 -&gt; 200 (614.224 ms)
+[debug]
+&gt;&gt;&gt; REQUEST &gt;&gt;&gt;
+(Ommited request headers)
+
+&lt;&lt;&lt; RESPONSE &lt;&lt;&lt;
+(Ommited response headers)
+
+(Ommited response payload)
+{:ok,
+ %{
+   &quot;records&quot; =&gt; [
+     %{
+       &quot;createdTime&quot; =&gt; &quot;2020-07-01T05:27:44.000Z&quot;,
+       &quot;fields&quot; =&gt; %{
+         &quot;content&quot; =&gt; &quot;Lorem ipsum dolor sit amet, consectetur adipiscing elit&quot;,
+         &quot;id&quot; =&gt; &quot;feature_4&quot;,
+         &quot;image&quot; =&gt; [
+           %{
+             &quot;filename&quot; =&gt; &quot;pipe.png&quot;,
+             &quot;id&quot; =&gt; &quot;attJxlSNbmLRra4qx&quot;,
+             &quot;size&quot; =&gt; 11828,
+             &quot;thumbnails&quot; =&gt; %{
+               &quot;full&quot; =&gt; %{
+                 &quot;height&quot; =&gt; 3000,
+                 &quot;url&quot; =&gt; &quot;https://dl.airtable.com/.attachmentThumbnails/fe2e0dcd3e2a969f1816570e02dad366/7c9e2246&quot;,
+                 &quot;width&quot; =&gt; 3000
+               },
+               &quot;large&quot; =&gt; %{
+                 &quot;height&quot; =&gt; 512,
+                 &quot;url&quot; =&gt; &quot;https://dl.airtable.com/.attachmentThumbnails/2651c43ab85e28d2ba0c574f36ee7a1a/fe4a5495&quot;,
+                 &quot;width&quot; =&gt; 512
+               },
+               &quot;small&quot; =&gt; %{
+                 &quot;height&quot; =&gt; 36,
+                 &quot;url&quot; =&gt; &quot;https://dl.airtable.com/.attachmentThumbnails/0d717bf44d9552c7e25482496bc30c3c/6e29a1ad&quot;,
+                 &quot;width&quot; =&gt; 36
+               }
+             },
+             &quot;type&quot; =&gt; &quot;image/png&quot;,
+             &quot;url&quot; =&gt; &quot;https://dl.airtable.com/.attachments/70ff8a20d056c7dfb677f1fc6bc79771/abea3535/pipe.png&quot;
+           }
+         ],
+         &quot;position&quot; =&gt; 10,
+         &quot;title&quot; =&gt; &quot;Feature 4&quot;,
+         &quot;type&quot; =&gt; &quot;feature&quot;
+       },
+       &quot;id&quot; =&gt; &quot;rec7VPdanrfUyvYnw&quot;
+     }
+   ]
+ }}
+</code></pre> <p>It works! Now let&#39;s confirm that the <code>get/2</code> function works as well using the previous record ID:</p> <pre><code class="console">iex(2)&gt; Services.Airtable.get(&quot;contents&quot;, &quot;rec7VPdanrfUyvYnw&quot;)
+[info] GET https://api.airtable.com/v0/YOUR_TABLE_ID/contents/rec7VPdanrfUyvYnw -&gt; 200 (6455.924 ms)
+[debug]
+&gt;&gt;&gt; REQUEST &gt;&gt;&gt;
+(Ommited request headers)
+&lt;&lt;&lt; RESPONSE &lt;&lt;&lt;
+(Ommited response headers)
+
+(Ommited response payload)
+{:ok,
+ %{
+   &quot;createdTime&quot; =&gt; &quot;2020-07-01T05:27:44.000Z&quot;,
+   &quot;fields&quot; =&gt; %{
+     &quot;content&quot; =&gt; &quot;Lorem ipsum dolor sit amet, consectetur adipiscing elit&quot;,
+     &quot;id&quot; =&gt; &quot;feature_4&quot;,
+     &quot;image&quot; =&gt; [
+       %{
+         &quot;filename&quot; =&gt; &quot;pipe.png&quot;,
+         &quot;id&quot; =&gt; &quot;attJxlSNbmLRra4qx&quot;,
+         &quot;size&quot; =&gt; 11828,
+         &quot;thumbnails&quot; =&gt; %{
+           &quot;full&quot; =&gt; %{
+             &quot;height&quot; =&gt; 3000,
+             &quot;url&quot; =&gt; &quot;https://dl.airtable.com/.attachmentThumbnails/fe2e0dcd3e2a969f1816570e02dad366/7c9e2246&quot;,
+             &quot;width&quot; =&gt; 3000
+           },
+           &quot;large&quot; =&gt; %{
+             &quot;height&quot; =&gt; 512,
+             &quot;url&quot; =&gt; &quot;https://dl.airtable.com/.attachmentThumbnails/2651c43ab85e28d2ba0c574f36ee7a1a/fe4a5495&quot;,
+             &quot;width&quot; =&gt; 512
+           },
+           &quot;small&quot; =&gt; %{
+             &quot;height&quot; =&gt; 36,
+             &quot;url&quot; =&gt; &quot;https://dl.airtable.com/.attachmentThumbnails/0d717bf44d9552c7e25482496bc30c3c/6e29a1ad&quot;,
+             &quot;width&quot; =&gt; 36
+           }
+         },
+         &quot;type&quot; =&gt; &quot;image/png&quot;,
+         &quot;url&quot; =&gt; &quot;https://dl.airtable.com/.attachments/70ff8a20d056c7dfb677f1fc6bc79771/abea3535/pipe.png&quot;
+       }
+     ],
+     &quot;position&quot; =&gt; 10,
+     &quot;title&quot; =&gt; &quot;Feature 4&quot;,
+     &quot;type&quot; =&gt; &quot;feature&quot;
+   },
+   &quot;id&quot; =&gt; &quot;rec7VPdanrfUyvYnw&quot;
+ }}
+</code></pre> <p>Yay! The Airtable client is ready. However, we still have to convert the returned payload into the domain entities we created previously, and for that, we are going to make use of the <em>Repository pattern</em>.</p> <h3>The Repository pattern</h3> <p>This pattern provides an abstraction of the data layer, which decouples it from its source or persistence layer, making it accessible through a series of straightforward functions. The basic idea is to have a public interface as the primary repository module that relies on different adapters, using the most suitable one depending on the situation or environment. The two adapters that we are going to implement are:</p> <ul> <li>An HTTP adapter, powered by the <code>Services.Airtable</code> client, which we are going to be using while developing and in the production environment.</li> <li>A fake adapter that returns hardcoded results, which we can use in our tests, prevents unnecessary HTTP requests against Airtable&#39;s API.</li> </ul> <p>Let&#39;s go ahead and implement the main repository module:</p> <pre><code class="elixir"># lib/phoenix_cms/repo.ex
+
+defmodule PhoenixCms.Repo do
+  alias PhoenixCms.{Article, Content}
+
+  # Behaviour callbacks
+
+  @type entity_types :: Article.t() | Content.t()
+
+  @callback all(Article | Content) :: {:ok, [entity_types]} | {:error, term}
+  @callback get(Article | Content, String.t()) :: {:ok, entity_types} | {:error, term}
+
+  # Sets the adapter
+  @adapter Application.get_env(:phoenix_cms, __MODULE__)[:adapter]
+
+  # Public API functions
+  def articles, do: @adapter.all(Article)
+
+  def contents, do: @adapter.all(Content)
+
+  def get_article(id), do: @adapter.get(Article, id)
+end
+</code></pre> <p>In this module we are doing three different things:</p> <ol> <li>First of all, it is describing the necessary callback functions that any module needs to implement to become a repository adapter. These functions are, <code>all</code> which receives an Article or Content atom and returns a <code>{:ok, items}</code> tuple on success or a <code>{:error, reason}</code> tuple on error.</li> <li>It&#39;s also setting the current <code>@adapter</code> module variable from the application configuration.</li> <li>Finally, it also implements three different functions, the public API of the repository, which internally use the corresponding adapter functions thanks to the previous dependency injection.</li> </ol> <p>Knowing the repository interface, let&#39;s implement the HTTP adapter that relies on the <code>Services.Airtable</code> client that we created before:</p> <pre><code class="elixir"># lib/phoenix_cms/repo/http.ex
+
+defmodule PhoenixCms.Repo.Http do
+  alias __MODULE__.Decoder
+  alias PhoenixCms.{Article, Content, Repo}
+  alias Services.Airtable
+
+  @behaviour Repo
+
+  @articles_table &quot;articles&quot;
+  @contents_table &quot;contents&quot;
+
+  @impl Repo
+  def all(Article), do: do_all(@articles_table)
+  def all(Content), do: do_all(@contents_table)
+
+  @impl Repo
+  def get(Article, id), do: do_get(@articles_table, id)
+  def get(Content, id), do: do_get(@contents_table, id)
+
+  defp do_all(table) do
+    case Airtable.all(table) do
+      {:ok, %{&quot;records&quot; =&gt; records}} -&gt;
+        {:ok, Decoder.decode(records)}
+
+      {:error, 404} -&gt;
+        {:error, :not_found}
+
+      other -&gt;
+        other
+    end
+  end
+
+  defp do_get(table, id) do
+    case Airtable.get(table, id) do
+      {:ok, response} -&gt;
+        {:ok, Decoder.decode(response)}
+
+      {:error, 404} -&gt;
+        {:error, :not_found}
+
+      other -&gt;
+        other
+    end
+  end
+end
+</code></pre> <p>The module implements the necessary callback functions from the <code>Repo</code> behavior, using the <code>Services.Airtable</code> client to fetch the data from the corresponding table. Since the behaviour specifies that both of these functions return <code>Article</code> or <code>Contents</code> structs, it uses a <code>Decoder</code> module to convert the raw HTTP response items into these domain data structures:</p> <pre><code class="elixir"># lib/phoenix_cms/repo/http/decoder.ex
+
+defmodule PhoenixCms.Repo.Http.Decoder do
+  @moduledoc false
+
+  alias PhoenixCms.{Article, Content}
+
+  def decode(response) when is_list(response) do
+    Enum.map(response, &amp;decode/1)
+  end
+
+  def decode(%{
+        &quot;id&quot; =&gt; id,
+        &quot;fields&quot; =&gt;
+          %{
+            &quot;slug&quot; =&gt; slug
+          } = fields
+      }) do
+    %Article{
+      id: id,
+      slug: slug,
+      title: Map.get(fields, &quot;title&quot;, &quot;&quot;),
+      description: Map.get(fields, &quot;description&quot;, &quot;&quot;),
+      image: decode_image(Map.get(fields, &quot;image&quot;)),
+      content: Map.get(fields, &quot;content&quot;, &quot;&quot;),
+      author: Map.get(fields, &quot;author&quot;, &quot;&quot;),
+      published_at: Date.from_iso8601!(Map.get(fields, &quot;published_at&quot;))
+    }
+  end
+
+  def decode(%{
+        &quot;fields&quot; =&gt;
+          %{
+            &quot;type&quot; =&gt; type
+          } = fields
+      }) do
+    %Content{
+      id: Map.get(fields, &quot;id&quot;, &quot;&quot;),
+      position: Map.get(fields, &quot;position&quot;, &quot;&quot;),
+      type: type,
+      title: Map.get(fields, &quot;title&quot;, &quot;&quot;),
+      content: Map.get(fields, &quot;content&quot;, &quot;&quot;),
+      image: decode_image(Map.get(fields, &quot;image&quot;, &quot;&quot;)),
+      styles: Map.get(fields, &quot;styles&quot;, &quot;&quot;)
+    }
+  end
+
+  defp decode_image([%{&quot;url&quot; =&gt; url}]), do: url
+  defp decode_image(_), do: &quot;&quot;
+end
+</code></pre> <p>Using pattern matching, it takes the necessary data to build the structs. Airtable does not send empty values, thus defaulting missing keys to empty strings. Let&#39;s jump back into <code>iex</code> and try it out:</p> <pre><code class="console">➜ iex -S mix
+Erlang/OTP 23 [erts-11.0.2] [source] [64-bit] [smp:8:8] [ds:8:8:10] [async-threads:1]
+
+Interactive Elixir (1.10.4) - press Ctrl+C to exit (type h() ENTER for help)
+iex(1)&gt; PhoenixCms.Repo.Http.all(PhoenixCms.Article)
+{:ok,
+ [
+   %PhoenixCms.Article{
+     author: &quot;author-1@phoenixcms.com&quot;,
+     ...
+     ...
+  ]
+}
+
+iex(2)&gt; PhoenixCms.Repo.Http.all(PhoenixCms.Content)
+{:ok,
+ [
+   %PhoenixCms.Content{
+     content: &quot;Lorem ipsum dolor sit amet, consectetur adipiscing elit&quot;,
+     id: &quot;feature_4&quot;,
+     ...
+     ...
+  ]
+}
+</code></pre> <p>It works as expected! Let&#39;s continue with the fake adapter definition:</p> <pre><code class="elixir"># lib/phoenix_cms/repo/fake.ex
+
+defmodule PhoenixCms.Repo.Fake do
+  @moduledoc false
+
+  alias PhoenixCms.{Article, Content, Repo}
+
+  @behaviour Repo
+
+  @impl Repo
+  def all(Content) do
+    {:ok,
+     [
+       %PhoenixCms.Content{
+         id: &quot;contents-1&quot;,
+         # ...
+       },
+       %PhoenixCms.Content{
+         id: &quot;contents-2&quot;,
+         # ...
+       }
+     ]}
+  end
+
+  def all(Article) do
+    {:ok,
+     [
+       %Article{
+         id: &quot;article-1&quot;,
+         # ..
+       },
+       %Article{
+         id: &quot;article-2&quot;,
+         # ..
+       }
+     ]}
+  end
+
+  def all(_), do: {:error, :not_found}
+
+  @impl Repo
+  def get(entity, id) when entity in [Article, Content] do
+    with {:ok, items} &lt;- all(entity),
+         {:ok, nil} &lt;- {:ok, Enum.find(items, &amp;(&amp;1.id == id))} do
+      {:error, :not_found}
+    end
+  end
+
+  def get(_, _), do: {:error, :not_found}
+end
+</code></pre> <p>This is the most basic implementation that we can make. However, since we are not going to be using it during the tutorial, it&#39;s good enough.</p> <p>We are missing something tho, which is configuring the adapter module we want to use in our different environments:</p> <pre><code class="elixir"># config/config.exs
+
+use Mix.Config
+
+# ...
+
+# Repo configuration
+config :phoenix_cms, PhoenixCms.Repo, adapter: PhoenixCms.Repo.Http
+</code></pre> <p>I don&#39;t want to extend the articles more than the necessary, so we are not going to be implementing any tests. Nevertheless, if you&#39;re going to write your own, add the fake adapter to the test environment configuration to prevent unnecessary HTTP requests against Airtable:</p> <pre><code class="elixir"># config/test.exs
+
+use Mix.Config
+
+# ...
+
+# Repo configuration
+config :phoenix_cms, PhoenixCms.Repo, adapter: PhoenixCms.Repo.Fake
+</code></pre> <p>And that&#39;s all for today. In the next part, we will focus on the front-end, rendering the <code>Phoenix.LiveView</code> pages using the data returned by the repository, and eventually discovering that this is not a very good solution, and thinking about a more performant one. In the meantime, you can check the end result <a href="https://phoenixcms.herokuapp.com/">here</a>, or have a look at the <a href="https://github.com/bigardone/phoenix-cms">source code</a>.</p> <p>Happy coding!</p> <div class=btn-wrapper> <a href="https://phoenixcms.herokuapp.com/" target=_blank class=btn><i class="fa fa-cloud"></i> Live demo</a> <a href="https://github.com/bigardone/phoenix-cms" target=_blank class=btn><i class="fa fa-github"></i> Source code</a> </div> <div id=disqus_thread></div> <script>
+  /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+  var disqus_shortname = 'codeloveandboards'; // required: replace example with your forum shortname
+  
+  /* * * DON'T EDIT BELOW THIS LINE * * */
+  (function() {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+  })();
+</script> <noscript> Please enable JavaScript to view the <a href='//disqus.com/?ref_noscript'>comments powered by Disqus.</a> </noscript> <a class=dsq-brlink href='//disqus.com'> comments powered by <span class=logo-disqus>Disqus</span> </a> </article> </section> </div> </section> <footer id=main_footer> <ul class=article-nav> <li class=previous> <a href="/blog/2020/07/02/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-1/"><h4>previous post</h4> <h3> Headless CMS fun with Phoenix LiveView and Airtable (pt. 1) </h3> <div class=meta-data> <hr> posted Jul 2, 2020 on elixir, phoenix, liveview </div> </a> </li> <li class=next> </li> </ul> <section> <div class=container> <div class=center> <ul> <li> <a href='/blog'>Archives</a> </li> <li> <a href='//feeds.feedburner.com/CodeLoveAndBoards' target=_blank>RSS</a> </li> </ul> Copyright © 2020 - Ricardo García Vega - Code, Love & Boards! </div> </div> </section> </footer> <script src="../../../../../javascripts/blog-5ddb0520.js"></script> <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  
+  ga('create', 'UA-37802122-1', 'codeloveandboards.com');
+  ga('send', 'pageview');
+</script> <script>
+  _StatHat.push(["_trackCount", "g2pcD9xou7DlR0DtndiwvSBBYU5k", 1.0]);
+</script> </body> </html>
