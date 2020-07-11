@@ -14,7 +14,7 @@
     <link rel="alternate" href="http://codeloveandboards.com/blog/2020/07/11/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-2/"/>
     <id>http://codeloveandboards.com/blog/2020/07/11/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-2/</id>
     <published>2020-07-11T07:54:00Z</published>
-    <updated>2020-07-11T09:54:59+02:00</updated>
+    <updated>2020-07-11T09:58:03+02:00</updated>
     <author>
       <name>Article Author</name>
     </author>
@@ -605,7 +605,7 @@ config :phoenix_cms, PhoenixCms.Repo, adapter: PhoenixCms.Repo.Fake
     <link rel="alternate" href="http://codeloveandboards.com/blog/2020/07/02/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-1/"/>
     <id>http://codeloveandboards.com/blog/2020/07/02/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-1/</id>
     <published>2020-07-03T05:19:00Z</published>
-    <updated>2020-07-11T09:55:16+02:00</updated>
+    <updated>2020-07-11T09:57:53+02:00</updated>
     <author>
       <name>Article Author</name>
     </author>
