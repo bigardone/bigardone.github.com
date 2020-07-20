@@ -14,7 +14,7 @@
     <link rel="alternate" href="http://codeloveandboards.com/blog/2020/07/19/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-3/"/>
     <id>http://codeloveandboards.com/blog/2020/07/19/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-3/</id>
     <published>2020-07-20T06:14:00Z</published>
-    <updated>2020-07-20T08:16:34+02:00</updated>
+    <updated>2020-07-20T08:28:43+02:00</updated>
     <author>
       <name>Article Author</name>
     </author>
@@ -520,7 +520,7 @@ end
 [info] GET https://api.airtable.com/v0/appXTw8FgG3h55fk6/articles/rec1osLptzsXfWg5g -&amp;gt; 200 (118.158 ms)
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;p&gt;As we can see, every time we visit a page, the view makes the corresponding HTTP request to get its necessary contents. Although working fine for a single user, if we had many users visiting our site, it could easily overcome Airtable&amp;#39;s rate limit of five requests per second. Not to mention the overhead that adds making a HTTP request on every page and what would happen if Airtable is down for whatever reason. In the next and last part of the series, we will look for a solution to all these problems, by implementing an automated cache mechanism using ETS. In the meantime, you can check the end result &lt;a href="https://phoenixcms.herokuapp.com/"&gt;here&lt;/a&gt;, or have a look at the &lt;a href="https://github.com/bigardone/phoenix-cms"&gt;source code&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;As we can see, every time we visit a page, the view makes the corresponding HTTP request to get its necessary contents. Although working fine for a single user, if we had many users visiting our site, it could easily overcome Airtable&amp;#39;s rate limit of five requests per second. Not to mention the overhead that adds making an HTTP request on every page and what would happen if Airtable is down for whatever reason. In the next and last part of the series, we will look for a solution to all these problems, by implementing an automated cache mechanism using ETS. In the meantime, you can check the end result &lt;a href="https://phoenixcms.herokuapp.com/"&gt;here&lt;/a&gt;, or have a look at the &lt;a href="https://github.com/bigardone/phoenix-cms"&gt;source code&lt;/a&gt;.&lt;/p&gt;
 
 &lt;p&gt;Happy coding!&lt;/p&gt;
 
