@@ -5,16 +5,16 @@
   <id>http://codeloveandboards.com/blog</id>
   <link href="http://codeloveandboards.com/blog"/>
   <link href="http://codeloveandboards.com/feed.xml" rel="self"/>
-  <updated>2020-07-11T07:54:00Z</updated>
+  <updated>2020-07-20T06:14:00Z</updated>
   <author>
     <name>Blog Author</name>
   </author>
   <entry>
-    <title>Headless CMS fun with Phoenix LiveView and Airtable (pt. 2)</title>
-    <link rel="alternate" href="http://codeloveandboards.com/blog/2020/07/11/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-2/"/>
-    <id>http://codeloveandboards.com/blog/2020/07/11/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-2/</id>
-    <published>2020-07-11T07:54:00Z</published>
-    <updated>2020-07-11T09:58:03+02:00</updated>
+    <title>Headless CMS fun with Phoenix LiveView and Airtable (pt. 3)</title>
+    <link rel="alternate" href="http://codeloveandboards.com/blog/2020/07/19/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-3/"/>
+    <id>http://codeloveandboards.com/blog/2020/07/19/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-3/</id>
+    <published>2020-07-20T06:14:00Z</published>
+    <updated>2020-07-20T08:16:34+02:00</updated>
     <author>
       <name>Article Author</name>
     </author>
@@ -23,6 +23,7 @@
   &lt;ol&gt;
     &lt;li&gt;&lt;a href="/blog/2020/07/02/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-1"&gt;Introduction.&lt;/a&gt;&lt;/li&gt;
     &lt;li&gt;&lt;a href="/blog/2020/07/11/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-2"&gt;The project set up and implementing the repository pattern.&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="/blog/2020/07/19/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-3"&gt;Content rendering using Phoenix LiveView.&lt;/a&gt;&lt;/li&gt;
     &lt;li&gt;Coming soon...&lt;/li&gt;
   &lt;/ol&gt;
 
@@ -30,7 +31,528 @@
   &lt;a href="https://github.com/bigardone/phoenix-cms" target="_blank"&gt;&lt;i class="fa fa-github"&gt;&lt;/i&gt; Source code&lt;/a&gt;
 &lt;/div&gt;
 
-&lt;p&gt;In the &lt;a href="blog/2020/07/02/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-1"&gt;previous part&lt;/a&gt; of these series, we talked about what we are going to be building and its two main parts. Today, we will focus on the Phoenix application, but you need the Airtable base to follow up on the tutorial. Therefore, if you don&amp;#39;t have an Airtable account, &lt;a href="https://airtable.com/invite/r/uJ5KeMkl"&gt;sign up&lt;/a&gt;, and click on the &lt;em&gt;Copy base&lt;/em&gt; link located at the top right corner of the source base. Once you have imported it into your workspace, we can continue creating the Phoenix application.&lt;/p&gt;
+&lt;p&gt;In the &lt;a href="/blog/2020/07/11/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-2"&gt;previous part&lt;/a&gt;, we generated the base application, and the Airtable API HTTP client to request both contents and blog articles. We also defined the &lt;code&gt;Article&lt;/code&gt; and &lt;code&gt;Content&lt;/code&gt; domain models, and implemented the repository pattern with two different adapters, one returning fake data for testing purposes, and the other using the Airtable HTTP client to request and convert the returned data into our domain. It&amp;#39;s time for some front-end fun, so let&amp;#39;s get cracking.&lt;/p&gt;
+
+&lt;p&gt;&lt;img class="center" src="/images/blog/phoenix-cms-1/site.jpg"/&gt;&lt;/p&gt;
+
+&lt;h2&gt;Rendering content using LiveView&lt;/h2&gt;
+
+&lt;p&gt;One thing before continuing, though. I&amp;#39;m using &lt;a href="https://bulma.io/"&gt;Bulma&lt;/a&gt;, which is very good looking and easy to use CSS framework for the UI styles. To use it, you need to add &lt;a href="https://github.com/bigardone/phoenix-cms/blob/50c2fa1c83df5ffb9d13b92e9f2742fe1e013b55/lib/phoenix_cms_web/templates/layout/root.html.leex#L8"&gt;this line&lt;/a&gt; in the &lt;code&gt;root.html.leex&lt;/code&gt; template, and &lt;a href="https://github.com/bigardone/phoenix-cms/blob/master/assets/css/app.scss"&gt;here&lt;/a&gt; you can find the CSS file with the custom styles.&lt;/p&gt;
+
+&lt;p&gt;What is &lt;a href="https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html"&gt;Phoenix.LiveView&lt;/a&gt;? The short definition would be: a library which provides rich, real-time user experiences with server-rendered HTML, without having to write almost any JS whatsoever, only using plain Elixir. But in reality, it is a bit more complicated.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href="LiveView"&gt;LiveView&lt;/a&gt; initially renders static HTML, which is fast and optimal for search and indexing engines. After the first rendering, it upgrades to a persistent connection, with its state, and is capable of listening to messages from both other processes and the browser, and update its state. Once the state is updated, it re-renders the parts of the HTML corresponding to these changes.&lt;/p&gt;
+
+&lt;p&gt;LiveView is currently so well integrated into Phoenix, that we can use them anywhere, including the router file as if they were controllers. Since we created the project with the &lt;code&gt;--live&lt;/code&gt; option, we already have everything we need to start using it, so let&amp;#39;s go ahead and edit the route file to add the three different live view that we need:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/phoenix_cms_web/router.ex
+
+defmodule PhoenixCmsWeb.Router do
+  use PhoenixCmsWeb, :router
+
+  # ...
+
+
+  scope &amp;quot;/&amp;quot;, PhoenixCmsWeb do
+    pipe_through :browser
+
+    live &amp;quot;/&amp;quot;, PageLive
+    live &amp;quot;/blog&amp;quot;, ArticlesLive
+    live &amp;quot;/blog/:id/:slug&amp;quot;, ShowArticleLive
+  end
+
+  # ...
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We have three different routes in our application:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;/&lt;/code&gt;: which renders the home page using the &lt;code&gt;PageLive&lt;/code&gt; live view.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;/blog&lt;/code&gt;: which renders all the articles using the &lt;code&gt;ArticlesLive&lt;/code&gt; live view.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;/blog/:id/:slug&lt;/code&gt;: which renders a given article using the &lt;code&gt;ShowArticleLive&lt;/code&gt; live view.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3&gt;Live navigation&lt;/h3&gt;
+
+&lt;p&gt;LiveView provides support for live navigation using the browser&amp;#39;s pushState API, making it possible to navigate between pages without full page reloads. Let&amp;#39;s use this feature by adding links to both the home and the blog page in the main navigation bar:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/phoenix_cms_web/templates/layout/root.html.leex
+
+&amp;lt;!DOCTYPE html&amp;gt;
+&amp;lt;html lang=&amp;quot;en&amp;quot;&amp;gt;
+  # ...
+
+    &amp;lt;nav class=&amp;quot;navbar has-shadow&amp;quot; role=&amp;quot;navigation&amp;quot; aria-label=&amp;quot;main navigation&amp;quot;&amp;gt;
+      &amp;lt;div class=&amp;quot;container&amp;quot;&amp;gt;
+        &amp;lt;div class=&amp;quot;navbar-brand&amp;quot;&amp;gt;
+          &amp;lt;%= live_patch &amp;quot;PhoenixCMS&amp;quot;, to: Routes.live_path(@conn, PhoenixCmsWeb.PageLive), class: &amp;quot;navbar-item has-text-weight-bold has-text-link&amp;quot; %&amp;gt;
+        &amp;lt;/div&amp;gt;
+        &amp;lt;div class=&amp;quot;navbar-end&amp;quot;&amp;gt;
+          &amp;lt;%= live_patch &amp;quot;Blog&amp;quot;, to: Routes.live_path(@conn, PhoenixCmsWeb.ArticlesLive), class: &amp;quot;navbar-item&amp;quot; %&amp;gt;
+        &amp;lt;/div&amp;gt;
+      &amp;lt;/div&amp;gt;
+    &amp;lt;/nav&amp;gt;
+
+    # ...
+&amp;lt;/html&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;a href="https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.Helpers.html#live_patch/2"&gt;live_patch&lt;/a&gt; renders a link which patches the current &lt;code&gt;LiveView&lt;/code&gt; with the one specified in the &lt;code&gt;to&lt;/code&gt; option, without reloading the whole page and adding a new entry in the browser&amp;#39;s history. Now that we can navigate through our views let&amp;#39;s implement the home page.&lt;/p&gt;
+
+&lt;h3&gt;The PageLive live view&lt;/h3&gt;
+
+&lt;p&gt;&lt;img class="center" src="/images/blog/phoenix-cms-1/home.png"/&gt;&lt;/p&gt;
+
+&lt;p&gt;Let&amp;#39;s start with the main home page:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/phoenix_cms_web/live/page_live.ex
+
+defmodule PhoenixCmsWeb.PageLive do
+  use PhoenixCmsWeb, :live_view
+
+  alias PhoenixCmsWeb.LiveEncoder
+
+  @impl true
+  def mount(_params, _session, socket) do
+    {:ok, assign_socket(socket)}
+  end
+
+  # Missing assign_socket function...
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;code&gt;mount/3&lt;/code&gt; function receives &lt;code&gt;params&lt;/code&gt;, the current &lt;code&gt;session&lt;/code&gt;, and the &lt;code&gt;socket&lt;/code&gt;, returning it with the assigned contents. Let&amp;#39;s implement the &lt;code&gt;assign_socket/1&lt;/code&gt; private function:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/phoenix_cms_web/live/page_live.ex
+
+defmodule PhoenixCmsWeb.PageLive do
+  use PhoenixCmsWeb, :live_view
+
+  # ...
+
+  defp assign_socket(socket) do
+    case fetch_contents() do
+      {:ok, contents} -&amp;gt;
+        socket
+        |&amp;gt; assign(:page_title, &amp;quot;Home&amp;quot;)
+        |&amp;gt; assign(:contents, contents)
+        |&amp;gt; put_flash(:error, nil)
+
+      _ -&amp;gt;
+        socket
+        |&amp;gt; assign(:page_title, &amp;quot;Home&amp;quot;)
+        |&amp;gt; assign(:contents, nil)
+        |&amp;gt; put_flash(:error, &amp;quot;Error fetching data&amp;quot;)
+    end
+  end
+
+  # Missing fetch_contents function...
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Depending on the result of the &lt;code&gt;fetch_contents/0&lt;/code&gt; function, it assigns &lt;code&gt;:contents&lt;/code&gt; or a flash &lt;code&gt;:error&lt;/code&gt;. The &lt;code&gt;fetch_contents/0&lt;/code&gt; looks like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/phoenix_cms_web/live/page_live.ex
+
+defmodule PhoenixCmsWeb.PageLive do
+  use PhoenixCmsWeb, :live_view
+
+  # ...
+
+  defp fetch_contents do
+    with {:ok, contents} &amp;lt;- PhoenixCms.contents() do
+      contents =
+        contents
+        |&amp;gt; Enum.sort_by(&amp;amp; &amp;amp;1.position)
+        |&amp;gt; LiveEncoder.contents()
+
+      {:ok, contents}
+    end
+  end
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This function calls &lt;code&gt;PhoenixCms.contents/0&lt;/code&gt;, which we haven&amp;#39;t implemented yet, sorts contents by &lt;code&gt;position&lt;/code&gt; and calls &lt;code&gt;LiveEncoder.contents/1&lt;/code&gt;, which converts these &lt;code&gt;Content&lt;/code&gt; structs into the payload which the live view template is expecting. When working with Pheonix apps, I like to delegate any business logic functions that need the &lt;code&gt;*Web&lt;/code&gt; namespace from the main module, in our case &lt;code&gt;PhoenixCms&lt;/code&gt;, acting as the public API between business logic and presentation. Let&amp;#39;s go ahead and expose the functions that we need:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/phoenix_cms.ex
+
+defmodule PhoenixCms do
+  defdelegate articles, to: PhoenixCms.Repo
+
+  defdelegate contents, to: PhoenixCms.Repo
+
+  defdelegate get_article(id), to: PhoenixCms.Repo
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Now we need to implement the &lt;code&gt;PhoenixCmsWeb.LiveEncoder&lt;/code&gt; module and convert the list of &lt;code&gt;PhoenixCms.Content&lt;/code&gt; into the payload that the live template needs to render:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/phoenix_cms_web/live/encoder.ex
+
+defmodule PhoenixCmsWeb.LiveEncoder do
+  alias PhoenixCms.Content
+
+  def contents(items) when is_list(items) do
+    {features, rest} =
+      items
+      |&amp;gt; Enum.map(&amp;amp;encode/1)
+      |&amp;gt; Enum.split_with(&amp;amp;(&amp;amp;1.type == &amp;quot;feature&amp;quot;))
+
+    rest
+    |&amp;gt; Enum.concat([%{features: features}])
+    |&amp;gt; List.flatten()
+  end
+
+  def encode(%Content{} = content) do
+    Map.take(content, [:id, :type, :title, :content, :image, :styles])
+  end
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We want to render every content in its HTML section node, except for content with type feature, which we want to group them in the same section. Therefore, we split the contents into two different lists, extracting the ones with type &lt;code&gt;feature&lt;/code&gt; and appending it as a map with a &lt;code&gt;features&lt;/code&gt; key.&lt;/p&gt;
+
+&lt;p&gt;To render HTML in &lt;code&gt;LiveView&lt;/code&gt;, you can either implement the &lt;code&gt;render/1&lt;/code&gt; callback function or create a &lt;code&gt;your_view_template.html.leex&lt;/code&gt; template in your live view folder. Let&amp;#39;s take the second choice:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/phoenix_cms_web/live/page_live.html.leex
+
+&amp;lt;%= if @contents do %&amp;gt;
+  &amp;lt;%= for content &amp;lt;- @contents, do: render_section(content) %&amp;gt;
+&amp;lt;% end %&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Iterating over the assigned contents, it calls the &lt;code&gt;render_section/1&lt;/code&gt; function, which we need to add to the &lt;code&gt;PageLive&lt;/code&gt; module:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/phoenix_cms_web/live/page_live.ex
+
+defmodule PhoenixCmsWeb.PageLive do
+  use PhoenixCmsWeb, :live_view
+
+  # ...
+
+  def render_section(%{type: &amp;quot;hero&amp;quot;} = content) do
+    Phoenix.View.render(PhoenixCmsWeb.PageView, &amp;quot;hero.html&amp;quot;, content: content)
+  end
+
+  def render_section(%{type: &amp;quot;text_and_image&amp;quot;} = content) do
+    Phoenix.View.render(PhoenixCmsWeb.PageView, &amp;quot;text_and_image.html&amp;quot;, content: content)
+  end
+
+  def render_section(%{features: content}) do
+    Phoenix.View.render(PhoenixCmsWeb.PageView, &amp;quot;features.html&amp;quot;, content: content)
+  end
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As we have three different content types (&lt;code&gt;hero&lt;/code&gt;, &lt;code&gt;text_and_image&lt;/code&gt;, and &lt;code&gt;feature&lt;/code&gt;), we want to give them their layout and style, so we render them using different templates:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/phoenix_cms_web/templates/page/hero.html.eex
+
+&amp;lt;section class=&amp;quot;hero is-link is-medium&amp;quot;&amp;gt;
+  &amp;lt;div class=&amp;quot;hero-body&amp;quot;&amp;gt;
+    &amp;lt;div class=&amp;quot;container&amp;quot;&amp;gt;
+      &amp;lt;header class=&amp;quot;hero__header&amp;quot;&amp;gt;
+        &amp;lt;h1 class=&amp;quot;title is-1 mb-6&amp;quot;&amp;gt;&amp;lt;%= @content.title %&amp;gt;&amp;lt;/h1&amp;gt;
+        &amp;lt;p class=&amp;quot;subtitle is-3 mb-6&amp;quot;&amp;gt;&amp;lt;%= @content.content %&amp;gt;&amp;lt;/p&amp;gt;
+      &amp;lt;/header&amp;gt;
+      &amp;lt;figure class=&amp;quot;image&amp;quot;&amp;gt;
+        &amp;lt;img class=&amp;quot;&amp;quot; src=&amp;quot;&amp;lt;%= @content.image %&amp;gt;&amp;quot; alt=&amp;quot;Placeholder image&amp;quot;&amp;gt;
+      &amp;lt;/figure&amp;gt;
+    &amp;lt;/div&amp;gt;
+  &amp;lt;/div&amp;gt;
+&amp;lt;/section&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/phoenix_cms_web/templates/page/text_and_image.html.eex
+
+&amp;lt;div class=&amp;quot;container text-and-image&amp;quot;&amp;gt;
+  &amp;lt;div class=&amp;quot;columns is-variable is-mobile is-8&amp;quot;&amp;gt;
+    &amp;lt;div class=&amp;quot;column is-half&amp;quot;&amp;gt;
+      &amp;lt;header class=&amp;quot;mb-4&amp;quot;&amp;gt;&amp;lt;h2 class=&amp;quot;title&amp;quot;&amp;gt;&amp;lt;%= @content.title %&amp;gt;&amp;lt;/h2&amp;gt;&amp;lt;/header&amp;gt;
+      &amp;lt;p class=&amp;quot;subtitle&amp;quot;&amp;gt;&amp;lt;%= @content.content %&amp;gt;&amp;lt;/p&amp;gt;
+    &amp;lt;/div&amp;gt;
+    &amp;lt;div class=&amp;quot;column is-half image-container&amp;quot;&amp;gt;
+      &amp;lt;figure class=&amp;quot;image&amp;quot;&amp;gt;
+        &amp;lt;img src=&amp;quot;&amp;lt;%= @content.image %&amp;gt;&amp;quot; alt=&amp;quot;Placeholder image&amp;quot;&amp;gt;
+      &amp;lt;/figure&amp;gt;
+    &amp;lt;/div&amp;gt;
+  &amp;lt;/div&amp;gt;
+&amp;lt;/div&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/phoenix_cms_web/templates/page/features.html.eex
+
+&amp;lt;section class=&amp;quot;section&amp;quot;&amp;gt;
+  &amp;lt;div class=&amp;quot;container mb-6 features&amp;quot;&amp;gt;
+    &amp;lt;header class=&amp;quot;mb-6&amp;quot;&amp;gt;
+      &amp;lt;h2 class=&amp;quot;title is-2&amp;quot;&amp;gt;Features&amp;lt;/h2&amp;gt;
+    &amp;lt;/header&amp;gt;
+    &amp;lt;div class=&amp;quot;columns is-multiline is-mobile is-8&amp;quot;&amp;gt;
+      &amp;lt;%= for item &amp;lt;- @content do %&amp;gt;
+        &amp;lt;div class=&amp;quot;column is-one-third feature&amp;quot;&amp;gt;
+          &amp;lt;figure class=&amp;quot;image feature__image&amp;quot;&amp;gt;
+            &amp;lt;img src=&amp;quot;&amp;lt;%= item.image %&amp;gt;&amp;quot; alt=&amp;quot;Placeholder image&amp;quot;&amp;gt;
+          &amp;lt;/figure&amp;gt;
+          &amp;lt;header class=&amp;quot;mb-4&amp;quot;&amp;gt;&amp;lt;h4 class=&amp;quot;title is-4&amp;quot;&amp;gt;&amp;lt;%= item.title %&amp;gt;&amp;lt;/h4&amp;gt;&amp;lt;/header&amp;gt;
+          &amp;lt;p class=&amp;quot;subtitle&amp;quot;&amp;gt;&amp;lt;%= item.content %&amp;gt;&amp;lt;/p&amp;gt;
+        &amp;lt;/div&amp;gt;
+      &amp;lt;% end %&amp;gt;
+    &amp;lt;/div&amp;gt;
+  &amp;lt;/div&amp;gt;
+&amp;lt;/section&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3&gt;The ArticlesLive live view&lt;/h3&gt;
+
+&lt;p&gt;&lt;img class="center" src="/images/blog/phoenix-cms-1/blog.png"/&gt;&lt;/p&gt;
+
+&lt;p&gt;To render the articles list corresponding to the &lt;code&gt;/blog&lt;/code&gt; route, let&amp;#39;s implement the &lt;code&gt;ArticlesLive&lt;/code&gt; module:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/phoenix_cms_web/live/articles_live.ex
+
+defmodule PhoenixCmsWeb.ArticlesLive do
+  use PhoenixCmsWeb, :live_view
+
+  alias PhoenixCmsWeb.LiveEncoder
+
+  @impl true
+  def mount(_params, _session, socket) do
+    {:ok, assign_socket(socket)}
+  end
+
+  defp assign_socket(socket) do
+    case fetch_articles() do
+      {:ok, articles} -&amp;gt;
+        socket
+        |&amp;gt; assign(:page_title, &amp;quot;Blog&amp;quot;)
+        |&amp;gt; assign(:articles, articles)
+        |&amp;gt; put_flash(:error, nil)
+
+      _ -&amp;gt;
+        socket
+        |&amp;gt; assign(:page_title, &amp;quot;Blog&amp;quot;)
+        |&amp;gt; assign(:articles, nil)
+        |&amp;gt; put_flash(:error, &amp;quot;Error fetching data&amp;quot;)
+    end
+  end
+
+  defp fetch_articles do
+    with {:ok, articles} &amp;lt;- PhoenixCms.articles() do
+      articles
+      |&amp;gt; Enum.sort_by(&amp;amp; &amp;amp;1.published_at)
+      |&amp;gt; LiveEncoder.articles()
+
+      {:ok, articles}
+    end
+  end
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Just like in the &lt;code&gt;PageLive&lt;/code&gt; module, it fetches the articles using &lt;code&gt;PhoenixCms.articles/0&lt;/code&gt;, which delegates its call to the &lt;code&gt;PhoenixCms.Repo&lt;/code&gt; module. If everything goes fine, it encodes the items and assigns them to the socket. This step is important because since the socket process stores the assigned elements in memory, we only want to store the necessary values:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/phoenix_cms_web/live/encoder.ex
+
+defmodule PhoenixCmsWeb.LiveEncoder do
+  alias PhoenixCms.{Article, Content }
+
+  # ...
+
+  def articles(articles) do
+    Enum.map(articles, &amp;amp;encode/1)
+  end
+
+  def encode(%Article{} = article) do
+    Map.take(article, [:id, :slug, :title, :description, :image, :author, :published_at])
+  end
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Note that we are not taking the full article &lt;code&gt;content&lt;/code&gt; for this page, because we don&amp;#39;t want to render it. Now let&amp;#39;s write its template:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/phoenix_cms_web/live/articles_live.html.leex
+
+&amp;lt;%= if @articles  do %&amp;gt;
+  &amp;lt;section class=&amp;quot;section&amp;quot;&amp;gt;
+    &amp;lt;div class=&amp;quot;container&amp;quot;&amp;gt;
+      &amp;lt;header class=&amp;quot;mb-6&amp;quot;&amp;gt;&amp;lt;h2 class=&amp;quot;title&amp;quot;&amp;gt;Blog&amp;lt;/h2&amp;gt;&amp;lt;/header&amp;gt;
+      &amp;lt;div class=&amp;quot;columns is-variable is-multiline is-mobile is-8&amp;quot;&amp;gt;
+        &amp;lt;%= for article &amp;lt;- @articles, do: render_article(@socket, article) %&amp;gt;
+      &amp;lt;/div&amp;gt;
+    &amp;lt;/div&amp;gt;
+  &amp;lt;/section&amp;gt;
+&amp;lt;% end %&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As we did with the contents list, we have to add the &lt;code&gt;render_article/2&lt;/code&gt; to the view:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/phoenix_cms_web/live/articles_live.ex
+
+defmodule PhoenixCmsWeb.ArticlesLive do
+  use PhoenixCmsWeb, :live_view
+
+  # ...
+
+
+  def render_article(socket, %{id: _id, slug: _slug} = article) do
+    Phoenix.View.render(PhoenixCmsWeb.PageView, &amp;quot;article.html&amp;quot;, socket: socket, article: article)
+  end
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;And we can&amp;#39;t forget about its article item template:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/phoenix_cms_web/templates/page/article.html.eex
+
+&amp;lt;%= live_patch to: Routes.live_path(@socket, PhoenixCmsWeb.ShowArticleLive, @article.id, @article.slug), class: &amp;quot;column is-half article-list__article&amp;quot; do %&amp;gt;
+  &amp;lt;img class=&amp;quot;article__image&amp;quot; src=&amp;quot;&amp;lt;%= @article.image %&amp;gt;&amp;quot;&amp;gt;
+  &amp;lt;header&amp;gt;
+    &amp;lt;h3 class=&amp;quot;title is-4&amp;quot;&amp;gt;&amp;lt;%= @article.title %&amp;gt;&amp;lt;/h3&amp;gt;
+    &amp;lt;h4 class=&amp;quot;subtitle is-5&amp;quot;&amp;gt;&amp;lt;%= @article.description %&amp;gt;&amp;lt;/h4&amp;gt;
+    &amp;lt;div class=&amp;quot;media&amp;quot;&amp;gt;
+      &amp;lt;div class=&amp;quot;media-left&amp;quot;&amp;gt;
+        &amp;lt;figure class=&amp;quot;image is-48x48&amp;quot;&amp;gt;
+          &amp;lt;img class=&amp;quot;is-rounded avatar&amp;quot; src=&amp;quot;&amp;lt;%= &amp;quot;https://avatars.dicebear.com/api/avataaars/#{@article.author}.svg&amp;quot; %&amp;gt;&amp;quot; alt=&amp;quot;Placeholder image&amp;quot;&amp;gt;
+        &amp;lt;/figure&amp;gt;
+      &amp;lt;/div&amp;gt;
+      &amp;lt;div class=&amp;quot;media-content&amp;quot;&amp;gt;
+        &amp;lt;p class=&amp;quot;title is-6&amp;quot;&amp;gt;&amp;lt;%= @article.author %&amp;gt;&amp;lt;/p&amp;gt;
+        &amp;lt;p class=&amp;quot;subtitle is-6&amp;quot;&amp;gt;&amp;lt;%= @article.published_at %&amp;gt;&amp;lt;/p&amp;gt;
+      &amp;lt;/div&amp;gt;
+    &amp;lt;/div&amp;gt;
+  &amp;lt;/header&amp;gt;
+&amp;lt;% end %&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Using the same &lt;code&gt;live_patch&lt;/code&gt; function as in the main navigation section, we create a link around the article summary to navigate to the article detail page, in which we can read the full version of the article.&lt;/p&gt;
+
+&lt;h3&gt;The ShowArticleLive live view&lt;/h3&gt;
+
+&lt;p&gt;&lt;img class="center" src="/images/blog/phoenix-cms-1/show-blog.png"/&gt;&lt;/p&gt;
+
+&lt;p&gt;Last but not least, this LiveView renders the full version of an article:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/phoenix_cms_web/live/show_article_live.ex
+
+defmodule PhoenixCmsWeb.ShowArticleLive do
+  use PhoenixCmsWeb, :live_view
+
+  @impl true
+  def mount(%{&amp;quot;id&amp;quot; =&amp;gt; id}, _session, socket) do
+    {:ok, assign_socket(socket, id)}
+  end
+
+  defp assign_socket(socket, id) do
+    case PhoenixCms.get_article(id) do
+      {:ok, article} -&amp;gt;
+        socket
+        |&amp;gt; assign(:page_title, article.title)
+        |&amp;gt; assign(:article, article)
+        |&amp;gt; put_flash(:error, nil)
+
+      {:error, _} -&amp;gt;
+        socket
+        |&amp;gt; assign(:page_title, &amp;quot;Blog&amp;quot;)
+        |&amp;gt; assign(:article, nil)
+        |&amp;gt; put_flash(:error, &amp;quot;Error fetching data&amp;quot;)
+    end
+  end
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Following the same pattern as in the previous views, it calls &lt;code&gt;PhoenixCms.get_article/1&lt;/code&gt; passing the article id received in its mount parameters, and assigning the result to the socket. The corresponding template looks like this:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/phoenix_cms_web/live/show_article_live.html.leex
+
+&amp;lt;%= if @article  do %&amp;gt;
+  &amp;lt;article class=&amp;quot;article&amp;quot;&amp;gt;
+    &amp;lt;div class=&amp;quot;container mt-6&amp;quot;&amp;gt;
+      &amp;lt;header class=&amp;quot;article__header&amp;quot;&amp;gt;
+        &amp;lt;h1 class=&amp;quot;title&amp;quot;&amp;gt;&amp;lt;%= @article.title %&amp;gt;&amp;lt;/h1&amp;gt;
+        &amp;lt;div class=&amp;quot;media&amp;quot;&amp;gt;
+          &amp;lt;div class=&amp;quot;media-left&amp;quot;&amp;gt;
+            &amp;lt;figure class=&amp;quot;image is-48x48&amp;quot;&amp;gt;
+              &amp;lt;img class=&amp;quot;is-rounded avatar&amp;quot; src=&amp;quot;&amp;lt;%= &amp;quot;https://avatars.dicebear.com/api/avataaars/#{@article.author}.svg&amp;quot; %&amp;gt;&amp;quot; alt=&amp;quot;Placeholder image&amp;quot;&amp;gt;
+            &amp;lt;/figure&amp;gt;
+          &amp;lt;/div&amp;gt;
+          &amp;lt;div class=&amp;quot;media-content&amp;quot;&amp;gt;
+            &amp;lt;p class=&amp;quot;title is-6&amp;quot;&amp;gt;&amp;lt;%= @article.author %&amp;gt;&amp;lt;/p&amp;gt;
+            &amp;lt;p class=&amp;quot;subtitle is-7&amp;quot;&amp;gt;&amp;lt;%= @article.published_at %&amp;gt;&amp;lt;/p&amp;gt;
+          &amp;lt;/div&amp;gt;
+        &amp;lt;/div&amp;gt;
+      &amp;lt;/header&amp;gt;
+      &amp;lt;figure class=&amp;quot;image main-image&amp;quot;&amp;gt;
+        &amp;lt;img src=&amp;quot;&amp;lt;%= @article.image %&amp;gt;&amp;quot;&amp;gt;
+      &amp;lt;/figure&amp;gt;
+      &amp;lt;p class=&amp;quot;subtitle is-italic&amp;quot;&amp;gt;&amp;lt;%= @article.description %&amp;gt;&amp;lt;/p&amp;gt;
+      &amp;lt;section class=&amp;quot;article__content&amp;quot;&amp;gt;
+        &amp;lt;%= raw(@article.content) %&amp;gt;
+      &amp;lt;/section&amp;gt;
+    &amp;lt;/div&amp;gt;
+  &amp;lt;/article&amp;gt;
+&amp;lt;% end %&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3&gt;Almost there&lt;/h3&gt;
+
+&lt;p&gt;Now that we have everything ready, let&amp;#39;s start the application and navigate through its pages, checking out the logs in the console:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="console"&gt;iex(2)&amp;gt; [info] GET https://api.airtable.com/v0/appXTw8FgG3h55fk6/articles -&amp;gt; 200 (653.723 ms)
+[info] GET /
+[info] Sent 200 in 20ms
+[info] GET https://api.airtable.com/v0/appXTw8FgG3h55fk6/contents -&amp;gt; 200 (153.722 ms)
+[info] GET /blog
+[info] Sent 200 in 426µs
+[info] GET https://api.airtable.com/v0/appXTw8FgG3h55fk6/articles -&amp;gt; 200 (218.254 ms)
+[info] GET /blog/rec1osLptzsXfWg5g/lorem-ipsum
+[info] Sent 200 in 384µs
+[info] GET https://api.airtable.com/v0/appXTw8FgG3h55fk6/articles/rec1osLptzsXfWg5g -&amp;gt; 200 (193.594 ms)
+[info] GET /blog
+[info] Sent 200 in 581µs
+[info] GET https://api.airtable.com/v0/appXTw8FgG3h55fk6/articles -&amp;gt; 200 (211.392 ms)
+[info] GET /
+[info] Sent 200 in 519µs
+[info] GET https://api.airtable.com/v0/appXTw8FgG3h55fk6/contents -&amp;gt; 200 (129.278 ms)
+[info] GET /blog
+[info] Sent 200 in 427µs
+[info] GET https://api.airtable.com/v0/appXTw8FgG3h55fk6/articles -&amp;gt; 200 (224.131 ms)
+[info] GET /blog/rec1osLptzsXfWg5g/lorem-ipsum
+[info] Sent 200 in 381µs
+[info] GET https://api.airtable.com/v0/appXTw8FgG3h55fk6/articles/rec1osLptzsXfWg5g -&amp;gt; 200 (118.158 ms)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;As we can see, every time we visit a page, the view makes the corresponding HTTP request to get its necessary contents. Although working fine for a single user, if we had many users visiting our site, it could easily overcome Airtable&amp;#39;s rate limit of five requests per second. Not to mention the overhead that adds making a HTTP request on every page and what would happen if Airtable is down for whatever reason. In the next and last part of the series, we will look for a solution to all these problems, by implementing an automated cache mechanism using ETS. In the meantime, you can check the end result &lt;a href="https://phoenixcms.herokuapp.com/"&gt;here&lt;/a&gt;, or have a look at the &lt;a href="https://github.com/bigardone/phoenix-cms"&gt;source code&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Happy coding!&lt;/p&gt;
+
+&lt;div class="btn-wrapper"&gt;
+  &lt;a href="https://phoenixcms.herokuapp.com/" target="_blank" class="btn"&gt;&lt;i class="fa fa-cloud"&gt;&lt;/i&gt; Live demo&lt;/a&gt;
+  &lt;a href="https://github.com/bigardone/phoenix-cms" target="_blank" class="btn"&gt;&lt;i class="fa fa-github"&gt;&lt;/i&gt; Source code&lt;/a&gt;
+&lt;/div&gt;
+</content>
+  </entry>
+  <entry>
+    <title>Headless CMS fun with Phoenix LiveView and Airtable (pt. 2)</title>
+    <link rel="alternate" href="http://codeloveandboards.com/blog/2020/07/11/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-2/"/>
+    <id>http://codeloveandboards.com/blog/2020/07/11/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-2/</id>
+    <published>2020-07-11T07:54:00Z</published>
+    <updated>2020-07-20T08:16:41+02:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;div class="index"&gt;
+  &lt;p&gt;This post belongs to the &lt;strong&gt;Headless CMS fun with Phoenix LiveView and Airtable&lt;/strong&gt; series.&lt;/p&gt;
+  &lt;ol&gt;
+    &lt;li&gt;&lt;a href="/blog/2020/07/02/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-1"&gt;Introduction.&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="/blog/2020/07/11/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-2"&gt;The project set up and implementing the repository pattern.&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="/blog/2020/07/19/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-3"&gt;Content rendering using Phoenix LiveView.&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;Coming soon...&lt;/li&gt;
+  &lt;/ol&gt;
+
+  &lt;a href="https://phoenixcms.herokuapp.com/" target="_blank" class="btn"&gt;&lt;i class="fa fa-cloud"&gt;&lt;/i&gt; Live demo&lt;/a&gt;
+  &lt;a href="https://github.com/bigardone/phoenix-cms" target="_blank"&gt;&lt;i class="fa fa-github"&gt;&lt;/i&gt; Source code&lt;/a&gt;
+&lt;/div&gt;
+
+&lt;p&gt;In the &lt;a href="/blog/2020/07/02/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-1"&gt;previous part&lt;/a&gt; of these series, we talked about what we are going to be building and its two main parts. Today, we will focus on the Phoenix application, but you need the Airtable base to follow up on the tutorial. Therefore, if you don&amp;#39;t have an Airtable account, &lt;a href="https://airtable.com/invite/r/uJ5KeMkl"&gt;sign up&lt;/a&gt;, and click on the &lt;em&gt;Copy base&lt;/em&gt; link located at the top right corner of the source base. Once you have imported it into your workspace, we can continue creating the Phoenix application.&lt;/p&gt;
 
 &lt;p&gt;&lt;img class="center" src="/images/blog/phoenix-cms-1/site.jpg"/&gt;&lt;/p&gt;
 
@@ -605,7 +1127,7 @@ config :phoenix_cms, PhoenixCms.Repo, adapter: PhoenixCms.Repo.Fake
     <link rel="alternate" href="http://codeloveandboards.com/blog/2020/07/02/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-1/"/>
     <id>http://codeloveandboards.com/blog/2020/07/02/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-1/</id>
     <published>2020-07-03T05:19:00Z</published>
-    <updated>2020-07-11T09:57:53+02:00</updated>
+    <updated>2020-07-20T08:16:46+02:00</updated>
     <author>
       <name>Article Author</name>
     </author>
@@ -614,6 +1136,7 @@ config :phoenix_cms, PhoenixCms.Repo, adapter: PhoenixCms.Repo.Fake
   &lt;ol&gt;
     &lt;li&gt;&lt;a href="/blog/2020/07/02/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-1"&gt;Introduction.&lt;/a&gt;&lt;/li&gt;
     &lt;li&gt;&lt;a href="/blog/2020/07/11/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-2"&gt;The project set up and implementing the repository pattern.&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="/blog/2020/07/19/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-3"&gt;Content rendering using Phoenix LiveView.&lt;/a&gt;&lt;/li&gt;
     &lt;li&gt;Coming soon...&lt;/li&gt;
   &lt;/ol&gt;
 
@@ -1417,145 +1940,6 @@ end
   &lt;a href="https://phoenix-liveview-ant-farm.herokuapp.com/" target="_blank" class="btn"&gt;&lt;i class="fa fa-cloud"&gt;&lt;/i&gt; Live demo&lt;/a&gt;
   &lt;a href="https://github.com/bigardone/phoenix-liveview-ant-farm" target="_blank" class="btn"&gt;&lt;i class="fa fa-github"&gt;&lt;/i&gt; Source code&lt;/a&gt;
 &lt;/div&gt;
-</content>
-  </entry>
-  <entry>
-    <title>Elm and Web Components</title>
-    <link rel="alternate" href="http://codeloveandboards.com/blog/2018/09/09/elm-and-web-components/"/>
-    <id>http://codeloveandboards.com/blog/2018/09/09/elm-and-web-components/</id>
-    <published>2018-09-09T08:35:00Z</published>
-    <updated>2018-09-09T18:13:14+02:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;p&gt;One of my favorite talks from &lt;a href="https://2018.elmeurope.org/"&gt;Elm Europe 2018&lt;/a&gt; conference was the one about &lt;a href="https://www.youtube.com/watch?v=tyFe9Pw6TVE"&gt;When and how to use Web Components with Elm&lt;/a&gt; by &lt;a href="https://github.com/lukewestby"&gt;Luke Westby&lt;/a&gt;, creator of the popular &lt;strong&gt;Elm&lt;/strong&gt; live editor &lt;a href="https://ellie-app.com/new"&gt;Ellie&lt;/a&gt;. In this fun and enlightening talk, he suggests an alternative way of using external JS libraries in &lt;strong&gt;Elm&lt;/strong&gt;, rather than relying on ports. Ports, although being the standard way of communicating with external JS in &lt;strong&gt;Elm&lt;/strong&gt;, might not be the right tool for some particular situations, especially when your application grows and you need to handle a significant amount of them. The alternative way he exposes is using &lt;a href="https://developer.mozilla.org/en-US/docs/Web/Web_Components"&gt;Web Components&lt;/a&gt;, which is &lt;em&gt;a suite of different technologies allowing you to create reusable custom elements — with their functionality encapsulated away from the rest of your code — and utilize them in your web apps&lt;/em&gt;. This solution blew up my mind, so I couldn&amp;#39;t resist trying it out myself, and I had the perfect project for it :)&lt;/p&gt;
-
-&lt;h3&gt;Revisiting Phoenix &amp;amp; Elm landing page&lt;/h3&gt;
-
-&lt;p&gt;Some months ago I did a small tutorial about &lt;a href="/blog/2017/12/02/phoenix-elm-landing-page-pt-1"&gt;creating a landing page with Phoenix and Elm&lt;/a&gt;, in which we added &lt;a href="https://developers.google.com/recaptcha/"&gt;Google reCAPTCHA&lt;/a&gt; to add security to the subscription form. Both the initialization and passing the response token are handled using ports, which makes it the perfect candidate for being a custom Web Component. Let&amp;#39;s add the definition of the custom element:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="javascript"&gt;// assets/js/components/recaptcha.
-
-export default class Recaptcha extends HTMLElement {
-  constructor() {
-    const self = super();
-
-    self._grecaptcha = null;
-    self._token = null;
-
-    return self;
-  }
-
-  connectedCallback() {
-    this._grecaptcha = grecaptcha.render(this, {
-      hl: &amp;#39;en&amp;#39;,
-      sitekey: &amp;#39;your-recaptcha-site-key&amp;#39;,
-      callback: (token) =&amp;gt; {
-        this._token = token;
-        this.dispatchEvent(new CustomEvent(&amp;#39;gotToken&amp;#39;));
-      },
-    });
-  }
-
-  set token(token) {
-    this._token = token;
-
-    if (this._grecaptcha !== null &amp;amp;&amp;amp; token === null) grecaptcha.reset(this._grecaptcha);
-  }
-
-  get token() {
-    return this._token;
-  }
-}
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;We are defining the &lt;code&gt;Recaptcha&lt;/code&gt; class which extends &lt;code&gt;HTMLElement&lt;/code&gt; and has the following functions:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;constructor&lt;/code&gt;, in which we define the internal properties of the component. In our case, we have &lt;code&gt;_grecaptcha&lt;/code&gt; to store the &lt;strong&gt;reCAPTCHA&lt;/strong&gt; plugin instance, and &lt;code&gt;_token&lt;/code&gt; to store the token received from Google while validating the user.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;connetedCallback&lt;/code&gt; is one of the &lt;a href="https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_custom_elements#Using_the_lifecycle_callbacks"&gt;lifecycle callbacks&lt;/a&gt; of any custom element, and in which we initialize the internal &lt;strong&gt;reCAPTCHA&lt;/strong&gt; plugin, and dispatches a custom &lt;code&gt;gotToken&lt;/code&gt; event with the value received from Google.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;set token()&lt;/code&gt; and &lt;code&gt;get token()&lt;/code&gt; which are the getter and setter functions for the &lt;code&gt;token&lt;/code&gt; property.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Once we have defined the &lt;code&gt;Recaptcha&lt;/code&gt; custom element, let&amp;#39;s edit the main &lt;code&gt;app.js&lt;/code&gt; file to remove use it and also remove the unnecessary port&amp;#39;s functionality that we don&amp;#39;t need anymore:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="javascript"&gt;// assets/js/app.
-
-import Elm from &amp;#39;./elm/main&amp;#39;;
-import Recaptcha from &amp;#39;./components/recaptcha&amp;#39;;
-
-window.customElements.define(&amp;#39;g-recaptcha&amp;#39;, Recaptcha);
-
-window.onloadCallback = () =&amp;gt; {
-  const formContainer = document.querySelector(&amp;#39;#form_container&amp;#39;);
-
-  if (formContainer) {
-    Elm.Main.embed(formContainer);
-  }
-};
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;We register the custom element using &lt;code&gt;window.customElements.define&lt;/code&gt; which takes the &lt;code&gt;name&lt;/code&gt; (requires a dash on it) of the HTML node and the component definition, in our case &lt;code&gt;Recaptcha&lt;/code&gt;. From now on, we can add  our new &lt;code&gt;Recaptcha&lt;/code&gt; custom element by adding a &lt;code&gt;&amp;lt;g-recaptacha&amp;gt;&amp;lt;/g-recaptcha&amp;gt;&lt;/code&gt; tag, so let&amp;#39;s edit them Elm view module to remove the old div we were using to render the &lt;code&gt;reCAPTCHA&lt;/code&gt; component, and add the new tag:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elm"&gt;-- assets/elm/src/View.elm
-
-module View exposing (view)
-
--- ...
-
-formView : SubscribeForm -&amp;gt; Html Msg
-formView subscribeForm =
-        let
-            { fullName, email, recaptchaToken } =
-                    extractFormFields subscribeForm
-        -- ...
-        in
-        -- ...
-            , Html.div
-                [ Html.class &amp;quot;field&amp;quot; ]
-                [ Html.node &amp;quot;g-recaptcha&amp;quot;
-                    [ Html.id &amp;quot;recaptcha&amp;quot;
-                    , Html.property &amp;quot;token&amp;quot; &amp;lt;| encodeRecaptchaToken recaptchaToken
-                    , Html.on &amp;quot;gotToken&amp;quot; decodeGotToken
-                    ]
-                    []
-                , validationErrorView &amp;quot;recaptcha_token&amp;quot; validationErrors
-                ]
-                        , -- ...
-
-
-
-encodeRecaptchaToken : Maybe String -&amp;gt; Encode.Value
-encodeRecaptchaToken maybeRecaptchaToken =
-    case maybeRecaptchaToken of
-        Just recaptchaToken -&amp;gt;
-            Encode.string recaptchaToken
-
-        Nothing -&amp;gt;
-            Encode.null
-
-
-decodeGotToken : Decode.Decoder Msg
-decodeGotToken =
-    Decode.map SetRecaptchaToken &amp;lt;| Decode.at [ &amp;quot;target&amp;quot;, &amp;quot;token&amp;quot; ] &amp;lt;| Decode.string
-
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;To make the custom element work we need to do the following:
-- Define the new &lt;code&gt;g-recaptcha&lt;/code&gt; node using &lt;code&gt;Html.node&lt;/code&gt;.
-- Set the &lt;code&gt;token&lt;/code&gt; property with &lt;code&gt;Html.property&lt;/code&gt; which in the component uses internally the &lt;code&gt;set token(token)&lt;/code&gt; setter function we have defined previously.
-- Handle the custom &lt;code&gt;gotToken&lt;/code&gt; event we have also defined previously, which sets the token in the model after getting it back from the custom element in its &lt;code&gt;decodeGotToken&lt;/code&gt; decoder.&lt;/p&gt;
-
-&lt;p&gt;And, that&amp;#39;s it! If we run the application, everything should be working as before, yay!&lt;/p&gt;
-
-&lt;p&gt;&lt;img src="/images/blog/phoenix-elm-landing-page/final-result.gif"
-alt="Final result" style="background: #fff;" /&gt;&lt;/p&gt;
-
-&lt;h3&gt;Conclusion&lt;/h3&gt;
-
-&lt;p&gt;After watching Luke&amp;#39;s talk, I was looking forward to spending some free time playing around with &lt;strong&gt;Web Components&lt;/strong&gt; and checking by myself how they work and how they play with &lt;strong&gt;Elm&lt;/strong&gt;. After implementing the solution, and reviewing the code while writing this post, I have to admit that I  like a lot final result. Having all the functionality related to the component encapsulated in its own definition, and simply rendering it and managing messages using events as with any other HTML node is really cool, and this separation of concerns makes your &lt;strong&gt;Elm&lt;/strong&gt; code cleaner and easier to understand and maintain. Although it surely has some drawbacks like browser compatibility (which you can fix using a proper polyfill), I&amp;#39;m going to start using this solution in my current and future projects to explore its benefits and possible limitations more deeply. If you are curious about the final result, &lt;a href="https://github.com/bigardone/phoenix-and-elm-landing-page/commit/4e9e88037ba7679e6b20fbb942b1b5379db6f418"&gt;here is the commit&lt;/a&gt; with the needed changes.&lt;/p&gt;
-
-&lt;p&gt;Happy coding!&lt;/p&gt;
 </content>
   </entry>
 </feed>
