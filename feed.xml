@@ -5,16 +5,16 @@
   <id>http://codeloveandboards.com/blog</id>
   <link href="http://codeloveandboards.com/blog"/>
   <link href="http://codeloveandboards.com/feed.xml" rel="self"/>
-  <updated>2020-07-20T06:14:00Z</updated>
+  <updated>2020-07-27T07:00:00Z</updated>
   <author>
     <name>Blog Author</name>
   </author>
   <entry>
-    <title>Headless CMS fun with Phoenix LiveView and Airtable (pt. 3)</title>
-    <link rel="alternate" href="http://codeloveandboards.com/blog/2020/07/19/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-3/"/>
-    <id>http://codeloveandboards.com/blog/2020/07/19/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-3/</id>
-    <published>2020-07-20T06:14:00Z</published>
-    <updated>2020-07-20T08:28:43+02:00</updated>
+    <title>Headless CMS fun with Phoenix LiveView and Airtable (pt. 4)</title>
+    <link rel="alternate" href="http://codeloveandboards.com/blog/2020/07/27/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-4/"/>
+    <id>http://codeloveandboards.com/blog/2020/07/27/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-4/</id>
+    <published>2020-07-27T07:00:00Z</published>
+    <updated>2020-07-27T15:30:58+02:00</updated>
     <author>
       <name>Article Author</name>
     </author>
@@ -24,7 +24,733 @@
     &lt;li&gt;&lt;a href="/blog/2020/07/02/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-1"&gt;Introduction.&lt;/a&gt;&lt;/li&gt;
     &lt;li&gt;&lt;a href="/blog/2020/07/11/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-2"&gt;The project set up and implementing the repository pattern.&lt;/a&gt;&lt;/li&gt;
     &lt;li&gt;&lt;a href="/blog/2020/07/19/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-3"&gt;Content rendering using Phoenix LiveView.&lt;/a&gt;&lt;/li&gt;
-    &lt;li&gt;Coming soon...&lt;/li&gt;
+    &lt;li&gt;&lt;a href="/blog/2020/07/27/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-4"&gt;Adding a cache to the repository and broadcasting changes to the views..&lt;/a&gt;&lt;/li&gt;
+  &lt;/ol&gt;
+
+  &lt;a href="https://phoenixcms.herokuapp.com/" target="_blank" class="btn"&gt;&lt;i class="fa fa-cloud"&gt;&lt;/i&gt; Live demo&lt;/a&gt;
+  &lt;a href="https://github.com/bigardone/phoenix-cms" target="_blank"&gt;&lt;i class="fa fa-github"&gt;&lt;/i&gt; Source code&lt;/a&gt;
+&lt;/div&gt;
+
+&lt;p&gt;In the &lt;a href="/blog/2020/07/19/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-3"&gt;previous part&lt;/a&gt;, we talked about Phoenix LiveView and implemented all the necessary views and templates to render all the content on our website. Each live view requests its contents to Airtable on its mount function, assigning them in its state. At first, it sounds like a proper implementation, similar to what we would have done using Ecto and a database to store the contents. However, the current solution has three main issues:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Using HTTP to request content against an external service adds an overhead to the initial page load, slowing down page loads.&lt;/li&gt;
+&lt;li&gt;If, for whatever reason, the external service is down, we won&amp;#39;t be able to display any content to our visitors.&lt;/li&gt;
+&lt;li&gt;Last but not least, Airtable is limited to 5 requests per second per base. If we exceed this rate, it will return a 429 status code, and we&amp;#39;ll need to wait 30 seconds before a new request succeeds.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;So, how can we solve these issues? The solution we are going to implement consists of adding an in-memory cache to the repository, which stores both the contents and the articles, and synchronizes every second with Airtable. This way, we remove the additional overhead, render content even if Airtable happens to be down, and we control the number of requests per second done in a single place. Let&amp;#39;s do this!&lt;/p&gt;
+
+&lt;p&gt;&lt;img class="center" src="/images/blog/phoenix-cms-1/site.jpg"/&gt;&lt;/p&gt;
+
+&lt;h2&gt;The repository cache&lt;/h2&gt;
+
+&lt;p&gt;Erlang/OTP/Elixir comes with a robust in-memory term storage, called &lt;a href="http://erlang.org/doc/man/ets.html"&gt;ETS&lt;/a&gt;, out of the box. It can store large amounts of data offering constant time data access. &lt;strong&gt;ETS&lt;/strong&gt; organizes data as a set of dynamic tables, consisting of tuples, containing a key and the stored term. Tables are created by a process that is its owner and deleted when this process dies. In Elixir, &lt;strong&gt;ETS&lt;/strong&gt; tables are often managed using a &lt;a href="https://hexdocs.pm/elixir/GenServer.html"&gt;GenServer&lt;/a&gt; process, and in our particular case, we need two different tables, ergo two different cache processes, one to store &lt;code&gt;PhoenixCms.Content&lt;/code&gt; terms and the other to store &lt;code&gt;PhoenixCms.Article&lt;/code&gt;. Knowing this, let&amp;#39;s implement the generic &lt;strong&gt;GenServer&lt;/strong&gt; cache definition:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/phoenix_cms/repo/cache.ex
+
+defmodule PhoenixCms.Repo.Cache do
+  use GenServer
+
+  @callback table_name :: atom
+  @callback start_link(keyword) :: GenServer.on_start()
+
+  @impl GenServer
+  def init(name) do
+    name
+    |&amp;gt; table_for()
+    |&amp;gt; :ets.new([:ordered_set, :protected, :named_table])
+
+    {:ok, %{name: name}}
+  end
+
+  defp table_for(name), do: apply(name, :table_name, [])
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This module defines the behavior that any cache process must fulfill, which is initially a &lt;code&gt;table_name/0&lt;/code&gt; function, which returns the ETS table name for that cache and a &lt;code&gt;start_link/1&lt;/code&gt; function, which defines how the cache process starts. The module also defines the generic logic of a cache process, like the &lt;code&gt;init/1&lt;/code&gt; function, which using &lt;code&gt;name&lt;/code&gt; with the &lt;code&gt;private table_for/1&lt;/code&gt; function, gets the table name, depending on the current cache module, and creates the ETS table using the following parameters:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;name&lt;/code&gt;, an atom representing the table&amp;#39;s name, in our case &lt;code&gt;:articles&lt;/code&gt; or &lt;code&gt;:contents&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;:ordered_set&lt;/code&gt;, which specifies the type of the table, in our case, an ordered set that contains a value per unique key.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;:protected&lt;/code&gt;, which sets the access control, in our case read is available for all processes, but write operations are permitted only from the owner process, avoiding race conditions.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;:named_table&lt;/code&gt;, makes the table accessible by name instead of the by its PID.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Finally, it sets the initial process state to a map containing the cache module name, which we&amp;#39;ll use later on. Now let&amp;#39;s define the specific cache modules:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/phoenix_cms/article/cache.ex
+
+defmodule PhoenixCms.Article.Cache do
+  alias PhoenixCms.Repo.Cache
+
+  @behaviour Cache
+
+  def child_spec(opts) do
+    %{
+      id: __MODULE__,
+      start: {__MODULE__, :start_link, [opts]},
+      type: :worker,
+      restart: :permanent,
+      shutdown: 500
+    }
+  end
+
+  @impl Cache
+  def table_name, do: :articles
+
+  @impl Cache
+  def start_link(_args) do
+    GenServer.start_link(Cache, __MODULE__, name: __MODULE__)
+  end
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/phoenix_cms/content/cache.ex
+
+defmodule PhoenixCms.Content.Cache do
+  alias PhoenixCms.Repo.Cache
+
+  @behaviour Cache
+
+  def child_spec(opts) do
+    %{
+      id: __MODULE__,
+      start: {__MODULE__, :start_link, [opts]},
+      type: :worker,
+      restart: :permanent,
+      shutdown: 500
+    }
+  end
+
+  @impl Cache
+  def table_name, do: :contents
+
+  @impl Cache
+  def start_link(_args) do
+    GenServer.start_link(Cache, __MODULE__, name: __MODULE__)
+  end
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Both modules fulfill the &lt;code&gt;PhoenixCms.Repo.Cache&lt;/code&gt; behavior by implementing the &lt;code&gt;table_name/0&lt;/code&gt; function, which returns the corresponding table name, and &lt;code&gt;start_link/1&lt;/code&gt;, starts a new &lt;code&gt;PhoenixCms.Repo.Cache&lt;/code&gt; &lt;code&gt;GenServer&lt;/code&gt;, and uses their module name to set the initial state and name the process. To start both cache processes when the application starts, let&amp;#39;s add them to the main supervision tree:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/phoenix_cms/application.ex
+
+defmodule PhoenixCms.Application do
+  use Application
+
+  def start(_type, _args) do
+    children = [
+      # ...
+
+      # Start cache processes
+      PhoenixCms.Article.Cache,
+      PhoenixCms.Content.Cache,
+
+      # ...
+    ]
+
+    opts = [strategy: :one_for_one, name: PhoenixCms.Supervisor]
+    Supervisor.start_link(children, opts)
+  end
+
+  # ...
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;To check that everything works fine, let&amp;#39;s start IEX and get the cache processes info:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="console"&gt;➜ iex -S mix
+Erlang/OTP 23 [erts-11.0.2] [source] [64-bit] [smp:8:8] [ds:8:8:10] [async-threads:1]
+
+Interactive Elixir (1.10.4) - press Ctrl+C to exit (type h() ENTER for help)
+iex(1)&amp;gt; PhoenixCms.Article.Cache |&amp;gt; GenServer.whereis() |&amp;gt; Process.info()
+[
+  registered_name: PhoenixCms.Article.Cache,
+  current_function: {:gen_server, :loop, 7},
+  initial_call: {:proc_lib, :init_p, 5},
+  status: :waiting,
+  message_queue_len: 0,
+  links: [#PID&amp;lt;0.318.0&amp;gt;],
+  dictionary: [
+    &amp;quot;$initial_call&amp;quot;: {PhoenixCms.Repo.Cache, :init, 1},
+    &amp;quot;$ancestors&amp;quot;: [PhoenixCms.Supervisor, #PID&amp;lt;0.317.0&amp;gt;]
+  ],
+  trap_exit: false,
+  error_handler: :error_handler,
+  priority: :normal,
+  group_leader: #PID&amp;lt;0.316.0&amp;gt;,
+  total_heap_size: 233,
+  heap_size: 233,
+  stack_size: 12,
+  reductions: 44,
+  garbage_collection: [
+    max_heap_size: %{error_logger: true, kill: true, size: 0},
+    min_bin_vheap_size: 46422,
+    min_heap_size: 233,
+    fullsweep_after: 65535,
+    minor_gcs: 0
+  ],
+  suspending: []
+]
+iex(2)&amp;gt; PhoenixCms.Content.Cache |&amp;gt; GenServer.whereis() |&amp;gt; Process.info()
+[
+  registered_name: PhoenixCms.Content.Cache,
+  current_function: {:gen_server, :loop, 7},
+  initial_call: {:proc_lib, :init_p, 5},
+  status: :waiting,
+  message_queue_len: 0,
+  links: [#PID&amp;lt;0.318.0&amp;gt;],
+  dictionary: [
+    &amp;quot;$initial_call&amp;quot;: {PhoenixCms.Repo.Cache, :init, 1},
+    &amp;quot;$ancestors&amp;quot;: [PhoenixCms.Supervisor, #PID&amp;lt;0.317.0&amp;gt;]
+  ],
+  trap_exit: false,
+  error_handler: :error_handler,
+  priority: :normal,
+  group_leader: #PID&amp;lt;0.316.0&amp;gt;,
+  total_heap_size: 233,
+  heap_size: 233,
+  stack_size: 12,
+  reductions: 44,
+  garbage_collection: [
+    max_heap_size: %{error_logger: true, kill: true, size: 0},
+    min_bin_vheap_size: 46422,
+    min_heap_size: 233,
+    fullsweep_after: 65535,
+    minor_gcs: 0
+  ],
+  suspending: []
+]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Since the processes are up, both &lt;code&gt;ETS&lt;/code&gt; tables must have been created as well, let&amp;#39;s confirm it:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="console"&gt;iex(3)&amp;gt; :ets.info(:articles)
+[
+  id: #Reference&amp;lt;0.2785746427.4276748289.246266&amp;gt;,
+  decentralized_counters: false,
+  read_concurrency: false,
+  write_concurrency: false,
+  compressed: false,
+  memory: 145,
+  owner: #PID&amp;lt;0.326.0&amp;gt;,
+  heir: :none,
+  name: :articles,
+  size: 0,
+  node: :nonode@nohost,
+  named_table: true,
+  type: :ordered_set,
+  keypos: 1,
+  protection: :protected
+]
+iex(4)&amp;gt; :ets.info(:contents)
+[
+  id: #Reference&amp;lt;0.2785746427.4276748289.246267&amp;gt;,
+  decentralized_counters: false,
+  read_concurrency: false,
+  write_concurrency: false,
+  compressed: false,
+  memory: 145,
+  owner: #PID&amp;lt;0.327.0&amp;gt;,
+  heir: :none,
+  name: :contents,
+  size: 0,
+  node: :nonode@nohost,
+  named_table: true,
+  type: :ordered_set,
+  keypos: 1,
+  protection: :protected
+]
+iex(5)&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;There we go! And if we check both cache processes PIDs, they should match their corresponding table owner&amp;#39;s PID:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="console"&gt;iex(5)&amp;gt; GenServer.whereis(PhoenixCms.Article.Cache)
+#PID&amp;lt;0.326.0&amp;gt;
+iex(6)&amp;gt; GenServer.whereis(PhoenixCms.Content.Cache)
+#PID&amp;lt;0.327.0&amp;gt;
+iex(7)&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Let&amp;#39;s add some helper functions to the cache module to get and set data from the corresponding ETS table:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/phoenix_cms/repo/cache.ex
+
+defmodule PhoenixCms.Repo.Cache do
+  # ...
+
+  def all(cache) do
+    cache
+    |&amp;gt; table_for()
+    |&amp;gt; :ets.tab2list()
+    |&amp;gt; case do
+      values when values != [] -&amp;gt;
+        {:ok, Enum.map(values, &amp;amp;elem(&amp;amp;1, 1))}
+
+      _ -&amp;gt;
+        {:error, :not_found}
+    end
+  end
+
+  def get(cache, key) do
+    cache
+    |&amp;gt; table_for()
+    |&amp;gt; :ets.lookup(key)
+    |&amp;gt; case do
+      [{^key, value} | _] -&amp;gt;
+        {:ok, value}
+
+      _ -&amp;gt;
+        {:error, :not_found}
+    end
+  end
+
+  def set_all(cache, items), do: GenServer.cast(cache, {:set_all, items})
+
+  def set(cache, id, item), do: GenServer.cast(cache, {:set, id, item})
+
+  # ...
+
+  @impl GenServer
+  def handle_cast({:set_all, items}, %{name: name} = state)
+      when is_list(items) do
+    Enum.each(items, &amp;amp;:ets.insert(table_for(name), {&amp;amp;1.id, &amp;amp;1}))
+
+    {:noreply, state}
+  end
+
+  def handle_cast({:set, id, item}, %{name: name} = state) do
+    name
+    |&amp;gt; table_for()
+    |&amp;gt; :ets.insert({id, item})
+
+    {:noreply, state}
+  end
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Let&amp;#39;s take a closer look at them:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;all/1&lt;/code&gt; takes the cache module, which uses to get the table name and calls &lt;code&gt;:ets.tab2list/1&lt;/code&gt;, which returns all the entry tuples of a given table, which maps to a list of values, or an &lt;code&gt;{:error, :not_found}&lt;/code&gt; if empty.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;get/2&lt;/code&gt; receives the cache module and a key, and does the same as &lt;code&gt;all/1&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;set_all/2&lt;/code&gt; and &lt;code&gt;set/3&lt;/code&gt; are different tho. Since we configured the table as protected, we can only insert data from the process which created the table. Therefore, it sends the corresponding messages to the processes using &lt;code&gt;GensServer.cast/2&lt;/code&gt;. It implements both message callback functions, which insert all of the given entries or a given entry by its ID correspondently.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Let&amp;#39;s refactor the repository module to include the cache in its logic, and avoid unnecessary HTTP requests when the data already exists in the cache:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/phoenix_cms/repo.ex
+
+defmodule PhoenixCms.Repo do
+  alias PhoenixCms.{Article, Content}
+  # ...
+
+  def articles(skip_cache \\ false)
+  def articles(false), do: all(Article)
+  def articles(true), do: @adapter.all(Article)
+
+  def contents(skip_cache \\ false)
+  def contents(false), do: all(Content)
+  def contents(true), do: @adapter.all(Content)
+
+  def get_article(id), do: get(Article, id)
+
+  defp all(entity) do
+    with cache &amp;lt;- cache_for(entity),
+         {:error, :not_found} &amp;lt;- Cache.all(cache),
+         {:ok, items} &amp;lt;- @adapter.all(entity) do
+      Cache.set_all(cache, items)
+      {:ok, items}
+    end
+  end
+
+  defp get(entity, id) do
+    with cache &amp;lt;- cache_for(entity),
+         {:error, :not_found} &amp;lt;- Cache.get(cache, id),
+         {:ok, item} &amp;lt;- @adapter.get(entity, id) do
+      Cache.set(cache, id, item)
+      {:ok, item}
+    end
+  end
+
+  defp cache_for(Article), do: PhoenixCms.Article.Cache
+  defp cache_for(Content), do: PhoenixCms.Content.Cache
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We are adding a new &lt;code&gt;skip_cache&lt;/code&gt; parameter that when is &lt;code&gt;false&lt;/code&gt;, instead of directly calling the adapter in the public functions, now it checks if the requested items exist in the cache, calling the adapter if not and populating them. Hence, the next request has the data already cached. When it is &lt;code&gt;true&lt;/code&gt;, it uses the adapter directly, skipping the cache, and we&amp;#39;ll use this variation in a minute. Let&amp;#39;s navigate through the application checking out the logs:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="console"&gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt; Homepage first visit
+[info] GET /
+[info] GET https://api.airtable.com/v0/appXTw8FgG3h55fk6/contents -&amp;gt; 200 (663.964 ms)
+[info] Sent 200 in 834ms
+
+&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt; Blog page first visit
+[info] GET /blog
+[info] Sent 200 in 400µs
+[info] GET https://api.airtable.com/v0/appXTw8FgG3h55fk6/articles -&amp;gt; 200 (225.874 ms)
+
+&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt; Blog detail first visit
+[info] GET /blog/rec1osLptzsXfWg5g/lorem-ipsum
+[info] Sent 200 in 422µs
+
+&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt; Homepage second visit
+[info] GET /
+[info] Sent 200 in 456µs
+
+&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt; Blog page second visit
+[info] GET /blog
+[info] Sent 200 in 531µs
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The first time we visit the home and blog pages, it performs the corresponding HTTP requests against Airtable. However, when visiting an article page, since the article has already been cached from the previous request, it does not need to request it. The same happens when we visit both the home and blog pages a second time.&lt;/p&gt;
+
+&lt;h3&gt;Synchronizing the caches&lt;/h3&gt;
+
+&lt;p&gt;Although the current cache implementation covers the issues that we have using the HTTP client directly, we now face a new problem. If we update any data stored in Airtable, the changes will not be reflected in our application, as the cache is already populated. Currently, Airtable does not have any mechanism to report data changes, such as webhooks. Nevertheless, we can achieve this using services like Zapier, but it only works for new rows or row deletions, not for updates, which is not suitable for our needs. Therefore, let&amp;#39;s build or own cache synchronization solution, which is very easy, thanks to Elixir.&lt;/p&gt;
+
+&lt;p&gt;The main idea is to have two new processes, one for each cache, that periodically make requests against Airtable, updating their corresponding cache if there are new changes. Let&amp;#39;s define the new module:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/phoenix_cms/repo/cache/synchronizer.ex
+
+defmodule PhoenixCms.Repo.Cache.Synchronizer do
+  alias PhoenixCms.Repo.Cache
+
+  use GenServer
+
+  @refresh_time :timer.seconds(1)
+
+  def start_link(opts) do
+    GenServer.start_link(__MODULE__, opts)
+  end
+
+  @impl GenServer
+  def init(opts) do
+    cache = Keyword.fetch!(opts, :cache)
+
+    send(self(), :sync)
+
+    {:ok, cache}
+  end
+
+  @impl GenServer
+  def handle_info(:sync, cache) do
+    with {:ok, items} &amp;lt;- apply(cache, :fetch_fn, []).() do
+      Cache.set_all(cache, items)
+    end
+
+    schedule(cache)
+
+    {:noreply, cache}
+  end
+
+  defp schedule(cache) do
+    Process.send_after(self(), :sync, @refresh_time)
+  end
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;One more time, we are using &lt;a href="https://hexdocs.pm/elixir/GenServer.html"&gt;GenServer&lt;/a&gt; for the new process. Its&lt;code&gt;init/1&lt;/code&gt; function takes the mandatory cache key from the options, which can contain either &lt;code&gt;PhoenixCms.Article.Cache&lt;/code&gt; or &lt;code&gt;PhoenixCms.Content.Cache&lt;/code&gt;, and sets it as the initial state of the process. It also sends itself a &lt;code&gt;:sync&lt;/code&gt; message, which handles in the &lt;code&gt;handle_info(:sync, cache)&lt;/code&gt; callback, applying the &lt;code&gt;:fetch_fn&lt;/code&gt; function to the cache module, and setting the items in the cache if the request succeeds. Finally, it calls the &lt;code&gt;schedule/1&lt;/code&gt; private function, which sends the &lt;code&gt;:sync&lt;/code&gt; message again after one second. So, we now have a process that requests the corresponding data to Airbrake every second, updating the corresponding cache table. Now we need to start these processes, so let&amp;#39;s refactor the cache module:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/phoenix_cms/repo/cache.ex
+
+defmodule PhoenixCms.Repo.Cache do
+  use GenServer
+
+  alias __MODULE__.Synchronizer
+
+  @callback fetch_fn :: fun
+
+  # ...
+
+  @impl GenServer
+  def init(name) do
+    Process.flag(:trap_exit, true)
+
+    name
+    |&amp;gt; table_for()
+    |&amp;gt; :ets.new([:ordered_set, :protected, :named_table])
+
+    {:ok, pid} = Synchronizer.start_link(cache: name)
+    ref = Process.monitor(pid)
+
+    {:ok, %{name: name, synchronizer_ref: ref}}
+  end
+
+  # ...
+
+  @impl GenServer
+  def handle_info(
+        {:DOWN, ref, :process, _object, _reason},
+        %{synchronizer_ref: ref, name: name} = state
+      ) do
+    {:ok, pid} = Synchronizer.start_link(cache: name)
+    ref = Process.monitor(pid)
+
+    {:noreply, %{state | synchronizer_ref: ref}}
+  end
+
+  def handle_info({:EXIT, _, _}, state) do
+    {:noreply, state}
+  end
+
+  # ...
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Once the cache process initializes, it creates the corresponding ETS table as it was doing before and starts its synchronizer process. Since the synchronizer process links to the cache process, it does the following:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;First of all, it traps exits, so if the synchronizer dies, it does not kill the cache process, implementing &lt;code&gt;handle_info({:EXIT, _, _}, state)&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;Secondly, it monitors the synchronizer process, storing the monitor ref in its state, so in case the synchronizer process dies, it spawns a new one in &lt;code&gt;handle_info( {:DOWN, ref, :process, _, _}, %{synchronizer_ref: ref)&lt;/code&gt;, so that the cache keeps up to date with its source of truth, which is Airtable.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Finally, we need to implement the &lt;code&gt;fetch_fn/0&lt;/code&gt; function in the cache modules:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/phoenix_cms/article/cache.ex
+
+defmodule PhoenixCms.Article.Cache do
+  alias PhoenixCms.{Repo, Repo.Cache}
+
+  @behaviour Cache
+
+  # ...
+
+  @impl Cache
+  def fetch_fn, do: fn -&amp;gt; Repo.articles(true) end
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/phoenix_cms/content/cache.ex
+
+defmodule PhoenixCms.Content.Cache do
+  alias PhoenixCms.{Repo, Repo.Cache}
+
+  @behaviour Cache
+
+  # ...
+
+  @impl Cache
+  def fetch_fn, do: fn -&amp;gt; Repo.contents(true) end
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Each function calls the corresponding repository, passing true as the &lt;code&gt;skip_cache&lt;/code&gt; parameter so that it always checks against Airtable. Let&amp;#39;s go back to IEX and start &lt;code&gt;:observer&lt;/code&gt; to check the application tree:&lt;/p&gt;
+
+&lt;p&gt;&lt;img class="center" src="/images/blog/phoenix-cms-1/application-tree.png"/&gt;&lt;/p&gt;
+
+&lt;p&gt;We can see both the &lt;code&gt;PhoenixCms.Article.Cache&lt;/code&gt; and &lt;code&gt;PhoenixCms.Content.Cache&lt;/code&gt; processes, each of them linked to their &lt;code&gt;PhoenixCms.Repo.Cache.Synchronizer&lt;/code&gt; process. And if we check the logs, we can see the following:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="console"&gt;iex(3)&amp;gt; [info] GET https://api.airtable.com/v0/appXTw8FgG3h55fk6/articles -&amp;gt; 200 (126.214 ms)
+[info] GET https://api.airtable.com/v0/appXTw8FgG3h55fk6/contents -&amp;gt; 200 (121.886 ms)
+[info] GET https://api.airtable.com/v0/appXTw8FgG3h55fk6/articles -&amp;gt; 200 (123.290 ms)
+[info] GET https://api.airtable.com/v0/appXTw8FgG3h55fk6/contents -&amp;gt; 200 (125.372 ms)
+[info] GET https://api.airtable.com/v0/appXTw8FgG3h55fk6/articles -&amp;gt; 200 (140.528 ms)
+[info] GET https://api.airtable.com/v0/appXTw8FgG3h55fk6/contents -&amp;gt; 200 (116.197 ms)
+[info] GET https://api.airtable.com/v0/appXTw8FgG3h55fk6/articles -&amp;gt; 200 (123.440 ms)
+[info] GET https://api.airtable.com/v0/appXTw8FgG3h55fk6/contents -&amp;gt; 200 (121.408 ms)
+[info] GET https://api.airtable.com/v0/appXTw8FgG3h55fk6/articles -&amp;gt; 200 (121.811 ms)
+[info] GET https://api.airtable.com/v0/appXTw8FgG3h55fk6/contents -&amp;gt; 200 (118.887 ms)
+[info] GET https://api.airtable.com/v0/appXTw8FgG3h55fk6/articles -&amp;gt; 200 (437.112 ms)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;If we now change anything in Airtable, and we refresh the browser tab with our application, it should render the modifications correctly.&lt;/p&gt;
+
+&lt;h3&gt;Real-time UI updates&lt;/h3&gt;
+
+&lt;p&gt;We currently have everything working as planned. All the content is stored in an external service, and we get the content using an HTTP client pointing to its API. We also have a cache mechanism that auto-updates the stored data, and which prevents the repository from making additional HTTP requests. Finally, we display all the content using Phoenix LiveView, which lets us render updates in the UI in real-time. But, wait a sec! With our current implementation, that we have to refresh the browser manually to display content updates, we could have used regular Phoenix views. So what&amp;#39;s the point of using LiveView anyways? The point is that we can broadcast changes to live views, which will render them to the visitor without having to refresh the browser whatsoever.&lt;/p&gt;
+
+&lt;p&gt;To broadcast changes to the view, we are going to be using &lt;a href="https://hexdocs.pm/phoenix_pubsub/Phoenix.PubSub.html"&gt;Phoenix.PubSub&lt;/a&gt;, which comes by default with Phoenix.  Let&amp;#39;s do some refactoring to the cache module:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/phoenix_cms/repo/cache.ex
+
+defmodule PhoenixCms.Repo.Cache do
+  use GenServer
+
+  alias __MODULE__.Synchronizer
+
+  # ...
+
+  @callback topic :: String.t()
+
+  @secret &amp;quot;cache secret&amp;quot;
+
+  # ...
+
+  @impl GenServer
+  def init(name) do
+    # ...
+
+    {:ok, %{name: name, synchronizer_ref: ref, hash: &amp;quot;&amp;quot;}}
+  end
+
+  # ...
+
+  @impl GenServer
+  def handle_cast({:set_all, items}, %{name: name, hash: hash} = state)
+      when is_list(items) do
+    new_hash = generate_hash(items)
+
+    if hash != new_hash do
+      Enum.each(items, &amp;amp;:ets.insert(table_for(name), {&amp;amp;1.id, &amp;amp;1}))
+      PhoenixCmsWeb.Endpoint.broadcast(apply(name, :topic, []), &amp;quot;update&amp;quot;, %{})
+    end
+
+    {:noreply, %{state | hash: new_hash}}
+  end
+
+  # ...
+
+  defp generate_hash(items) do
+    :sha256
+    |&amp;gt; :crypto.hmac(@secret, :erlang.term_to_binary(items))
+    |&amp;gt; Base.encode64()
+  end
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;First of all, we are defining a new callback function to the repository behavior, &lt;code&gt;topic&lt;/code&gt;, which must return the topic in which we are going the broadcast the changes in the current cache. In the initial state, we are also adding a new hash empty string. While handling {:set_all, items} messages, we generate a new hash of with the items, and if the hash is different to the one stored in the state, it inserts all the items in the ETS table, like it previously did, and calls &lt;code&gt;PhoenixCmsWeb.Endpoint.broadcast/3&lt;/code&gt;, using the &lt;code&gt;:topic&lt;/code&gt; function from the cache module. Finally, it sets the new hash in its state. This way, we are reporting to any subscriber of &lt;code&gt;topic&lt;/code&gt; that there are changes when the hashes are different. Moreover, it is also storing them and preventing unnecessary writes when there are no data differences.&lt;/p&gt;
+
+&lt;p&gt;Let&amp;#39;s implement the topic function in both cache modules:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/phoenix_cms/article/cache.ex
+
+defmodule PhoenixCms.Article.Cache do
+  alias PhoenixCms.{Repo, Repo.Cache}
+
+  @behaviour Cache
+
+  @topic &amp;quot;articles&amp;quot;
+
+  # ...
+
+  @impl Cache
+  def topic, do: @topic
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/phoenix_cms/content/cache.ex
+
+defmodule PhoenixCms.Content.Cache do
+  alias PhoenixCms.{Repo, Repo.Cache}
+
+  @behaviour Cache
+
+  @topic &amp;quot;contents&amp;quot;
+
+  # ...
+
+  @impl Cache
+  def topic, do: @topic
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The last step is to subscribe to the corresponding topics in the live views:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class="elixir"&gt;# lib/phoenix_cms_web/live/page_live.ex
+
+defmodule PhoenixCmsWeb.PageLive do
+  use PhoenixCmsWeb, :live_view
+
+  @topic &amp;quot;contents&amp;quot;
+
+  @impl true
+  def mount(_params, _session, socket) do
+    PhoenixCmsWeb.Endpoint.subscribe(@topic)
+
+    {:ok, assign_socket(socket)}
+  end
+
+  @impl true
+  def handle_info(%{event: &amp;quot;update&amp;quot;}, socket) do
+    {:noreply, assign_socket(socket)}
+  end
+
+  # ...
+end
+
+# lib/phoenix_cms_web/live/articles_live.ex
+
+defmodule PhoenixCmsWeb.ArticlesLive do
+  use PhoenixCmsWeb, :live_view
+
+  alias PhoenixCmsWeb.LiveEncoder
+
+  @topic &amp;quot;articles&amp;quot;
+
+  @impl true
+  def mount(_params, _session, socket) do
+    PhoenixCmsWeb.Endpoint.subscribe(@topic)
+
+    {:ok, assign_socket(socket)}
+  end
+
+  @impl true
+  def handle_info(%{event: &amp;quot;update&amp;quot;}, socket) do
+    {:noreply, assign_socket(socket)}
+  end
+
+  # ...
+end
+
+# lib/phoenix_cms_web/live/show_article_live.ex
+
+defmodule PhoenixCmsWeb.ShowArticleLive do
+  use PhoenixCmsWeb, :live_view
+
+  @topic &amp;quot;articles&amp;quot;
+
+  @impl true
+  def mount(%{&amp;quot;id&amp;quot; =&amp;gt; id}, _session, socket) do
+    PhoenixCmsWeb.Endpoint.subscribe(@topic)
+
+    {:ok, assign_socket(socket, id)}
+  end
+
+  @impl true
+  def handle_info(%{event: &amp;quot;update&amp;quot;}, socket) do
+    id = socket.assigns.article.id
+
+    {:noreply, assign_socket(socket, id)}
+  end
+
+  # ...
+end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;In the &lt;code&gt;mount/3&lt;/code&gt; function, each view subscribes to the relevant topic. Once the view process adheres to the topic, it needs to handle incoming messages using &lt;code&gt;handle_info/2&lt;/code&gt;, which reassigns the socket contents, triggering a new render in the visitor&amp;#39;s screen. Let&amp;#39;s jump back to the browser, change something in Airtable, and watch what happens in our application:&lt;/p&gt;
+
+&lt;p&gt;&lt;img class="center" src="/images/blog/phoenix-cms-1/real-time.gif"/&gt;&lt;/p&gt;
+
+&lt;p&gt;It works! We finally have finished our simple CMS using Phoenix and Airtable, yay! I hope you enjoyed this tutorial as much as I enjoyed writing it and implementing it. You can check the final result &lt;a href="https://phoenixcms.herokuapp.com/"&gt;here&lt;/a&gt;, or have a look at the &lt;a href="https://github.com/bigardone/phoenix-cms"&gt;source code&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Happy coding!&lt;/p&gt;
+
+&lt;div class="btn-wrapper"&gt;
+  &lt;a href="https://phoenixcms.herokuapp.com/" target="_blank" class="btn"&gt;&lt;i class="fa fa-cloud"&gt;&lt;/i&gt; Live demo&lt;/a&gt;
+  &lt;a href="https://github.com/bigardone/phoenix-cms" target="_blank" class="btn"&gt;&lt;i class="fa fa-github"&gt;&lt;/i&gt; Source code&lt;/a&gt;
+&lt;/div&gt;
+</content>
+  </entry>
+  <entry>
+    <title>Headless CMS fun with Phoenix LiveView and Airtable (pt. 3)</title>
+    <link rel="alternate" href="http://codeloveandboards.com/blog/2020/07/19/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-3/"/>
+    <id>http://codeloveandboards.com/blog/2020/07/19/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-3/</id>
+    <published>2020-07-20T06:14:00Z</published>
+    <updated>2020-07-27T15:31:19+02:00</updated>
+    <author>
+      <name>Article Author</name>
+    </author>
+    <content type="html">&lt;div class="index"&gt;
+  &lt;p&gt;This post belongs to the &lt;strong&gt;Headless CMS fun with Phoenix LiveView and Airtable&lt;/strong&gt; series.&lt;/p&gt;
+  &lt;ol&gt;
+    &lt;li&gt;&lt;a href="/blog/2020/07/02/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-1"&gt;Introduction.&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="/blog/2020/07/11/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-2"&gt;The project set up and implementing the repository pattern.&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="/blog/2020/07/19/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-3"&gt;Content rendering using Phoenix LiveView.&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href="/blog/2020/07/27/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-4"&gt;Adding a cache to the repository and broadcasting changes to the views..&lt;/a&gt;&lt;/li&gt;
   &lt;/ol&gt;
 
   &lt;a href="https://phoenixcms.herokuapp.com/" target="_blank" class="btn"&gt;&lt;i class="fa fa-cloud"&gt;&lt;/i&gt; Live demo&lt;/a&gt;
@@ -535,7 +1261,7 @@ end
     <link rel="alternate" href="http://codeloveandboards.com/blog/2020/07/11/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-2/"/>
     <id>http://codeloveandboards.com/blog/2020/07/11/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-2/</id>
     <published>2020-07-11T07:54:00Z</published>
-    <updated>2020-07-20T08:16:41+02:00</updated>
+    <updated>2020-07-27T15:31:27+02:00</updated>
     <author>
       <name>Article Author</name>
     </author>
@@ -545,7 +1271,7 @@ end
     &lt;li&gt;&lt;a href="/blog/2020/07/02/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-1"&gt;Introduction.&lt;/a&gt;&lt;/li&gt;
     &lt;li&gt;&lt;a href="/blog/2020/07/11/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-2"&gt;The project set up and implementing the repository pattern.&lt;/a&gt;&lt;/li&gt;
     &lt;li&gt;&lt;a href="/blog/2020/07/19/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-3"&gt;Content rendering using Phoenix LiveView.&lt;/a&gt;&lt;/li&gt;
-    &lt;li&gt;Coming soon...&lt;/li&gt;
+    &lt;li&gt;&lt;a href="/blog/2020/07/27/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-4"&gt;Adding a cache to the repository and broadcasting changes to the views..&lt;/a&gt;&lt;/li&gt;
   &lt;/ol&gt;
 
   &lt;a href="https://phoenixcms.herokuapp.com/" target="_blank" class="btn"&gt;&lt;i class="fa fa-cloud"&gt;&lt;/i&gt; Live demo&lt;/a&gt;
@@ -1127,7 +1853,7 @@ config :phoenix_cms, PhoenixCms.Repo, adapter: PhoenixCms.Repo.Fake
     <link rel="alternate" href="http://codeloveandboards.com/blog/2020/07/02/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-1/"/>
     <id>http://codeloveandboards.com/blog/2020/07/02/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-1/</id>
     <published>2020-07-03T05:19:00Z</published>
-    <updated>2020-07-20T08:16:46+02:00</updated>
+    <updated>2020-07-27T15:31:38+02:00</updated>
     <author>
       <name>Article Author</name>
     </author>
@@ -1137,7 +1863,7 @@ config :phoenix_cms, PhoenixCms.Repo, adapter: PhoenixCms.Repo.Fake
     &lt;li&gt;&lt;a href="/blog/2020/07/02/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-1"&gt;Introduction.&lt;/a&gt;&lt;/li&gt;
     &lt;li&gt;&lt;a href="/blog/2020/07/11/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-2"&gt;The project set up and implementing the repository pattern.&lt;/a&gt;&lt;/li&gt;
     &lt;li&gt;&lt;a href="/blog/2020/07/19/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-3"&gt;Content rendering using Phoenix LiveView.&lt;/a&gt;&lt;/li&gt;
-    &lt;li&gt;Coming soon...&lt;/li&gt;
+    &lt;li&gt;&lt;a href="/blog/2020/07/27/headless-cms-fun-with-phoenix-liveview-and-airtable-pt-4"&gt;Adding a cache to the repository and broadcasting changes to the views..&lt;/a&gt;&lt;/li&gt;
   &lt;/ol&gt;
 
   &lt;a href="https://phoenixcms.herokuapp.com/" target="_blank" class="btn"&gt;&lt;i class="fa fa-cloud"&gt;&lt;/i&gt; Live demo&lt;/a&gt;
@@ -1498,447 +2224,6 @@ update msg ({ flags, navigation } as model) =
 &lt;div class="btn-wrapper"&gt;
   &lt;a href="https://nifty-minsky-538aab.netlify.com/private/admin/" target="_blank" class="btn"&gt;&lt;i class="fa fa-cloud"&gt;&lt;/i&gt; Live demo&lt;/a&gt;
   &lt;a href="https://github.com/bigardone/elm-dynamic-base-path" target="_blank" class="btn"&gt;&lt;i class="fa fa-github"&gt;&lt;/i&gt; Source code&lt;/a&gt;
-&lt;/div&gt;
-</content>
-  </entry>
-  <entry>
-    <title>Concurrent ant farm with Elixir and Phoenix LiveView</title>
-    <link rel="alternate" href="http://codeloveandboards.com/blog/2019/03/28/concurrent-ant-farm-with-elixir-and-phoenix-liveview/"/>
-    <id>http://codeloveandboards.com/blog/2019/03/28/concurrent-ant-farm-with-elixir-and-phoenix-liveview/</id>
-    <published>2019-03-28T07:00:00Z</published>
-    <updated>2019-05-11T09:04:33+02:00</updated>
-    <author>
-      <name>Article Author</name>
-    </author>
-    <content type="html">&lt;p&gt;A couple of years ago, I worked on an &lt;strong&gt;Elixir&lt;/strong&gt; personal project which consisted of a virtual ant farm, where every ant was a GenServer process, simulating a basic AI behavior. What initially was going to be something straightforward; it ended up being much bigger and not working as planned, and eventually forgotten. When Chris Maccord announced &lt;a href="https://github.com/phoenixframework/phoenix_live_view"&gt;Phoenix LiveView&lt;/a&gt;, I thought to myself that I wouldn&amp;#39;t use it for now, because I enjoy too much writing front-end in &lt;strong&gt;Elm&lt;/strong&gt;. However, I also love &lt;strong&gt;Elixir&lt;/strong&gt; and &lt;strong&gt;Phoenix&lt;/strong&gt;, so I couldn&amp;#39;t resist giving it a try, and giving the ant farm another go, this time using &lt;strong&gt;Elixir&lt;/strong&gt; only, and trying to invest the less time possible. So I rolled up my sleeves, and surprisingly, four or five hours later I had the ant farm working, and this is how I did it:&lt;/p&gt;
-
-&lt;h3&gt;Disclaimer&lt;/h3&gt;
-
-&lt;p&gt;Before continuing, take this small experiment with a grain of salt. I don&amp;#39;t know anything about AI behaviors, nor SVG animations, so there is plenty of room for improvement. However, this is what worked fine after the first try, and I didn&amp;#39;t want to expend more than an evening on it. This being said, let&amp;#39;s get cracking!&lt;/p&gt;
-
-&lt;h3&gt;Setting up the project with LiveView&lt;/h3&gt;
-
-&lt;p&gt;Creating the project and adding &lt;strong&gt;LiveView&lt;/strong&gt; was pretty straight forward. There are already several tutorials over the Internet about how to add &lt;strong&gt;LiveView&lt;/strong&gt; to a &lt;strong&gt;Phoenix&lt;/strong&gt; application, so I jumped into &lt;a href="https://elixirschool.com/blog/phoenix-live-view/"&gt;this great post&lt;/a&gt; from &lt;a href="https://elixirschool.com/blog"&gt;Elixir School Blog&lt;/a&gt;and followed the instructions, which are very clear and easy to implement. Some minutes later, I had the project up and running.&lt;/p&gt;
-
-&lt;h3&gt;Bringing ants to life&lt;/h3&gt;
-
-&lt;p&gt;After having all the necessary project boilerplate, I started by defining what an ant is, and creating a simple module to define the data structure to represent its state:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# lib/ant_farm/ant/state.ex
-
-defmodule AntFarm.Ant.State do
-  alias __MODULE__
-
-  @type position :: {integer, integer}
-  @type velocity :: {integer, integer}
-  @type state :: :walking | :resting | :panicking
-
-  @type t :: %State{
-          id: String.t(),
-          position: position,
-          velocity: velocity,
-          focus: non_neg_integer,
-          state: state,
-          speed: float
-        }
-
-  defstruct [:id, :position, :velocity, :focus, :state, :speed]
-
-  def new(id) do
-    state = random_state()
-
-    %State{
-      id: id,
-      position: random_position(),
-      velocity: random_velocity(),
-      focus: random_focus(state),
-      state: state,
-      speed: @speed
-    }
-  end
-end
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;It has the following properties:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;id&lt;/code&gt; to identify uniquely every ant.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;position&lt;/code&gt; which represents its current &lt;code&gt;{X, Y}&lt;/code&gt; coordinates.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;velocity&lt;/code&gt; which represents its movement direction, being &lt;code&gt;{1 | 0 | -1, 1 | 0 | -1}&lt;/code&gt;.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;focus&lt;/code&gt; which determines when it gets bored with its current behavior.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;state&lt;/code&gt; which represents its current behavior, and can be one of &lt;code&gt;:walking&lt;/code&gt;, &lt;code&gt;:resting&lt;/code&gt; or &lt;code&gt;:panicking&lt;/code&gt;.&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;speed&lt;/code&gt; which represents its current speed.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;I also added a &lt;code&gt;new/1&lt;/code&gt; helper function which returns a state struct with random values.&lt;/p&gt;
-
-&lt;p&gt;Having this state defined, I moved on to creating the ant process definition:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# lib/ant_farm/ant.ex
-
-defmodule AntFarm.Ant do
-  use GenServer
-
-  alias __MODULE__.{State, Behaviour}
-  @timeout 60
-
-  @doc false
-  def start_link(opts) do
-    id = Keyword.fetch!(opts, :id)
-
-    GenServer.start_link(__MODULE__, id, name: name(id))
-  end
-
-  def get_state(pid), do: GenServer.call(pid, :get_state)
-
-  @impl true
-  def init(id) do
-    schedule()
-    {:ok, State.new(id)}
-  end
-
-  @impl true
-  def handle_call(:get_state, _from, state) do
-    {:reply, state, state}
-  end
-
-  @impl true
-  def handle_info(:perform_actions, state) do
-    state = Behaviour.process(state)
-    schedule()
-
-    {:noreply, state}
-  end
-
-  defp name(id), do: String.to_atom(&amp;quot;ant::&amp;quot; &amp;lt;&amp;gt; id)
-
-  defp schedule do
-    Process.send_after(self(), :perform_actions, @timeout)
-  end
-end
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;This is a basic &lt;code&gt;GenServer&lt;/code&gt; implementation that starts a new named process, which state is a &lt;code&gt;AntFarm.Ant.State&lt;/code&gt; struct. To emulate some random behavior, every 60 milliseconds it processes its state with the &lt;code&gt;AntFarm.Ant.Behaviour.process/1&lt;/code&gt; function, which returns the new state to set.&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# lib/ant_farm/ant/behaviour.ex
-
-defmodule AntFarm.Ant.Behaviour do
-  alias AntFarm.Ant.State
-
-  @max_width Application.get_env(:ant_farm, :colony)[:width]
-  @max_height Application.get_env(:ant_farm, :colony)[:height]
-
-  def process(%State{state: :resting, focus: 0} = state) do
-    State.start_walking(state)
-  end
-
-  def process(%State{state: :resting} = state) do
-    State.keep_resting(state)
-  end
-
-  def process(%State{state: :walking, focus: 0} = state) do
-    State.start_resting(state)
-  end
-
-  def process(%State{state: :walking, speed: speed, position: {x, y}} = state) do
-    {vx, vy} = velocity = calculate_velocity(state)
-    position = {x + vx * speed, y + vy * speed}
-
-    state
-    |&amp;gt; State.keep_walking()
-    |&amp;gt; State.set_velocity(velocity)
-    |&amp;gt; State.set_position(position)
-  end
-
-  # ...
-  # ...
-  # ...
-end
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;The &lt;code&gt;process/1&lt;/code&gt; function receives an ant state, and returns a new one depending on its current properties and applying some of the following logic:&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;If the current &lt;code&gt;state&lt;/code&gt; is &lt;code&gt;:resting&lt;/code&gt; and &lt;code&gt;focus&lt;/code&gt; is 0, it forces the ant to start walking.&lt;/li&gt;
-&lt;li&gt;On the other hand, if &lt;code&gt;state&lt;/code&gt; is &lt;code&gt;:resting&lt;/code&gt; but it is still focusing on resting, then the ant keeps resting (which subtracts 1 to the current &lt;code&gt;focus&lt;/code&gt; value).&lt;/li&gt;
-&lt;li&gt;If the current &lt;code&gt;state&lt;/code&gt; is &lt;code&gt;:walking&lt;/code&gt; and &lt;code&gt;focus&lt;/code&gt; is 0, the ant gets tired and starts resting.&lt;/li&gt;
-&lt;li&gt;But if &lt;code&gt;state&lt;/code&gt; is &lt;code&gt;:walking&lt;/code&gt; and it is still focusing on it, then it keeps walking calculating its new velocity (in case it hits the ant farm boundaries) and position.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;This is just an example of how to implement some basic logic to emulate behavior depending on a current state. To see all the details check out the &lt;a href="https://github.com/bigardone/phoenix-liveview-ant-farm/blob/master/lib/ant_farm/ant/behaviour.ex"&gt;AntFarm.Ant.Behaviour&lt;/a&gt; source code.&lt;/p&gt;
-
-&lt;p&gt;At this point I had defined an ant&amp;#39;s structure and behavior, so the next thing I needed was a way to spawn new ants on demand, and &lt;strong&gt;Elixir&lt;/strong&gt;&amp;#39;s &lt;a href="https://hexdocs.pm/elixir/DynamicSupervisor.html"&gt;DynamicSupervisor&lt;/a&gt; was the right tool for it:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# lib/ant_farm/ant/supervisor.ex
-
-defmodule AntFarm.Ant.Supervisor do
-  use DynamicSupervisor
-
-  alias AntFarm.Ant
-
-  def start_link(arg) do
-    DynamicSupervisor.start_link(__MODULE__, arg, name: __MODULE__)
-  end
-
-  def start_child do
-    spec = {Ant, id: generate_id()}
-    DynamicSupervisor.start_child(__MODULE__, spec)
-  end
-
-  def populate(count \\ 1) do
-    for _ &amp;lt;- 1..count, do: start_child()
-  end
-
-  def ants do
-    __MODULE__
-    |&amp;gt; DynamicSupervisor.which_children()
-    |&amp;gt; Task.async_stream(&amp;amp;get_ant_state/1)
-    |&amp;gt; Enum.map(fn {:ok, state} -&amp;gt; state end)
-  end
-
-  @impl true
-  def init(_arg) do
-    DynamicSupervisor.init(strategy: :one_for_one)
-  end
-
-  # ...
-  # ...
-end
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;The &lt;code&gt;start_child&lt;/code&gt; function makes the supervisor spawn a new &lt;code&gt;Ant&lt;/code&gt; process with a random &lt;code&gt;id&lt;/code&gt;. I also added an &lt;code&gt;ants&lt;/code&gt; function which returns all its children state. Last but not least, the &lt;code&gt;populate/1&lt;/code&gt; function spawns a given number of ant processes, which is going to become handy to spawn some ants once the application starts. For this purpose, I also created a small populator module:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# lib/ant_farm/ant/supervisor/populator.ex
-
-defmodule AntFarm.Ant.Supervisor.Populator do
-  alias AntFarm.Ant.Supervisor, as: AntSupervisor
-
-  @population Application.get_env(:ant_farm, :colony)[:population]
-
-  def child_spec(opts) do
-    %{
-      id: __MODULE__,
-      start: {__MODULE__, :start_link, [opts]},
-      type: :worker,
-      restart: :permanent,
-      shutdown: 500
-    }
-  end
-
-  def start_link(_opts \\ []) do
-    AntSupervisor.populate(@population)
-    :ignore
-  end
-end
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;To spawn the ants once the application starts, and moreover, once the &lt;code&gt;AntFarm.Ant.Supervisor&lt;/code&gt; has started, we only need to add it to the main supervision tree like so:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# lib/ant_farm/application.ex
-
-defmodule AntFarm.Application do
-  use Application
-
-  def start(_type, _args) do
-    children = [
-      AntFarm.Ant.Supervisor,
-      AntFarm.Ant.Supervisor.Populator,
-      AntFarmWeb.Endpoint
-    ]
-
-    opts = [strategy: :one_for_one, name: AntFarm.Supervisor]
-    Supervisor.start_link(children, opts)
-  end
-
-  def config_change(changed, _new, removed) do
-    AntFarmWeb.Endpoint.config_change(changed, removed)
-    :ok
-  end
-end
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;This is how the application looked like the first time I started it, spawning only ten ant processes:&lt;/p&gt;
-
-&lt;p&gt;&lt;img class="center" src="/images/blog/liveview-ant-farm/tree.jpg"/&gt;&lt;/p&gt;
-
-&lt;h3&gt;Rendering the ant farm&lt;/h3&gt;
-
-&lt;p&gt;Now that I had a bunch of ants doing their ant things, it was time for some &lt;strong&gt;LiveView&lt;/strong&gt; fun, and displaying them in the browser. The first step was to render the basic template from the main controller:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# lib/ant_farm_web/templates/page/index.html.eex
-
-&amp;lt;div class=&amp;quot;container&amp;quot;&amp;gt;
-  &amp;lt;header class=&amp;quot;main-header&amp;quot;&amp;gt;
-    &amp;lt;h1&amp;gt;Phoenix LiveView Ant Farm&amp;lt;/h1&amp;gt;
-  &amp;lt;/header&amp;gt;
-  &amp;lt;%= live_render(@conn, AntFarmWeb.AntFarmLiveView, session: nil) %&amp;gt;
-  &amp;lt;p&amp;gt;
-    Crafted with ♥ by &amp;lt;a target=&amp;quot;_blank&amp;quot; href=&amp;quot;https://github.com/bigardone&amp;quot;&amp;gt;bigardone&amp;lt;/a&amp;gt; |
-    Check out the &amp;lt;a target=&amp;quot;_blank&amp;quot; href=&amp;quot;https://github.com/bigardone/phoenix-liveview-ant-farm&amp;quot;&amp;gt;source code&amp;lt;/a&amp;gt;
-  &amp;lt;/p&amp;gt;
-&amp;lt;/div&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Here comes the tricky part. Calling &lt;code&gt;live_render/3&lt;/code&gt; renders the &lt;strong&gt;LiveView&lt;/strong&gt;, which is the content that is going to be changing periodically to animate the ants. Let&amp;#39;s take a look at the &lt;code&gt;AntFarmWeb.AntFarmLiveView&lt;/code&gt; module:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# lib/ant_farm_web/live/ant_farm_live_view.ex
-
-defmodule AntFarmWeb.AntFarmLiveView do
-  use Phoenix.LiveView
-
-  alias AntFarm.Ant.Supervisor, as: Colony
-
-  @timeout 60
-
-  @impl true
-  def mount(_session, socket) do
-    if connected?(socket), do: schedule()
-    ants = Colony.ants()
-    {:ok, assign(socket, ants: ants)}
-  end
-
-  @impl true
-  def render(assigns) do
-    AntFarmWeb.PageView.render(&amp;quot;ant_farm.html&amp;quot;, assigns)
-  end
-
-  def handle_info(:tick, socket) do
-    schedule()
-    ants = Colony.ants()
-    {:noreply, assign(socket, ants: ants)}
-  end
-
-  defp schedule do
-    Process.send_after(self(), :tick, @timeout)
-  end
-end
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;When rendering the template for the first time, the &lt;code&gt;mount/2&lt;/code&gt; function gets called, assigning the existing ants to the connection, rendering the first static HTML and making the JS client connect to the socket. Only then, it creates the stateful view, invoking &lt;code&gt;mount/2&lt;/code&gt; again with the signed session, and calling the private &lt;code&gt;schedule/0&lt;/code&gt; function, which sends the tick message to the &lt;strong&gt;LiveView&lt;/strong&gt; process every sixty milliseconds, retrieving the new ant states and assigning it to the socket forcing a new render of the &lt;code&gt;ant_farm.html&lt;/code&gt; template.&lt;/p&gt;
-
-&lt;p&gt;The only thing left was creating the &lt;code&gt;ant_farm.html&lt;/code&gt; template:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# lib/ant_farm_web/templates/page/ant_farm.html.leex
-
-&amp;lt;div class=&amp;quot;main-content&amp;quot;&amp;gt;
-  &amp;lt;h2&amp;gt;Rendering &amp;lt;%= length(@ants) %&amp;gt; concurrent ants&amp;lt;/h2&amp;gt;
-  &amp;lt;svg viewbox=&amp;quot;0 0 1024 600&amp;quot;&amp;gt;
-    &amp;lt;rect width=&amp;quot;1024&amp;quot; height=&amp;quot;600&amp;quot; fill=&amp;quot;#00b349&amp;quot;/&amp;gt;
-    &amp;lt;%= for %{position: {x, y}} &amp;lt;- @ants do %&amp;gt;
-      &amp;lt;rect width=&amp;quot;2&amp;quot; height=&amp;quot;2&amp;quot; fill=&amp;quot;#000000&amp;quot; x=&amp;quot;&amp;lt;%= x %&amp;gt;&amp;quot; y=&amp;quot;&amp;lt;%= y %&amp;gt;&amp;quot;/&amp;gt;
-    &amp;lt;% end %&amp;gt;
-  &amp;lt;/svg&amp;gt;
-&amp;lt;/div&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;This is what I saw when I went to the browser:&lt;/p&gt;
-
-&lt;p&gt;&lt;img class="center" src="/images/blog/liveview-ant-farm/ants.gif"/&gt;&lt;/p&gt;
-
-&lt;p&gt;My ants were finally alive, yay!&lt;/p&gt;
-
-&lt;h3&gt;Do not tap on glass&lt;/h3&gt;
-
-&lt;p&gt;After having all the ants walking around the screen, I wanted to add some interactivity with them, and the most reasonable to me was clicking on the farm box. &lt;strong&gt;LiveView&lt;/strong&gt; comes with some event handling support out of the box, so I went back to the documentation and implemented the &lt;code&gt;phx-click&lt;/code&gt; binding in the &lt;code&gt;ant_farm.html&lt;/code&gt; template:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# lib/ant_farm_web/templates/page/ant_farm.html.leex
-
-# ...
-# ...
-
-  &amp;lt;svg class=&amp;quot;panic&amp;lt;%= @panic %&amp;gt;&amp;quot; phx-click=&amp;quot;tap&amp;quot; viewbox=&amp;quot;0 0 1024 600&amp;quot;&amp;gt;
-    # ...
-    # ...
-  &amp;lt;/svg&amp;gt;
-
-# ...
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Adding the &lt;code&gt;phx-click=&amp;quot;tap&amp;quot;&lt;/code&gt; attribute, makes the &lt;strong&gt;LiveView&lt;/strong&gt; JS client send a &lt;code&gt;tap&lt;/code&gt; message through the socket every time a user clicks on the &lt;code&gt;svg&lt;/code&gt; element. Therefore, the &lt;code&gt;AntFarmWeb.AntFarmLiveView&lt;/code&gt; needs to handle it:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# lib/ant_farm_web/live/ant_farm_live_view.ex
-
-defmodule AntFarmWeb.AntFarmLiveView do
-  use Phoenix.LiveView
-
-  # ...
-
-  @impl true
-  def mount(_session, socket) do
-    if connected?(socket), do: schedule()
-    ants = Colony.ants()
-    {:ok, assign(socket, panic: false, ants: ants)}
-  end
-
-  # ...
-
-  @impl true
-  def handle_event(&amp;quot;tap&amp;quot;, _value, socket) do
-    Colony.panic()
-    Process.send_after(self(), :chill, 1000)
-    {:noreply, assign(socket, panic: true)}
-  end
-
-  def handle_info(:chill, socket) do
-    {:noreply, assign(socket, panic: false)}
-  end
-
-  # ...
-end
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;The tap event handler calls &lt;code&gt;Colony.panick/0&lt;/code&gt; which makes all ants go crazy, sets its assign &lt;code&gt;panic&lt;/code&gt; value to &lt;code&gt;true&lt;/code&gt; and after a second sends a &lt;code&gt;:chill&lt;/code&gt; message, which sets the &lt;code&gt;panic&lt;/code&gt; assign value back to &lt;code&gt;false&lt;/code&gt;. This is a trick I did, to toggle a particular class to the SVG DOM element, which adds a vibration animation. Let&amp;#39;s take a look at the &lt;code&gt;Colony.panic/0&lt;/code&gt; function:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# lib/ant_farm/ant/supervisor.ex
-
-defmodule AntFarm.Ant.Supervisor do
-  use DynamicSupervisor
-
-  # ...
-
-  def panic do
-    __MODULE__
-    |&amp;gt; DynamicSupervisor.which_children()
-    |&amp;gt; Enum.each(&amp;amp;do_panic/1)
-  end
-
-  defp do_panic({_, pid, _, _}), do: Ant.panic(pid)
-end
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;It takes all of its children PIDs and calls &lt;code&gt;Ant.panic/1&lt;/code&gt; with each of them:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class="elixir"&gt;# lib/ant_farm/ant.ex
-
-defmodule AntFarm.Ant do
-  use GenServer
-
-  # ...
-
-  def panic(pid), do: GenServer.cast(pid, :panic)
-
-  # ...
-
-  @impl true
-  def handle_cast(:panic, %State{state: :panicking} = state) do
-    {:noreply, state}
-  end
-
-  def handle_cast(:panic, state) do
-    {:noreply, State.start_panicking(state)}
-  end
-end
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;The &lt;code&gt;panic/1&lt;/code&gt; function sends a &lt;code&gt;:panic&lt;/code&gt; message to the given PID, which takes the current &lt;code&gt;state&lt;/code&gt; and makes the ant go crazy for a random number of ticks, only if it&amp;#39;s not already panicking though. The result is quite nice as you can see in &lt;a href="https://phoenix-liveview-ant-farm.herokuapp.com"&gt;the demo&lt;/a&gt; :)&lt;/p&gt;
-
-&lt;p&gt;And, this is pretty much it. In a single evening, I managed to code the project and deploy it into Heroku. I was amazed about how easy was adding &lt;strong&gt;LiveView&lt;/strong&gt; to the project, how well it worked and the overall result. I&amp;#39;m definitely keeping an eye on &lt;strong&gt;LiveView&lt;/strong&gt; updates and how it evolves to use it in future projects. Don&amp;#39;t forget to check out the demo and the final repository in the links below.&lt;/p&gt;
-
-&lt;p&gt;Happy coding!&lt;/p&gt;
-
-&lt;div class="btn-wrapper"&gt;
-  &lt;a href="https://phoenix-liveview-ant-farm.herokuapp.com/" target="_blank" class="btn"&gt;&lt;i class="fa fa-cloud"&gt;&lt;/i&gt; Live demo&lt;/a&gt;
-  &lt;a href="https://github.com/bigardone/phoenix-liveview-ant-farm" target="_blank" class="btn"&gt;&lt;i class="fa fa-github"&gt;&lt;/i&gt; Source code&lt;/a&gt;
 &lt;/div&gt;
 </content>
   </entry>
